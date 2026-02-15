@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.9"
+SCRIPT_VERSION="0.3.0"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -2218,6 +2218,47 @@ server {
     ssl_reject_handshake on;
     return 444;
 }
+
+# ─── 8443 Fallback (direct access for panel management) ───
+server {
+    server_name $panel_domain;
+    listen 8443 ssl;
+    listen [::]:8443 ssl;
+    http2 on;
+
+    ssl_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
+    ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
+    ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
+
+    add_header Set-Cookie \$set_cookie_header;
+
+    location / {
+        error_page 418 = @unauthorized;
+        recursive_error_pages on;
+        if (\$authorized = 0) {
+            return 418;
+        }
+        proxy_http_version 1.1;
+        proxy_pass http://remnawave;
+        proxy_redirect off;
+        proxy_set_header Host \$host;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_set_header X-Real-IP 127.0.0.1;
+        proxy_set_header X-Forwarded-For 127.0.0.1;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Port 8443;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location @unauthorized {
+        root /var/www/html;
+        index index.html;
+    }
+}
 EOL
 }
 
@@ -2542,10 +2583,11 @@ installation_full() {
     ) &
     show_spinner "Создание nginx.conf"
 
-    # UFW для ноды
+    # UFW для ноды и доступа к панели
     (
         remnawave_network_subnet=172.30.0.0/16
         ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
+        ufw allow 8443/tcp >/dev/null 2>&1
     ) &
     show_spinner "Настройка файрвола"
 
@@ -2737,10 +2779,13 @@ installation_full() {
     echo -e "                   ${GREEN}🎉 УСТАНОВКА ЗАВЕРШЕНА!${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo
-    echo -e "${YELLOW}🔗 Ссылка для первого входа в панель:${NC}"
-    echo -e "${WHITE}https://${PANEL_DOMAIN}/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+    echo -e "${YELLOW}🔗 Ссылка для первого входа в панель (через порт 8443):${NC}"
+    echo -e "${WHITE}https://${PANEL_DOMAIN}:8443/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     echo
-    echo -e "${YELLOW}�📋 Команды запуска меню управления:${NC}"
+    echo -e "${DARKGRAY}Основной порт 443 обрабатывается XRAY (selfsteal).${NC}"
+    echo -e "${DARKGRAY}Для управления панелью всегда используйте порт 8443.${NC}"
+    echo
+    echo -e "${YELLOW}📋 Команды запуска меню управления:${NC}"
     echo -e "${GREEN}dfc-remna-install${NC} или ${GREEN}dfc-ri${NC}"
     echo
     echo -e "${DARKGRAY}───────────────────────────────────────────────────────────${NC}"
@@ -3241,10 +3286,11 @@ installation_node_local() {
         "$COOKIE_NAME" "$COOKIE_VALUE") &
     show_spinner "Обновление nginx.conf"
 
-    # ─── UFW для ноды ───
+    # ─── UFW для ноды и доступа к панели ───
     (
         remnawave_network_subnet=172.30.0.0/16
         ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
+        ufw allow 8443/tcp >/dev/null 2>&1
     ) &
     show_spinner "Настройка файрвола"
 
@@ -3434,7 +3480,7 @@ installation_node_local() {
     fi
     echo
     echo -e "${DARKGRAY}Архитектура: Xray (порт 443) → unix socket → Nginx → панель${NC}"
-    echo -e "${DARKGRAY}Доступ по 8443 можно открыть через меню управления панелью${NC}"
+    echo -e "${GREEN}🔗 Доступ к панели по порту 8443 открыт автоматически${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -5137,19 +5183,22 @@ open_panel_access() {
         fi
     fi
 
-    # Находим позицию последнего server блока (default_server) и вставляем перед ним
-    # Ищем строку "listen unix:/dev/shm/nginx.sock ssl proxy_protocol default_server;"
-    local insert_before_line
-    insert_before_line=$(grep -n "listen unix:/dev/shm/nginx.sock ssl proxy_protocol default_server;" "$dir/nginx.conf" | cut -d: -f1 | head -1)
+    # Находим номер строки с закрывающей скобкой последнего server блока
+    # Используем awk для корректного поиска закрывающей скобки на верхнем уровне
+    local insert_after_line
+    insert_after_line=$(awk '/^server \{/ {start=NR; brace=1} 
+        brace {if (/\{/) brace++; if (/\}/) brace--} 
+        brace==0 && start {print NR; exit}' "$dir/nginx.conf")
     
-    if [ -z "$insert_before_line" ]; then
-        # Если не нашли (panel-режим), вставляем перед последним "server {"
-        insert_before_line=$(grep -n "^server {" "$dir/nginx.conf" | tail -1 | cut -d: -f1)
+    # Если не нашли, ищем просто последнюю закрывающую скобку
+    if [ -z "$insert_after_line" ]; then
+        insert_after_line=$(grep -n "^}$" "$dir/nginx.conf" | tail -1 | cut -d: -f1)
     fi
 
     # Создаем временный файл с блоком
     local temp_file="/tmp/remnawave_8443_block_$$.conf"
     cat > "$temp_file" << 'EOF'
+
 # ─── 8443 Fallback (direct access) ───
 server {
     server_name PANEL_DOMAIN;
@@ -5190,17 +5239,15 @@ server {
         index index.html;
     }
 }
-
 EOF
 
     # Заменяем плейсхолдеры
     sed -i "s/PANEL_DOMAIN/${panel_domain}/g" "$temp_file"
     sed -i "s/PANEL_CERT/${panel_cert}/g" "$temp_file"
 
-    if [ -n "$insert_before_line" ]; then
-        # Вставляем fallback блок перед найденной позицией
-        ((insert_before_line--))
-        sed -i "${insert_before_line}r ${temp_file}" "$dir/nginx.conf"
+    if [ -n "$insert_after_line" ]; then
+        # Вставляем fallback блок после найденной строки
+        sed -i "${insert_after_line}r ${temp_file}" "$dir/nginx.conf"
     else
         # Если не нашли, просто добавляем в конец
         cat "$temp_file" >> "$dir/nginx.conf"
