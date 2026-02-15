@@ -2455,7 +2455,6 @@ installation_full() {
         for domain in "${!domains_to_check[@]}"; do
             print_success "Сертификат для $domain уже существует"
         done
-        echo
     fi
 
     # Определяем домены сертификатов
