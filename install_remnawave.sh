@@ -4910,7 +4910,7 @@ main_menu() {
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
             local update_notice=""
-            local menu_title="🚀 DFC-REMNA-INSTALL v$SCRIPT_VERSION"
+            local menu_title="🚀 DFC Remna-install v$SCRIPT_VERSION"
             if [ -f /tmp/remna_update_available ]; then
                 local new_version
                 new_version=$(cat /tmp/remna_update_available)
@@ -4992,7 +4992,7 @@ main_menu() {
             esac
         else
             # Для неустановленного состояния
-            show_arrow_menu "🚀 DFC-REMNA-INSTALL v$SCRIPT_VERSION" \
+            show_arrow_menu "🚀 DFC Remna-install v$SCRIPT_VERSION" \
                 "📦  Установить компоненты" \
                 "──────────────────────────────────────" \
                 "❌  Выход"
