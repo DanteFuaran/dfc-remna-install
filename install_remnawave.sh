@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.3.3"
+SCRIPT_VERSION="0.3.4"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -4820,6 +4820,114 @@ manage_panel_access() {
 }
 
 # ═══════════════════════════════════════════════════
+# УДАЛЕНИЕ НОДЫ С СЕРВЕРА ПАНЕЛИ
+# ═══════════════════════════════════════════════════
+remove_node_from_panel() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${RED}   🗑️  УДАЛЕНИЕ НОДЫ С СЕРВЕРА ПАНЕЛИ${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, есть ли нода на сервере
+    if ! grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+        print_error "Нода не найдена на этом сервере"
+        echo -e "${YELLOW}На сервере установлена только панель.${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
+    echo -e "${YELLOW}⚠️  ВНИМАНИЕ!${NC}"
+    echo -e "${WHITE}Эта операция удалит ноду с сервера и настроит панель${NC}"
+    echo -e "${WHITE}для работы на стандартном порту 443.${NC}"
+    echo
+    echo -e "${RED}После удаления ноды:${NC}"
+    echo -e "  ${GREEN}✓${NC} Панель будет доступна по https (порт 443)"
+    echo -e "  ${GREEN}✓${NC} Порт 8443 будет закрыт"
+    echo -e "  ${RED}✗${NC} VPN через эту ноду перестанет работать"
+    echo
+
+    if ! confirm_action; then
+        print_error "Операция отменена"
+        sleep 2
+        return 1
+    fi
+
+    # Получаем текущие домены из nginx.conf
+    local panel_domain sub_domain panel_cert sub_cert COOKIE_NAME COOKIE_VALUE
+    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | sed -n '1p')
+    sub_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | sed -n '2p')
+    
+    get_cookie_from_nginx
+    
+    panel_cert=$(grep -A5 "server_name ${panel_domain};" /opt/remnawave/nginx.conf | grep -oP '/ssl/\K[^/]+' | head -1)
+    sub_cert=$(grep -A5 "server_name ${sub_domain};" /opt/remnawave/nginx.conf | grep -oP '/ssl/\K[^/]+' | head -1)
+    [ -z "$panel_cert" ] && panel_cert="$panel_domain"
+    [ -z "$sub_cert" ] && sub_cert="$sub_domain"
+
+    echo
+    print_action "Остановка сервисов..."
+    (
+        cd /opt/remnawave
+        docker compose down >/dev/null 2>&1
+    ) &
+    show_spinner "Остановка контейнеров"
+
+    print_action "Удаление ноды из конфигурации..."
+    
+    # Генерируем новый docker-compose без remnanode
+    generate_docker_compose_panel "$panel_cert" "$sub_cert"
+    
+    # Восстанавливаем API токен
+    local existing_api_token
+    existing_api_token=$(grep -oP 'REMNAWAVE_API_TOKEN=\S+' /opt/remnawave/docker-compose.yml.bak 2>/dev/null | head -1)
+    if [ -n "$existing_api_token" ] && [ "$existing_api_token" != "\$api_token" ]; then
+        sed -i "s|REMNAWAVE_API_TOKEN=\$api_token|$existing_api_token|" /opt/remnawave/docker-compose.yml
+    fi
+
+    print_action "Настройка nginx для порта 443..."
+    
+    # Генерируем nginx.conf для работы на порту 443 (без unix socket)
+    generate_nginx_conf_panel "$panel_domain" "$sub_domain" "$panel_cert" "$sub_cert" "$COOKIE_NAME" "$COOKIE_VALUE"
+
+    print_action "Закрытие порта 8443..."
+    if ufw status 2>/dev/null | grep -q "8443.*ALLOW"; then
+        ufw delete allow 8443/tcp >/dev/null 2>&1
+    fi
+
+    print_action "Запуск сервисов..."
+    (
+        cd /opt/remnawave
+        docker compose up -d >/dev/null 2>&1
+    ) &
+    show_spinner "Запуск контейнеров"
+
+    show_spinner_timer 15 "Ожидание запуска панели" "Запуск панели"
+
+    # Проверяем доступность
+    if curl -s -f http://127.0.0.1:3000/api/auth_status >/dev/null 2>&1; then
+        print_success "Панель запущена и работает"
+    fi
+
+    # Итог
+    clear
+    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "    ${GREEN}🎉 Нода удалена, панель настроена!${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+    echo -e "${WHITE}Панель теперь доступна по:${NC}"
+    echo -e "${GREEN}https://${panel_domain}/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+    echo
+    echo -e "${DARKGRAY}Порт 443 активен, порт 8443 закрыт${NC}"
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
+}
+
+# ═══════════════════════════════════════════════════
 # АВТОМАТИЧЕСКОЕ ВКЛЮЧЕНИЕ ДОСТУПА ПО 8443
 # ═════════════════════════════════════════════════==
 auto_enable_panel_access_8443() {
@@ -4949,6 +5057,391 @@ EOF
     ufw allow 8443/tcp >/dev/null 2>&1
 
     return 0
+}
+
+# ═══════════════════════════════════════════════════
+# WARP NATIVE
+# ═══════════════════════════════════════════════════
+manage_warp() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   🌐 WARP NATIVE${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, есть ли нода на сервере
+    if ! grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+        echo -e "${YELLOW}⚠️  Нода не найдена на этом сервере${NC}"
+        echo -e "${DARKGRAY}WARP работает только с установленной нодой.${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
+    show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+        "📥  Установить WARP Native" \
+        "🗑️  Удалить WARP Native" \
+        "──────────────────────────────────────" \
+        "➕  Добавить WARP в конфигурацию ноды" \
+        "➖  Удалить WARP из конфигурации ноды" \
+        "──────────────────────────────────────" \
+        "❌  Назад"
+    local choice=$?
+
+    case $choice in
+        0) install_warp_native ;;
+        1) uninstall_warp_native ;;
+        2) ;; # разделитель
+        3) add_warp_to_config ;;
+        4) remove_warp_from_config ;;
+        5) ;; # разделитель
+        6) return ;;
+    esac
+}
+
+install_warp_native() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   📥 УСТАНОВКА WARP NATIVE${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, установлен ли уже WARP
+    if ip link show warp 2>/dev/null | grep -q "warp"; then
+        print_success "WARP Native уже установлен"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 0
+    fi
+
+    echo -e "${YELLOW}Установка WARP Native...${NC}"
+    echo -e "${DARKGRAY}Это может занять несколько минут${NC}"
+    echo
+
+    (
+        bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) 2>&1
+    ) &
+    show_spinner "Установка WARP Native"
+
+    # Проверяем результат
+    if ip link show warp 2>/dev/null | grep -q "warp"; then
+        print_success "WARP Native успешно установлен"
+        echo
+        echo -e "${WHITE}WARP интерфейс создан.${NC}"
+        echo -e "${WHITE}Теперь добавьте WARP в конфигурацию ноды.${NC}"
+    else
+        print_error "Не удалось установить WARP Native"
+        echo -e "${YELLOW}Проверьте подключение к интернету и попробуйте снова.${NC}"
+    fi
+
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
+}
+
+uninstall_warp_native() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${RED}   🗑️  УДАЛЕНИЕ WARP NATIVE${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, установлен ли WARP
+    if ! ip link show warp 2>/dev/null | grep -q "warp"; then
+        echo -e "${YELLOW}⚠️  WARP Native не установлен${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 0
+    fi
+
+    echo -e "${YELLOW}⚠️  Это удалит WARP интерфейс${NC}"
+    echo
+
+    if ! confirm_action; then
+        print_error "Операция отменена"
+        sleep 2
+        return 1
+    fi
+
+    echo
+    (
+        bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh) 2>&1
+    ) &
+    show_spinner "Удаление WARP Native"
+
+    print_success "WARP Native удалён"
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
+}
+
+add_warp_to_config() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   ➕ ДОБАВЛЕНИЕ WARP В КОНФИГУРАЦИЮ${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, установлен ли WARP
+    if ! ip link show warp 2>/dev/null | grep -q "warp"; then
+        echo -e "${YELLOW}⚠️  WARP Native не установлен!${NC}"
+        echo -e "${WHITE}Сначала установите WARP Native.${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
+    # Получаем токен
+    get_panel_token
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    local token
+    token=$(cat "${DIR_REMNAWAVE}/token")
+    local domain_url="127.0.0.1:3000"
+
+    # Получаем список конфигураций
+    local config_response
+    config_response=$(make_api_request "GET" "${domain_url}/api/config-profiles" "$token")
+
+    if [ -z "$config_response" ] || ! echo "$config_response" | jq -e '.response.configProfiles' >/dev/null 2>&1; then
+        print_error "Не удалось получить список конфигураций"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
+    local configs
+    configs=$(echo "$config_response" | jq -r '.response.configProfiles[] | select(.uuid and .name) | "\(.name) \(.uuid)"' 2>/dev/null)
+
+    if [ -z "$configs" ]; then
+        print_error "Конфигурации не найдены"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
+    echo -e "${YELLOW}Выберите конфигурацию для добавления WARP:${NC}"
+    echo
+
+    local i=1
+    declare -A config_map
+    local menu_items=()
+    while IFS=' ' read -r name uuid; do
+        [ -z "$name" ] && continue
+        menu_items+=("📄  $name")
+        config_map[$i]="$uuid"
+        ((i++))
+    done <<< "$configs"
+
+    menu_items+=("──────────────────────────────────────")
+    menu_items+=("❌  Назад")
+
+    show_arrow_menu "ВЫБЕРИТЕ КОНФИГУРАЦИЮ" "${menu_items[@]}"
+    local choice=$?
+
+    # Проверка - выбран ли разделитель или "Назад"
+    if [ $choice -ge $((i-1)) ]; then
+        return 0
+    fi
+
+    local selected_uuid=${config_map[$((choice+1))]}
+    [ -z "$selected_uuid" ] && return 1
+
+    # Получаем данные конфигурации
+    local config_data
+    config_data=$(make_api_request "GET" "${domain_url}/api/config-profiles/$selected_uuid" "$token")
+
+    if [ -z "$config_data" ]; then
+        print_error "Не удалось получить данные конфигурации"
+        return 1
+    fi
+
+    local config_json
+    config_json=$(echo "$config_data" | jq -r '.response.config // .config // empty')
+
+    if [ -z "$config_json" ] || [ "$config_json" = "null" ]; then
+        print_error "Конфигурация пуста"
+        return 1
+    fi
+
+    # Проверяем, есть ли уже warp-out
+    if echo "$config_json" | jq -e '.outbounds[] | select(.tag == "warp-out")' >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  WARP уже добавлен в эту конфигурацию${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 0
+    fi
+
+    # Добавляем warp-out
+    local warp_outbound
+    warp_outbound='{
+        "tag": "warp-out",
+        "protocol": "freedom",
+        "settings": {
+            "domainStrategy": "UseIP"
+        },
+        "streamSettings": {
+            "sockopt": {
+                "interface": "warp",
+                "tcpFastOpen": true
+            }
+        }
+    }'
+
+    config_json=$(echo "$config_json" | jq --argjson warp_out "$warp_outbound" '.outbounds += [$warp_out]' 2>/dev/null)
+
+    # Добавляем правило маршрутизации
+    local warp_rule
+    warp_rule='{
+        "type": "field",
+        "domain": ["whoer.net", "browserleaks.com", "2ip.io", "2ip.ru"],
+        "outboundTag": "warp-out"
+    }'
+
+    config_json=$(echo "$config_json" | jq --argjson warp_rule "$warp_rule" '.routing.rules += [$warp_rule]' 2>/dev/null)
+
+    # Обновляем конфигурацию
+    local update_response
+    update_response=$(make_api_request "PATCH" "${domain_url}/api/config-profiles" "$token" "{\"uuid\": \"$selected_uuid\", \"config\": $config_json}")
+
+    if [ -n "$update_response" ] && echo "$update_response" | jq -e '.' >/dev/null 2>&1; then
+        print_success "WARP добавлен в конфигурацию"
+        echo
+        echo -e "${DARKGRAY}Трафик для whoer.net, browserleaks.com, 2ip.io, 2ip.ru${NC}"
+        echo -e "${DARKGRAY}теперь будет идти через WARP${NC}"
+    else
+        print_error "Не удалось обновить конфигурацию"
+    fi
+
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
+}
+
+remove_warp_from_config() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${RED}   ➖ УДАЛЕНИЕ WARP ИЗ КОНФИГУРАЦИИ${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Получаем токен
+    get_panel_token
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    local token
+    token=$(cat "${DIR_REMNAWAVE}/token")
+    local domain_url="127.0.0.1:3000"
+
+    # Получаем список конфигураций
+    local config_response
+    config_response=$(make_api_request "GET" "${domain_url}/api/config-profiles" "$token")
+
+    if [ -z "$config_response" ]; then
+        print_error "Не удалось получить список конфигураций"
+        return 1
+    fi
+
+    local configs
+    configs=$(echo "$config_response" | jq -r '.response.configProfiles[] | select(.uuid and .name) | "\(.name) \(.uuid)"' 2>/dev/null)
+
+    if [ -z "$configs" ]; then
+        print_error "Конфигурации не найдены"
+        return 1
+    fi
+
+    echo -e "${YELLOW}Выберите конфигурацию для удаления WARP:${NC}"
+    echo
+
+    local i=1
+    declare -A config_map
+    local menu_items=()
+    while IFS=' ' read -r name uuid; do
+        [ -z "$name" ] && continue
+        menu_items+=("📄  $name")
+        config_map[$i]="$uuid"
+        ((i++))
+    done <<< "$configs"
+
+    menu_items+=("──────────────────────────────────────")
+    menu_items+=("❌  Назад")
+
+    show_arrow_menu "ВЫБЕРИТЕ КОНФИГУРАЦИЮ" "${menu_items[@]}"
+    local choice=$?
+
+    # Проверка - выбран ли разделитель или "Назад"
+    if [ $choice -ge $((i-1)) ]; then
+        return 0
+    fi
+
+    local selected_uuid=${config_map[$((choice+1))]}
+    [ -z "$selected_uuid" ] && return 1
+
+    # Получаем данные конфигурации
+    local config_data
+    config_data=$(make_api_request "GET" "${domain_url}/api/config-profiles/$selected_uuid" "$token")
+
+    local config_json
+    config_json=$(echo "$config_data" | jq -r '.response.config // .config // empty')
+
+    if [ -z "$config_json" ] || [ "$config_json" = "null" ]; then
+        print_error "Конфигурация пуста"
+        return 1
+    fi
+
+    local removed=false
+
+    # Удаляем warp-out из outbounds
+    if echo "$config_json" | jq -e '.outbounds[] | select(.tag == "warp-out")' >/dev/null 2>&1; then
+        config_json=$(echo "$config_json" | jq 'del(.outbounds[] | select(.tag == "warp-out"))' 2>/dev/null)
+        echo -e "${GREEN}✓${NC} Удалён warp-out из outbounds"
+        removed=true
+    else
+        echo -e "${YELLOW}⚠${NC} warp-out не найден в outbounds"
+    fi
+
+    # Удаляем правило из routing
+    if echo "$config_json" | jq -e '.routing.rules[] | select(.outboundTag == "warp-out")' >/dev/null 2>&1; then
+        config_json=$(echo "$config_json" | jq 'del(.routing.rules[] | select(.outboundTag == "warp-out"))' 2>/dev/null)
+        echo -e "${GREEN}✓${NC} Удалено правило WARP из routing"
+        removed=true
+    else
+        echo -e "${YELLOW}⚠${NC} Правило WARP не найдено в routing"
+    fi
+
+    if [ "$removed" = false ]; then
+        echo
+        echo -e "${YELLOW}WARP не был настроен в этой конфигурации${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 0
+    fi
+
+    # Обновляем конфигурацию
+    local update_response
+    update_response=$(make_api_request "PATCH" "${domain_url}/api/config-profiles" "$token" "{\"uuid\": \"$selected_uuid\", \"config\": $config_json}")
+
+    if [ -n "$update_response" ] && echo "$update_response" | jq -e '.' >/dev/null 2>&1; then
+        echo
+        print_success "WARP удалён из конфигурации"
+    else
+        echo
+        print_error "Не удалось обновить конфигурацию"
+    fi
+
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
 }
 
 open_panel_access() {
@@ -5577,6 +6070,7 @@ main_menu() {
                 "💾  База данных" \
                 "🔓  Доступ к панели" \
                 "🎨  Сменить шаблон сайта-заглушки" \
+                "🌐  WARP Native" \
                 "──────────────────────────────────────" \
                 "🔄  Обновить панель/ноду" \
                 "🔄  Обновить скрипт$update_notice" \
@@ -5593,6 +6087,7 @@ main_menu() {
                         "🖥️   Только панель" \
                         "🌐  Только нода" \
                         "➕  Подключить ноду в панель" \
+                        "🗑️   Удалить ноду с сервера панели" \
                         "──────────────────────────────────────" \
                         "❌  Назад"
                     local install_choice=$?
@@ -5619,8 +6114,11 @@ main_menu() {
                         4)
                             add_node_to_panel
                             ;;
-                        5) continue ;;
+                        5)
+                            remove_node_from_panel
+                            ;;
                         6) continue ;;
+                        7) continue ;;
                     esac
                     ;;
                 1) manage_reinstall ;;
@@ -5632,12 +6130,13 @@ main_menu() {
                 7) manage_database ;;
                 8) manage_panel_access ;;
                 9) manage_random_template ;;
-                10) continue ;;
-                11) manage_update ;;
-                12) update_script ;;
-                13) remove_script ;;
-                14) continue ;;
-                15) cleanup_terminal; exit 0 ;;
+                10) manage_warp ;;
+                11) continue ;;
+                12) manage_update ;;
+                13) update_script ;;
+                14) remove_script ;;
+                15) continue ;;
+                16) cleanup_terminal; exit 0 ;;
             esac
         else
             # Для неустановленного состояния
