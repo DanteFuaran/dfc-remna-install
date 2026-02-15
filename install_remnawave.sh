@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.1.3"
+SCRIPT_VERSION="0.1.4"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -1109,9 +1109,13 @@ get_public_key() {
     local pubkey
     pubkey=$(echo "$response" | jq -r '.response.pubKey // empty' 2>/dev/null)
 
-    if [ -n "$pubkey" ]; then
-        sed -i "s|SECRET_KEY=.*|SECRET_KEY=\"$pubkey\"|" "$target_dir/docker-compose.yml" 2>/dev/null || true
+    if [ -z "$pubkey" ]; then
+        print_error "Не удалось получить публичный ключ из API"
+        return 1
     fi
+
+    sed -i "s|SECRET_KEY=.*|SECRET_KEY=\"$pubkey\"|" "$target_dir/docker-compose.yml" 2>/dev/null
+    return 0
 }
 
 generate_xray_keys() {
@@ -2560,6 +2564,12 @@ installation_full() {
     # 2. Получение публичного ключа → SECRET_KEY для ноды
     print_action "Получение публичного ключа панели..."
     get_public_key "$domain_url" "$token" "$target_dir"
+
+    # Проверяем, что SECRET_KEY реально обновлён
+    if grep -q 'PUBLIC KEY FROM REMNAWAVE-PANEL' "$target_dir/docker-compose.yml" 2>/dev/null; then
+        print_error "Не удалось установить публичный ключ"
+        return
+    fi
     print_success "Установка публичного ключа"
 
     # 3. Генерация ключей x25519 (REALITY)
@@ -2636,7 +2646,28 @@ installation_full() {
     randomhtml
 
     # Ожидаем готовность после перезапуска
-    show_spinner_timer 10 "Ожидание запуска сервисов" "Запуск сервисов"
+    show_spinner_timer 15 "Ожидание запуска сервисов" "Запуск сервисов"
+
+    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности панели" 120
+
+    # Верификация: ждём пока remnanode запустит xray на порту 443
+    print_action "Ожидание подключения ноды (xray → порт 443)..."
+    local verify_ok=false
+    local verify_elapsed=0
+    local verify_timeout=60
+    while [ $verify_elapsed -lt $verify_timeout ]; do
+        if ss -tuln 2>/dev/null | grep -q ':443 '; then
+            verify_ok=true
+            break
+        fi
+        sleep 2
+        ((verify_elapsed+=2))
+    done
+    if [ "$verify_ok" = true ]; then
+        print_success "Порт 443 активен — xray (remnanode) работает"
+    else
+        echo -e "${YELLOW}⚠️  Порт 443 пока не активен — нода может ещё подключаться${NC}"
+    fi
 
     # 12. Сброс суперадмина — при первом входе пользователь задаст свои данные
     print_action "Сброс суперадмина для первого входа..."
@@ -3198,6 +3229,16 @@ installation_node_local() {
     # ─── Публичный ключ → SECRET_KEY ───
     print_action "Получение публичного ключа панели..."
     get_public_key "$domain_url" "$token" "$target_dir"
+
+    # Проверяем, что SECRET_KEY реально обновлён (не остался плейсхолдером)
+    if grep -q 'PUBLIC KEY FROM REMNAWAVE-PANEL' "$target_dir/docker-compose.yml" 2>/dev/null; then
+        print_error "Не удалось установить публичный ключ. Восстановление конфигурации..."
+        _restore_panel_config
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
     print_success "Установка публичного ключа"
 
     # ─── API: регистрация ноды ───
@@ -3270,13 +3311,67 @@ installation_node_local() {
 
     randomhtml
 
-    show_spinner_timer 10 "Ожидание запуска сервисов" "Запуск сервисов"
+    # Ожидаем готовность панели после перезапуска
+    show_spinner_timer 15 "Ожидание запуска сервисов" "Запуск сервисов"
+
+    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности панели" 120
+    if [ $? -ne 0 ]; then
+        print_error "Панель не отвечает после перезапуска. Восстановление..."
+        _restore_panel_config
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    # ─── Верификация: ждём пока remnanode запустит xray на порту 443 ───
+    print_action "Ожидание подключения ноды (xray → порт 443)..."
+    local verify_ok=false
+    local verify_elapsed=0
+    local verify_timeout=60
+    while [ $verify_elapsed -lt $verify_timeout ]; do
+        if ss -tuln 2>/dev/null | grep -q ':443 '; then
+            verify_ok=true
+            break
+        fi
+        sleep 2
+        ((verify_elapsed+=2))
+    done
+
+    if [ "$verify_ok" = true ]; then
+        print_success "Порт 443 активен — xray (remnanode) работает"
+    else
+        echo -e "${YELLOW}⚠️  Порт 443 не активен через ${verify_timeout} сек. Диагностика:${NC}"
+        echo
+
+        # Проверяем контейнер remnanode
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnanode$'; then
+            echo -e "${GREEN}  ✓${NC} Контейнер remnanode запущен"
+            echo -e "${DARKGRAY}  Логи remnanode (последние 10 строк):${NC}"
+            docker logs --tail 10 remnanode 2>&1 | while IFS= read -r line; do
+                echo -e "${DARKGRAY}    $line${NC}"
+            done
+        else
+            echo -e "${RED}  ✗${NC} Контейнер remnanode НЕ запущен"
+        fi
+
+        echo
+        echo -e "${YELLOW}  Возможные причины:${NC}"
+        echo -e "${WHITE}  1. Нода ещё подключается к панели (подождите 1-2 мин)${NC}"
+        echo -e "${WHITE}  2. Панель не смогла передать конфиг ноде${NC}"
+        echo -e "${WHITE}  3. Проверьте: ${GREEN}docker logs remnanode${NC}"
+        echo -e "${WHITE}  4. Проверьте: ${GREEN}docker logs remnawave${NC}"
+        echo
+        echo -e "${YELLOW}  Конфигурация НЕ откачена — нода создана в панели.${NC}"
+        echo -e "${YELLOW}  Попробуйте: ${GREEN}cd /opt/remnawave && docker compose restart${NC}"
+        echo
+    fi
 
     # ─── Итог ───
     clear
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "    ${GREEN}🎉 Нода успешно добавлена на сервер панели${NC}"
+    echo -e "    ${GREEN}🎉 Нода добавлена на сервер панели${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
     echo -e "${WHITE}Панель:${NC}       https://$panel_domain"
@@ -3285,9 +3380,16 @@ installation_node_local() {
     echo
     echo -e "${BLUE}──────────────────────────────────────${NC}"
     echo
-    echo -e "${GREEN}✅ Нода настроена и подключена к панели!${NC}"
-    echo -e "${GREEN}✅ Конфигурация nginx обновлена!${NC}"
-    echo -e "${GREEN}✅ Docker Compose обновлён!${NC}"
+    echo -e "${GREEN}✅ Нода зарегистрирована в панели${NC}"
+    echo -e "${GREEN}✅ Docker Compose обновлён (nginx + remnanode)${NC}"
+    echo -e "${GREEN}✅ Nginx перенастроен (unix socket + proxy_protocol)${NC}"
+    if [ "$verify_ok" = true ]; then
+        echo -e "${GREEN}✅ Порт 443 активен — xray (remnanode) работает${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Порт 443 пока не активен — проверьте логи ноды${NC}"
+    fi
+    echo
+    echo -e "${DARKGRAY}Архитектура: Xray (порт 443) → unix socket → Nginx → панель${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
