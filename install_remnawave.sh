@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.1.6"
+SCRIPT_VERSION="0.1.7"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -4554,10 +4554,6 @@ manage_database() {
         "💾  Сохранить базу данных" \
         "📥  Загрузить базу данных" \
         "──────────────────────────────────────" \
-        "🔐  Сбросить суперадмина" \
-        "🍪  Сменить cookie доступа" \
-        "🌐  Редактировать домены" \
-        "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
 
@@ -4565,11 +4561,7 @@ manage_database() {
         0) db_backup ;;
         1) db_restore ;;
         2) continue ;;
-        3) change_credentials ;;
-        4) regenerate_cookies ;;
-        5) manage_domains ;;
-        6) continue ;;
-        7) return ;;
+        3) return ;;
     esac
 }
 
@@ -4686,6 +4678,215 @@ manage_reinstall() {
         5) continue ;;
         6) return ;;
     esac
+}
+
+# ═══════════════════════════════════════════════════
+# УПРАВЛЕНИЕ ДОСТУПОМ К ПАНЕЛИ
+# ═══════════════════════════════════════════════════
+
+manage_panel_access() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   🔓 ДОСТУП К ПАНЕЛИ${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Показываем текущий статус порта 8443
+    if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
+        echo -e "${WHITE}Статус порта 8443:${NC} ${GREEN}открыт${NC}"
+    else
+        echo -e "${WHITE}Статус порта 8443:${NC} ${RED}закрыт${NC}"
+    fi
+
+    # Показываем cookie-ссылку
+    local COOKIE_NAME COOKIE_VALUE
+    if get_cookie_from_nginx; then
+        local panel_domain
+        panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
+        echo
+        echo -e "${WHITE}🔗 Cookie-ссылка на панель:${NC}"
+        echo -e "${DARKGRAY}https://${panel_domain}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+    fi
+    echo
+
+    show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+        "🔓  Открыть порт 8443" \
+        "🔒  Закрыть порт 8443" \
+        "🔗  Показать cookie-ссылку" \
+        "──────────────────────────────────────" \
+        "🔐  Сбросить суперадмина" \
+        "🍪  Сменить cookie доступа" \
+        "🌐  Редактировать домены" \
+        "──────────────────────────────────────" \
+        "❌  Назад"
+    local choice=$?
+
+    case $choice in
+        0) open_panel_access ;;
+        1) close_panel_access ;;
+        2)
+            clear
+            local COOKIE_NAME COOKIE_VALUE
+            if get_cookie_from_nginx; then
+                local pd
+                pd=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
+                echo
+                echo -e "${GREEN}🔗 Cookie-ссылка на панель (основной порт):${NC}"
+                echo -e "${WHITE}https://${pd}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+                echo
+                if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
+                    echo -e "${GREEN}🔗 Cookie-ссылка на панель (порт 8443):${NC}"
+                    echo -e "${WHITE}https://${pd}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+                    echo
+                fi
+            else
+                echo
+                print_error "Не удалось извлечь cookie из nginx.conf"
+                echo
+            fi
+            echo
+            read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+            ;;
+        3) continue ;;
+        4) change_credentials ;;
+        5) regenerate_cookies ;;
+        6) manage_domains ;;
+        7) continue ;;
+        8) return ;;
+    esac
+}
+
+open_panel_access() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   🔓 ОТКРЫТИЕ ДОСТУПА К ПАНЕЛИ (8443)${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, что nginx.conf существует
+    if [ ! -f /opt/remnawave/nginx.conf ]; then
+        print_error "Файл nginx.conf не найден"
+        sleep 2
+        return
+    fi
+
+    # Проверяем, не открыт ли уже порт
+    if grep -q "listen 8443 ssl;" /opt/remnawave/nginx.conf 2>/dev/null; then
+        print_warning "Порт 8443 уже открыт"
+
+        # Показываем ссылку
+        local COOKIE_NAME COOKIE_VALUE
+        if get_cookie_from_nginx; then
+            local panel_domain
+            panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
+            echo
+            echo -e "${GREEN}🔗 Ссылка на панель:${NC}"
+            echo -e "${WHITE}https://${panel_domain}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+        fi
+        echo
+        read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+        return
+    fi
+
+    # Проверяем, не занят ли порт 8443
+    if ss -tlnp | grep -q ':8443 '; then
+        print_error "Порт 8443 уже занят другим процессом"
+        sleep 2
+        return
+    fi
+
+    # Определяем тип конфигурации (full = unix socket, panel = listen 443)
+    local is_full=false
+    if grep -q "unix:/dev/shm/nginx.sock" /opt/remnawave/nginx.conf 2>/dev/null; then
+        is_full=true
+    fi
+
+    # Читаем данные cookie из nginx.conf
+    local COOKIE_NAME COOKIE_VALUE
+    if ! get_cookie_from_nginx; then
+        print_error "Не удалось извлечь cookie из nginx.conf"
+        sleep 2
+        return
+    fi
+
+    # Определяем домен панели
+    local panel_domain
+    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
+
+    # Добавляем listen 8443 
+    if [ "$is_full" = true ]; then
+        # Full-режим: добавляем listen 8443 после listen unix:... строки
+        sed -i '/listen unix:\/dev\/shm\/nginx.sock ssl proxy_protocol;/{
+            n
+            /http2 on;/a\    listen 8443 ssl;\n    listen [::]:8443 ssl;
+        }' /opt/remnawave/nginx.conf
+    else
+        # Panel-режим: добавляем listen 8443 после listen [::]:443
+        sed -i '0,/listen \[::\]:443 ssl http2;/{
+            /listen \[::\]:443 ssl http2;/a\    listen 8443 ssl http2;\n    listen [::]:8443 ssl http2;
+        }' /opt/remnawave/nginx.conf
+    fi
+
+    # Перезапускаем nginx
+    (
+        cd /opt/remnawave
+        docker compose restart nginx >/dev/null 2>&1
+    ) &
+    show_spinner "Перезапуск nginx"
+
+    # Открываем порт в UFW
+    ufw allow 8443/tcp >/dev/null 2>&1
+
+    echo
+    print_success "Порт 8443 открыт"
+    echo
+    echo -e "${GREEN}🔗 Ссылка на панель:${NC}"
+    echo -e "${WHITE}https://${panel_domain}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+    echo
+    echo -e "${RED}⚠️  Не забудьте закрыть порт после использования!${NC}"
+    echo
+    read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+}
+
+close_panel_access() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${RED}   🔒 ЗАКРЫТИЕ ДОСТУПА К ПАНЕЛИ (8443)${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем, что nginx.conf существует
+    if [ ! -f /opt/remnawave/nginx.conf ]; then
+        print_error "Файл nginx.conf не найден"
+        sleep 2
+        return
+    fi
+
+    # Проверяем, открыт ли порт
+    if ! grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
+        print_warning "Порт 8443 уже закрыт"
+        sleep 2
+        return
+    fi
+
+    # Удаляем строки listen 8443
+    sed -i '/listen 8443 ssl/d' /opt/remnawave/nginx.conf
+    sed -i '/listen \[::\]:8443 ssl/d' /opt/remnawave/nginx.conf
+
+    # Перезапускаем nginx
+    (
+        cd /opt/remnawave
+        docker compose restart nginx >/dev/null 2>&1
+    ) &
+    show_spinner "Перезапуск nginx"
+
+    # Закрываем порт в UFW
+    ufw delete allow 8443/tcp >/dev/null 2>&1
+
+    echo
+    print_success "Порт 8443 закрыт"
+    echo
+    read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
 }
 
 
@@ -5068,10 +5269,11 @@ main_menu() {
                 "⏹️   Остановить сервисы" \
                 "📋  Просмотр логов" \
                 "──────────────────────────────────────" \
-                "🔄  Обновить панель/ноду" \
-                "💾  База данных" \
+                "�  База данных" \
+                "🔓  Доступ к панели" \
                 "🎨  Сменить шаблон сайта-заглушки" \
                 "──────────────────────────────────────" \
+                "🔄  Обновить панель/ноду" \
                 "🔄  Обновить скрипт$update_notice" \
                 "🗑️   Удалить скрипт" \
                 "──────────────────────────────────────" \
@@ -5122,14 +5324,15 @@ main_menu() {
                 4) manage_stop ;;
                 5) manage_logs ;;
                 6) continue ;;
-                7) manage_update ;;
-                8) manage_database ;;
+                7) manage_database ;;
+                8) manage_panel_access ;;
                 9) manage_random_template ;;
                 10) continue ;;
-                11) update_script ;;
-                12) remove_script ;;
-                13) continue ;;
-                14) cleanup_terminal; exit 0 ;;
+                11) manage_update ;;
+                12) update_script ;;
+                13) remove_script ;;
+                14) continue ;;
+                15) cleanup_terminal; exit 0 ;;
             esac
         else
             # Для неустановленного состояния
