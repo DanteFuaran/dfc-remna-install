@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.1.8"
+SCRIPT_VERSION="0.1.9"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -5251,14 +5251,21 @@ main_menu() {
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
             local update_notice=""
-            local menu_title="🚀 DFC Remna-install v$SCRIPT_VERSION"
             if [ -f /tmp/remna_update_available ]; then
                 local new_version
                 new_version=$(cat /tmp/remna_update_available)
                 update_notice=" ${YELLOW}(Доступно обновление до v$new_version)${NC}"
             fi
+            
+            clear
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo -e "${WHITE}              🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${NC}"
+            echo -e "${DARKGRAY}  Проект развивается благодаря вашей поддержке${NC}"
+            echo -e "${DARKGRAY}           https://github.com/DanteFuaran${NC}"
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo
 
-            show_arrow_menu "$menu_title" \
+            show_arrow_menu "" \
                 "📦  Установить компоненты" \
                 "🔄  Переустановить" \
                 "──────────────────────────────────────" \
@@ -5333,7 +5340,15 @@ main_menu() {
             esac
         else
             # Для неустановленного состояния
-            show_arrow_menu "🚀 DFC Remna-install v$SCRIPT_VERSION" \
+            clear
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo -e "${WHITE}              🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${NC}"
+            echo -e "${DARKGRAY}  Проект развивается благодаря вашей поддержке${NC}"
+            echo -e "${DARKGRAY}           https://github.com/DanteFuaran${NC}"
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo
+            
+            show_arrow_menu "" \
                 "📦  Установить компоненты" \
                 "──────────────────────────────────────" \
                 "❌  Выход"
