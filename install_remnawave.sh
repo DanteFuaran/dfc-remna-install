@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.3.0"
+SCRIPT_VERSION="0.3.1"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -2218,64 +2218,6 @@ server {
     ssl_reject_handshake on;
     return 444;
 }
-
-# ─── 8443 Fallback (direct access for panel management) ───
-server {
-    server_name $panel_domain;
-    listen 8443 ssl;
-    listen [::]:8443 ssl;
-    http2 on;
-
-    ssl_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
-    ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
-    ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
-
-    add_header Set-Cookie \$set_cookie_header;
-
-    # API endpoints - no auth required for auth status
-    location ^~ /api/auth/ {
-        proxy_http_version 1.1;
-        proxy_pass http://remnawave;
-        proxy_set_header Host \$host;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-Host \$host;
-        proxy_set_header X-Forwarded-Port 8443;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-
-    location / {
-        error_page 418 = @unauthorized;
-        recursive_error_pages on;
-        if (\$authorized = 0) {
-            return 418;
-        }
-        proxy_http_version 1.1;
-        proxy_pass http://remnawave;
-        proxy_redirect off;
-        proxy_set_header Host \$host;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header X-Forwarded-Proto https;
-        proxy_set_header X-Forwarded-Host \$host;
-        proxy_set_header X-Forwarded-Port 8443;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-
-    location @unauthorized {
-        root /var/www/html;
-        index index.html;
-    }
-}
 EOL
 }
 
@@ -2600,11 +2542,10 @@ installation_full() {
     ) &
     show_spinner "Создание nginx.conf"
 
-    # UFW для ноды и доступа к панели
+    # UFW для ноды
     (
         remnawave_network_subnet=172.30.0.0/16
         ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
-        ufw allow 8443/tcp >/dev/null 2>&1
     ) &
     show_spinner "Настройка файрвола"
 
@@ -2796,11 +2737,14 @@ installation_full() {
     echo -e "                   ${GREEN}🎉 УСТАНОВКА ЗАВЕРШЕНА!${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo
-    echo -e "${YELLOW}🔗 Ссылка для первого входа в панель (через порт 8443):${NC}"
-    echo -e "${WHITE}https://${PANEL_DOMAIN}:8443/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+    echo -e "${YELLOW}⚠️  ВАЖНО: Панель временно недоступна через порт 443!${NC}"
+    echo -e "${WHITE}   XRAY (selfsteal) занимает порт 443 для работы VPN.${NC}"
     echo
-    echo -e "${DARKGRAY}Основной порт 443 обрабатывается XRAY (selfsteal).${NC}"
-    echo -e "${DARKGRAY}Для управления панелью всегда используйте порт 8443.${NC}"
+    echo -e "${YELLOW}🔗 Для доступа к панели включите порт 8443:${NC}"
+    echo -e "${GREEN}   dfc-remna-install → Управление панелью → Открыть доступ по 8443${NC}"
+    echo
+    echo -e "${DARKGRAY}После включения доступ будет по ссылке:${NC}"
+    echo -e "${DARKGRAY}https://${PANEL_DOMAIN}:8443/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     echo
     echo -e "${YELLOW}📋 Команды запуска меню управления:${NC}"
     echo -e "${GREEN}dfc-remna-install${NC} или ${GREEN}dfc-ri${NC}"
@@ -3303,11 +3247,10 @@ installation_node_local() {
         "$COOKIE_NAME" "$COOKIE_VALUE") &
     show_spinner "Обновление nginx.conf"
 
-    # ─── UFW для ноды и доступа к панели ───
+    # ─── UFW для ноды ───
     (
         remnawave_network_subnet=172.30.0.0/16
         ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
-        ufw allow 8443/tcp >/dev/null 2>&1
     ) &
     show_spinner "Настройка файрвола"
 
@@ -3497,7 +3440,11 @@ installation_node_local() {
     fi
     echo
     echo -e "${DARKGRAY}Архитектура: Xray (порт 443) → unix socket → Nginx → панель${NC}"
-    echo -e "${GREEN}🔗 Доступ к панели по порту 8443 открыт автоматически${NC}"
+    echo
+    echo -e "${YELLOW}⚠️  ВАЖНО: Панель временно недоступна через порт 443!${NC}"
+    echo -e "${WHITE}   XRAY (selfsteal) теперь занимает порт 443.${NC}"
+    echo -e "${WHITE}   Для доступа к панели включите порт 8443:${NC}"
+    echo -e "${GREEN}   dfc-remna-install → Управление панелью → Открыть доступ по 8443${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
