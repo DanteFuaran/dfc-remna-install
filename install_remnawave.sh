@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.3.5"
+SCRIPT_VERSION="0.3.7"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -3373,6 +3373,22 @@ installation_node_local() {
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
         echo
         return
+    fi
+
+    # ─── API: создание токена для subscription-page (если не было) ───
+    if [ -z "$existing_api_token" ] || [ "$existing_api_token" = "\$api_token" ]; then
+        print_action "Создание API токена для подписок..."
+        create_api_token "$domain_url" "$token" "/opt/remnawave"
+        if [ $? -eq 0 ]; then
+            print_success "API токен создан"
+            # Перезапускаем subscription-page с новым токеном
+            (cd /opt/remnawave && docker compose up -d remnawave-subscription-page >/dev/null 2>&1) &
+            show_spinner "Перезапуск subscription-page"
+        else
+            print_error "Не удалось создать API токен"
+            echo -e "${YELLOW}⚠️  Subscription-page может не работать. Создайте токен вручную:${NC}"
+            echo -e "   ${WHITE}Remnawave Dashboard → Settings → API Tokens${NC}"
+        fi
     fi
 
     # ─── Верификация: ждём пока remnanode запустит xray на порту 443 ───
