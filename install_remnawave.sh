@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.6"
+SCRIPT_VERSION="0.2.7"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -2541,11 +2541,10 @@ installation_full() {
     ) &
     show_spinner "Создание nginx.conf"
 
-    # UFW для ноды + fallback порт для панели
+    # UFW для ноды
     (
         remnawave_network_subnet=172.30.0.0/16
         ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
-        ufw allow 8443/tcp >/dev/null 2>&1
     ) &
     show_spinner "Настройка файрвола"
 
@@ -2739,9 +2738,6 @@ installation_full() {
     echo
     echo -e "${YELLOW}🔗 Ссылка для первого входа в панель:${NC}"
     echo -e "${WHITE}https://${PANEL_DOMAIN}/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
-    echo
-    echo -e "${YELLOW}� Запасной доступ (если xray не работает):${NC}"
-    echo -e "${WHITE}https://${PANEL_DOMAIN}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     echo
     echo -e "${YELLOW}�📋 Команды запуска меню управления:${NC}"
     echo -e "${GREEN}dfc-remna-install${NC} или ${GREEN}dfc-ri${NC}"
@@ -3244,11 +3240,10 @@ installation_node_local() {
         "$COOKIE_NAME" "$COOKIE_VALUE") &
     show_spinner "Обновление nginx.conf"
 
-    # ─── UFW для ноды + fallback порт для панели ───
+    # ─── UFW для ноды ───
     (
         remnawave_network_subnet=172.30.0.0/16
         ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
-        ufw allow 8443/tcp >/dev/null 2>&1
     ) &
     show_spinner "Настройка файрвола"
 
@@ -3431,7 +3426,6 @@ installation_node_local() {
     echo -e "${GREEN}✅ Нода зарегистрирована в панели${NC}"
     echo -e "${GREEN}✅ Docker Compose обновлён (nginx + remnanode)${NC}"
     echo -e "${GREEN}✅ Nginx перенастроен (unix socket + proxy_protocol)${NC}"
-    echo -e "${GREEN}✅ Порт 8443 открыт — fallback доступ к панели${NC}"
     if [ "$verify_ok" = true ]; then
         echo -e "${GREEN}✅ Порт 443 активен — xray (remnanode) работает${NC}"
     else
@@ -3439,7 +3433,7 @@ installation_node_local() {
     fi
     echo
     echo -e "${DARKGRAY}Архитектура: Xray (порт 443) → unix socket → Nginx → панель${NC}"
-    echo -e "${DARKGRAY}Fallback:    Nginx (порт 8443) → панель (без xray)${NC}"
+    echo -e "${DARKGRAY}Доступ по 8443 можно открыть через меню управления панелью${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -5011,11 +5005,11 @@ manage_panel_access() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    # Показываем текущий статус порта 8443
+    # Показываем текущий статус доступа по 8443
     if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
-        echo -e "${WHITE}Статус порта 8443:${NC} ${GREEN}открыт${NC}"
+        echo -e "${WHITE}Доступ по 8443:${NC} ${GREEN}открыт${NC}"
     else
-        echo -e "${WHITE}Статус порта 8443:${NC} ${RED}закрыт${NC}"
+        echo -e "${WHITE}Доступ по 8443:${NC} ${RED}закрыт${NC}"
     fi
 
     # Показываем cookie-ссылку
@@ -5030,8 +5024,8 @@ manage_panel_access() {
     echo
 
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
-        "🔓  Открыть порт 8443" \
-        "🔒  Закрыть порт 8443" \
+        "🔓  Открыть доступ по 8443" \
+        "🔒  Закрыть доступ по 8443" \
         "🔗  Показать cookie-ссылку" \
         "──────────────────────────────────────" \
         "🔐  Сбросить суперадмина" \
@@ -5055,7 +5049,7 @@ manage_panel_access() {
                 echo -e "${WHITE}https://${pd}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
                 echo
                 if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
-                    echo -e "${GREEN}🔗 Cookie-ссылка на панель (порт 8443):${NC}"
+                    echo -e "${GREEN}🔗 Cookie-ссылка на панель (доступ по 8443):${NC}"
                     echo -e "${WHITE}https://${pd}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
                     echo
                 fi
@@ -5083,8 +5077,10 @@ open_panel_access() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
+    local dir="/opt/remnawave"
+
     # Проверяем, что nginx.conf существует
-    if [ ! -f /opt/remnawave/nginx.conf ]; then
+    if [ ! -f "$dir/nginx.conf" ]; then
         print_error "Файл nginx.conf не найден"
         sleep 2
         return
@@ -5100,79 +5096,70 @@ open_panel_access() {
 
     # Определяем домен панели
     local panel_domain
-    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
+    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' "$dir/nginx.conf" | head -1)
 
-    # Проверяем, есть ли 8443 в конфиге (встроенный fallback для full-режима)
-    local has_8443_in_config=false
-    if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
-        has_8443_in_config=true
-    fi
-
-    # Проверяем, открыт ли порт в UFW
-    local ufw_open=false
-    if ufw status 2>/dev/null | grep -q "8443/tcp.*ALLOW"; then
-        ufw_open=true
-    fi
-
-    if [ "$has_8443_in_config" = true ] && [ "$ufw_open" = true ]; then
-        print_success "Порт 8443 уже открыт и доступен"
+    # Проверяем, уже настроен ли 8443
+    if grep -q "listen 8443 ssl" "$dir/nginx.conf" 2>/dev/null; then
+        # 8443 уже в конфиге — проверяем UFW
+        if ufw status 2>/dev/null | grep -q "8443/tcp.*ALLOW"; then
+            print_success "Доступ по 8443 уже открыт"
+        else
+            ufw allow 8443/tcp >/dev/null 2>&1
+            print_success "Порт 8443 открыт в файрволе"
+        fi
         echo
         echo -e "${GREEN}🔗 Ссылка на панель:${NC}"
         echo -e "${WHITE}https://${panel_domain}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+        echo
+        echo -e "${RED}⚠️  Не забудьте закрыть доступ после использования!${NC}"
         echo
         read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
         return
     fi
 
-    # Если 8443 нет в конфиге — добавляем через sed (panel-режим или старый full-режим)
-    if [ "$has_8443_in_config" = false ]; then
-        # Проверяем, не занят ли порт 8443
-        if ss -tlnp | grep -q ':8443 '; then
+    # Проверяем, не занят ли порт 8443
+    if command -v ss >/dev/null 2>&1; then
+        if ss -tuln | grep -q ":8443"; then
             print_error "Порт 8443 уже занят другим процессом"
             sleep 2
             return
         fi
-
-        # Определяем тип конфигурации
-        local is_full=false
-        if grep -q "unix:/dev/shm/nginx.sock" /opt/remnawave/nginx.conf 2>/dev/null; then
-            is_full=true
+    elif command -v netstat >/dev/null 2>&1; then
+        if netstat -tuln | grep -q ":8443"; then
+            print_error "Порт 8443 уже занят другим процессом"
+            sleep 2
+            return
         fi
-
-        if [ "$is_full" = true ]; then
-            # Full-режим (старый, без встроенного fallback): добавляем listen 8443
-            sed -i '/listen unix:\/dev\/shm\/nginx.sock ssl proxy_protocol;/{
-                n
-                /http2 on;/a\    listen 8443 ssl;\n    listen [::]:8443 ssl;
-            }' /opt/remnawave/nginx.conf
-        else
-            # Panel-режим: добавляем listen 8443 после listen [::]:443
-            sed -i '0,/listen \[::\]:443 ssl http2;/{
-                /listen \[::\]:443 ssl http2;/a\    listen 8443 ssl http2;\n    listen [::]:8443 ssl http2;
-            }' /opt/remnawave/nginx.conf
-        fi
-
-        # Перезапускаем nginx
-        (
-            cd /opt/remnawave
-            docker compose restart remnawave-nginx >/dev/null 2>&1
-        ) &
-        show_spinner "Перезапуск nginx"
     fi
+
+    # Добавляем listen 8443 ssl в серверный блок панели (как в eGames)
+    # Находим строку server_name панели и добавляем listen 8443 ssl после неё
+    sed -i "/server_name ${panel_domain};/a\\    listen 8443 ssl;" "$dir/nginx.conf"
+    if [ $? -ne 0 ]; then
+        print_error "Не удалось изменить конфигурацию nginx"
+        sleep 2
+        return
+    fi
+
+    # Перезапускаем nginx контейнер
+    (
+        cd "$dir"
+        docker compose down remnawave-nginx >/dev/null 2>&1
+        docker compose up -d remnawave-nginx >/dev/null 2>&1
+    ) &
+    show_spinner "Перезапуск nginx"
 
     # Открываем порт в UFW
     ufw allow 8443/tcp >/dev/null 2>&1
 
     echo
-    print_success "Порт 8443 открыт"
+    print_success "Доступ по 8443 открыт"
     echo
     echo -e "${GREEN}🔗 Ссылка на панель:${NC}"
     echo -e "${WHITE}https://${panel_domain}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     echo
-    if ! grep -q "# ─── Fallback:" /opt/remnawave/nginx.conf 2>/dev/null; then
-        echo -e "${RED}⚠️  Не забудьте закрыть порт после использования!${NC}"
-        echo
-    fi
+    echo -e "${RED}⚠️  Не забудьте закрыть доступ после использования!${NC}"
+    echo
     read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
 }
 
@@ -5183,43 +5170,41 @@ close_panel_access() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    # Проверяем, открыт ли порт в UFW
-    if ! ufw status 2>/dev/null | grep -q "8443/tcp.*ALLOW"; then
-        print_warning "Порт 8443 уже закрыт в файрволе"
+    local dir="/opt/remnawave"
+
+    # Проверяем, что nginx.conf существует
+    if [ ! -f "$dir/nginx.conf" ]; then
+        print_error "Файл nginx.conf не найден"
         sleep 2
         return
     fi
 
-    # Определяем, встроенный ли 8443 (full-режим с fallback) или временный (sed-инъекция)
-    local is_builtin_fallback=false
-    if grep -q "# ─── Fallback:" /opt/remnawave/nginx.conf 2>/dev/null; then
-        is_builtin_fallback=true
+    # Определяем домен панели
+    local panel_domain
+    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' "$dir/nginx.conf" | head -1)
+
+    # Удаляем listen 8443 ssl из nginx.conf
+    if grep -q "listen 8443 ssl" "$dir/nginx.conf" 2>/dev/null; then
+        sed -i '/listen 8443 ssl/d' "$dir/nginx.conf"
+        sed -i '/listen \[::\]:8443 ssl/d' "$dir/nginx.conf"
+
+        # Перезапускаем nginx контейнер
+        (
+            cd "$dir"
+            docker compose down remnawave-nginx >/dev/null 2>&1
+            docker compose up -d remnawave-nginx >/dev/null 2>&1
+        ) &
+        show_spinner "Перезапуск nginx"
     fi
 
-    if [ "$is_builtin_fallback" = true ]; then
-        # Встроенный fallback — только закрываем UFW, nginx конфиг не трогаем
+    # Закрываем порт в UFW
+    if ufw status 2>/dev/null | grep -q "8443.*ALLOW"; then
         ufw delete allow 8443/tcp >/dev/null 2>&1
-        echo
-        print_success "Порт 8443 закрыт в файрволе"
-        echo -e "${DARKGRAY}Fallback остаётся в nginx.conf — откройте порт командой dfc-ri при необходимости${NC}"
-    else
-        # Временная инъекция — удаляем из nginx.conf + закрываем UFW
-        if [ -f /opt/remnawave/nginx.conf ] && grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
-            sed -i '/listen 8443 ssl/d' /opt/remnawave/nginx.conf
-            sed -i '/listen \[::\]:8443 ssl/d' /opt/remnawave/nginx.conf
-
-            (
-                cd /opt/remnawave
-                docker compose restart remnawave-nginx >/dev/null 2>&1
-            ) &
-            show_spinner "Перезапуск nginx"
-        fi
-
-        ufw delete allow 8443/tcp >/dev/null 2>&1
-        echo
-        print_success "Порт 8443 закрыт"
+        ufw reload >/dev/null 2>&1
     fi
 
+    echo
+    print_success "Доступ по 8443 закрыт"
     echo
     read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
 }
