@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.1.0"
+SCRIPT_VERSION="0.1.1"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -1279,43 +1279,383 @@ create_api_token() {
 }
 
 # ═══════════════════════════════════════════════
-# ПОДКЛЮЧИТЬ НОДУ В ПАНЕЛЬ (НА СЕРВЕРЕ С ПАНЕЛЬЮ)
+# ДОБАВИТЬ НОДУ НА СЕРВЕР С ПАНЕЛЬЮ
 # ═══════════════════════════════════════════════
-add_node_to_panel() {
-    # Определяем: панель установлена на этом сервере?
-    local panel_is_here=false
-    if [ -f "/opt/remnawave/docker-compose.yml" ] && [ -f "/opt/remnawave/nginx.conf" ]; then
-        panel_is_here=true
-    fi
+add_node_local() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   🌐 ДОБАВЛЕНИЕ НОДЫ НА СЕРВЕР ПАНЕЛИ${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
 
-    if [ "$panel_is_here" = false ]; then
-        # Панели нет - обычная установка ноды
-        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-            install_packages
-        fi
-        installation_node
+    # Проверяем, что панель установлена
+    if [ ! -f "/opt/remnawave/docker-compose.yml" ] || [ ! -f "/opt/remnawave/nginx.conf" ]; then
+        print_error "Панель Remnawave не установлена на этом сервере"
+        echo -e "${YELLOW}Сначала установите панель через \"Панель + Нода\" или \"Только панель\"${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
         return
     fi
 
-    # ═══════════════════════════════════════════
-    # ПАНЕЛЬ УСТАНОВЛЕНА - добавляем ноду через API
-    # ═══════════════════════════════════════════
-    local domain_url="127.0.0.1:3000"
-
-    # Проверка: нода уже есть на этом сервере?
-    local node_already_here=false
+    # Проверяем, не установлена ли уже нода
     if grep -q "remnanode" /opt/remnawave/docker-compose.yml 2>/dev/null; then
-        node_already_here=true
+        print_error "Нода уже установлена на этом сервере"
+        echo -e "${YELLOW}Используйте \"Подключить ноду\" для добавления ноды на другой сервер${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
     fi
 
+    # Проверяем пакеты
+    if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+        install_packages
+    fi
+
+    local domain_url="127.0.0.1:3000"
+    local target_dir="${DIR_PANEL}"
+
+    # ─── Автоопределение конфигурации из существующей панели ───
     echo
-    echo -e "${GREEN}➕ Добавление ноды в панель${NC}"
+    print_action "Определение конфигурации панели..."
+
+    # Извлекаем домены из nginx.conf
+    local panel_domain sub_domain
+    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | sed -n '1p')
+    sub_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | sed -n '2p')
+
+    if [ -z "$panel_domain" ] || [ -z "$sub_domain" ]; then
+        print_error "Не удалось определить домены из nginx.conf"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    # Извлекаем cookie
+    local COOKIE_NAME COOKIE_VALUE
+    get_cookie_from_nginx
+    if [ $? -ne 0 ]; then
+        print_error "Не удалось извлечь cookie из nginx.conf"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    # Извлекаем API токен
+    local existing_api_token
+    existing_api_token=$(grep -oP 'REMNAWAVE_API_TOKEN=\K\S+' /opt/remnawave/docker-compose.yml | head -1)
+
+    # Определяем домены сертификатов
+    local panel_cert_domain sub_cert_domain
+    # Пытаемся из nginx: формат /ssl/ (full) или /live/ (panel)
+    panel_cert_domain=$(grep -A5 "server_name ${panel_domain};" /opt/remnawave/nginx.conf | grep -oP '/ssl/\K[^/]+' | head -1)
+    sub_cert_domain=$(grep -A5 "server_name ${sub_domain};" /opt/remnawave/nginx.conf | grep -oP '/ssl/\K[^/]+' | head -1)
+    if [ -z "$panel_cert_domain" ]; then
+        panel_cert_domain=$(grep -A5 "server_name ${panel_domain};" /opt/remnawave/nginx.conf | grep -oP 'live/\K[^/]+' | head -1)
+    fi
+    if [ -z "$sub_cert_domain" ]; then
+        sub_cert_domain=$(grep -A5 "server_name ${sub_domain};" /opt/remnawave/nginx.conf | grep -oP 'live/\K[^/]+' | head -1)
+    fi
+    [ -z "$panel_cert_domain" ] && panel_cert_domain="$panel_domain"
+    [ -z "$sub_cert_domain" ] && sub_cert_domain="$sub_domain"
+
+    # Автоопределяем метод сертификации
+    local AUTO_CERT_METHOD
+    AUTO_CERT_METHOD=$(detect_cert_method "$panel_domain")
+
+    print_success "Панель: $panel_domain"
+    print_success "Подписка: $sub_domain"
+    print_success "Метод сертификатов: $([ "$AUTO_CERT_METHOD" = "1" ] && echo "Cloudflare DNS-01" || echo "ACME HTTP-01")"
+
+    # ─── Запрашиваем только selfsteal домен ───
+    echo
+    echo -e "${GREEN}Введите домен для selfsteal ноды.${NC}"
+    echo -e "${DARKGRAY}DNS-запись должна указывать на IP этого сервера.${NC}"
+
+    local SELFSTEAL_DOMAIN
+    prompt_domain_with_retry "Домен selfsteal ноды (например node.example.com):" SELFSTEAL_DOMAIN true || return
+
+    # ─── Запрашиваем имя ноды ───
+    local entity_name
+    while true; do
+        reading_inline "Введите имя для ноды (например, Germany):" entity_name
+        if [[ "$entity_name" =~ ^[a-zA-Z0-9-]+$ ]]; then
+            if [ ${#entity_name} -ge 3 ] && [ ${#entity_name} -le 20 ]; then
+                break
+            else
+                print_error "Имя должно содержать от 3 до 20 символов"
+            fi
+        else
+            print_error "Имя должно содержать только английские буквы, цифры и дефис"
+        fi
+    done
+
+    # ─── Получаем сертификат для selfsteal домена ───
+    local CERT_METHOD="$AUTO_CERT_METHOD"
+    local LETSENCRYPT_EMAIL=""
+
+    declare -A domains_to_check
+    domains_to_check["$SELFSTEAL_DOMAIN"]=1
+
+    if check_if_certificates_needed domains_to_check; then
+        echo
+
+        if [ "$CERT_METHOD" = "1" ]; then
+            if [ ! -f "/etc/letsencrypt/cloudflare.ini" ]; then
+                show_arrow_menu "🔐 МЕТОД ПОЛУЧЕНИЯ СЕРТИФИКАТА ДЛЯ НОДЫ" \
+                    "☁️   Cloudflare DNS-01 (wildcard)" \
+                    "🌐  ACME HTTP-01 (Let's Encrypt)" \
+                    "──────────────────────────────────────" \
+                    "❌  Назад"
+                local cert_choice=$?
+                case $cert_choice in
+                    0) CERT_METHOD=1 ;;
+                    1) CERT_METHOD=2 ;;
+                    *) return ;;
+                esac
+                setup_cloudflare_credentials || return
+            fi
+        fi
+
+        LETSENCRYPT_EMAIL=$(grep -r "email" /etc/letsencrypt/accounts/ 2>/dev/null | grep -oP '"[^@]+@[^"]+' | head -1 | tr -d '"')
+        if [ -z "$LETSENCRYPT_EMAIL" ]; then
+            reading "Email для Let's Encrypt:" LETSENCRYPT_EMAIL
+        else
+            echo -e "${GREEN}✅${NC} Email для сертификата: $LETSENCRYPT_EMAIL"
+        fi
+        echo
+
+        handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"
+    else
+        print_success "Сертификат для $SELFSTEAL_DOMAIN уже существует"
+    fi
+
+    local NODE_CERT_DOMAIN
+    if [ "$CERT_METHOD" = "1" ]; then
+        NODE_CERT_DOMAIN=$(extract_domain "$SELFSTEAL_DOMAIN")
+    else
+        NODE_CERT_DOMAIN="$SELFSTEAL_DOMAIN"
+    fi
+
+    # ─── Остановка сервисов ───
+    echo
+    print_action "Обновление конфигурации..."
+
+    (
+        cd /opt/remnawave
+        docker compose down >/dev/null 2>&1
+    ) &
+    show_spinner "Остановка сервисов"
+
+    mkdir -p /var/www/html
+
+    # ─── Перегенерация docker-compose.yml (full: с нодой) ───
+    (generate_docker_compose_full "$panel_cert_domain" "$sub_cert_domain" "$NODE_CERT_DOMAIN") &
+    show_spinner "Обновление docker-compose.yml"
+
+    # Восстанавливаем API токен
+    if [ -n "$existing_api_token" ] && [ "$existing_api_token" != "\$api_token" ]; then
+        sed -i "s|REMNAWAVE_API_TOKEN=\$api_token|REMNAWAVE_API_TOKEN=$existing_api_token|" /opt/remnawave/docker-compose.yml
+    fi
+
+    # ─── Перегенерация nginx.conf (full: с selfsteal) ───
+    (generate_nginx_conf_full "$panel_domain" "$sub_domain" "$SELFSTEAL_DOMAIN" \
+        "$panel_cert_domain" "$sub_cert_domain" "$NODE_CERT_DOMAIN" \
+        "$COOKIE_NAME" "$COOKIE_VALUE") &
+    show_spinner "Обновление nginx.conf"
+
+    # ─── UFW для ноды ───
+    (
+        remnawave_network_subnet=172.30.0.0/16
+        ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
+    ) &
+    show_spinner "Настройка файрвола"
+
+    # ─── Запуск сервисов ───
+    echo
+    print_action "Запуск сервисов..."
+
+    (
+        cd /opt/remnawave
+        docker compose up -d >/dev/null 2>&1
+    ) &
+    show_spinner "Запуск Docker контейнеров"
+
+    show_spinner_timer 20 "Ожидание запуска Remnawave" "Запуск Remnawave"
+
+    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 120
+    if [ $? -ne 0 ]; then
+        print_error "API не отвечает. Проверьте: docker compose -f /opt/remnawave/docker-compose.yml logs"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    # ─── Авторизация в панели ───
+    get_panel_token
+    if [ $? -ne 0 ]; then
+        print_error "Не удалось получить токен авторизации"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+    local token
+    token=$(cat "${DIR_REMNAWAVE}/token")
+
+    # ─── Публичный ключ → SECRET_KEY ───
+    print_action "Получение публичного ключа панели..."
+    get_public_key "$domain_url" "$token" "$target_dir"
+    print_success "Установка публичного ключа"
+
+    # ─── Проверка уникальности домена/имени в API ───
+    check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"
+    if [ $? -ne 0 ]; then
+        print_error "Домен $SELFSTEAL_DOMAIN уже используется в панели"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    local response
+    response=$(make_api_request "GET" "$domain_url/api/config-profiles" "$token")
+    if echo "$response" | jq -e ".response.configProfiles[] | select(.name == \"$entity_name\")" >/dev/null 2>&1; then
+        print_error "Имя конфигурационного профиля '$entity_name' уже используется"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    # ─── API: регистрация ноды ───
+    echo
+    print_action "Генерация REALITY ключей..."
+    local private_key
+    private_key=$(generate_xray_keys "$domain_url" "$token")
+    if [ -z "$private_key" ]; then
+        print_error "Не удалось сгенерировать ключи"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+    print_success "Ключи сгенерированы"
+
+    print_action "Создание конфиг-профиля ($entity_name)..."
+    local config_result config_profile_uuid inbound_uuid
+    config_result=$(create_config_profile "$domain_url" "$token" "$entity_name" "$SELFSTEAL_DOMAIN" "$private_key" "$entity_name")
+    if [ $? -ne 0 ]; then
+        print_error "Не удалось создать конфигурационный профиль"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+    read config_profile_uuid inbound_uuid <<< "$config_result"
+    print_success "Конфигурационный профиль: $entity_name"
+
+    print_action "Создание ноды ($entity_name)..."
+    create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "172.30.0.1" "$entity_name"
+    if [ $? -eq 0 ]; then
+        print_success "Нода создана"
+    else
+        print_error "Не удалось создать ноду"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    print_action "Создание хоста ($SELFSTEAL_DOMAIN)..."
+    create_host "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "$entity_name" "$SELFSTEAL_DOMAIN"
+    print_success "Хост зарегистрирован"
+
+    print_action "Настройка сквадов..."
+    local squad_uuids
+    squad_uuids=$(get_default_squad "$domain_url" "$token")
+    if [ -n "$squad_uuids" ]; then
+        while IFS= read -r squad_uuid; do
+            [ -z "$squad_uuid" ] && continue
+            update_squad "$domain_url" "$token" "$squad_uuid" "$inbound_uuid"
+        done <<< "$squad_uuids"
+        print_success "Сквады обновлены"
+    else
+        echo -e "${YELLOW}⚠️  Сквады не найдены (будут настроены при создании пользователей)${NC}"
+    fi
+
+    # ─── Финальный перезапуск (с обновлённым SECRET_KEY) ───
+    print_action "Перезапуск сервисов..."
+    (
+        cd /opt/remnawave
+        docker compose down >/dev/null 2>&1
+        docker compose up -d >/dev/null 2>&1
+    ) &
+    show_spinner "Запуск контейнеров"
+
+    randomhtml
+
+    show_spinner_timer 10 "Ожидание запуска сервисов" "Запуск сервисов"
+
+    # ─── Итог ───
+    clear
+    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "   ${GREEN}🎉 НОДА ДОБАВЛЕНА НА СЕРВЕР ПАНЕЛИ!${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+    echo -e "${WHITE}Панель:${NC}       https://$panel_domain"
+    echo -e "${WHITE}Подписка:${NC}     https://$sub_domain"
+    echo -e "${WHITE}SelfSteal:${NC}    https://$SELFSTEAL_DOMAIN"
+    echo
+    echo -e "${GREEN}✅ Нода настроена и подключена к панели${NC}"
+    echo -e "${GREEN}✅ Конфигурация nginx обновлена${NC}"
+    echo -e "${GREEN}✅ Docker Compose обновлён${NC}"
+    echo
+    echo -e "${DARKGRAY}Проверьте подключение ноды в панели Remnawave${NC}"
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
+}
+
+# ═══════════════════════════════════════════════
+# ПОДКЛЮЧИТЬ НОДУ (РЕГИСТРАЦИЯ В ПАНЕЛИ)
+# ═══════════════════════════════════════════════
+add_node_to_panel() {
+    # Проверяем, что панель установлена на этом сервере
+    if [ ! -f "/opt/remnawave/docker-compose.yml" ] || [ ! -f "/opt/remnawave/nginx.conf" ]; then
+        print_error "Панель Remnawave не найдена на этом сервере"
+        echo -e "${YELLOW}Эта функция регистрирует ноду на удалённом сервере в панели.${NC}"
+        echo -e "${YELLOW}Панель должна быть установлена на этом сервере.${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
+    fi
+
+    local domain_url="127.0.0.1:3000"
+
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   ➕ ПОДКЛЮЧИТЬ НОДУ${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+    echo -e "${DARKGRAY}Регистрация ноды на удалённом сервере в панели.${NC}"
+    echo -e "${DARKGRAY}После регистрации установите ноду на целевом сервере${NC}"
+    echo -e "${DARKGRAY}через \"Только нода\".${NC}"
 
     # Получаем токен
+    echo
     get_panel_token
     if [ $? -ne 0 ]; then
         print_error "Не удалось получить токен"
-        return 1
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return
     fi
     local token
     token=$(cat "${DIR_REMNAWAVE}/token")
@@ -1331,26 +1671,7 @@ add_node_to_panel() {
         echo -e "${YELLOW}Пожалуйста, используйте другой домен${NC}"
     done
 
-    # Определяем: домен ноды указывает на этот сервер?
-    local install_locally=false
-    local server_ip
-    server_ip=$(get_server_ip)
-    local node_ip
-    node_ip=$(dig +short "$SELFSTEAL_DOMAIN" A 2>/dev/null | head -1)
-
-    if [ "$node_ip" = "$server_ip" ] && [ -n "$server_ip" ]; then
-        install_locally=true
-    fi
-
-    # Если нода уже установлена локально, не можем ставить вторую
-    if [ "$install_locally" = true ] && [ "$node_already_here" = true ]; then
-        print_error "На этом сервере уже установлена нода"
-        print_error "Для добавления ноды на другой сервер укажите домен, направленный на тот сервер"
-        sleep 2
-        return
-    fi
-
-    # Запрашиваем имя ноды (имя конфигурационного профиля)
+    # Запрашиваем имя ноды
     local entity_name
     while true; do
         reading_inline "Введите имя для вашей ноды (например, Germany):" entity_name
@@ -1372,140 +1693,8 @@ add_node_to_panel() {
         fi
     done
 
-    # ─── Если ставим локально - подготовка конфигов ───
-    if [ "$install_locally" = true ]; then
-        mkdir -p /var/www/html
-
-        # Извлекаем текущую конфигурацию
-        local panel_domain sub_domain
-        panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | sed -n '1p')
-        sub_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | sed -n '2p')
-
-        if [ -z "$panel_domain" ] || [ -z "$sub_domain" ]; then
-            print_error "Не удалось определить домены из nginx.conf"
-            return
-        fi
-
-        get_cookie_from_nginx
-        if [ $? -ne 0 ]; then
-            print_error "Не удалось извлечь cookie из nginx.conf"
-            return
-        fi
-
-        local existing_api_token
-        existing_api_token=$(grep -oP 'REMNAWAVE_API_TOKEN=\K\S+' /opt/remnawave/docker-compose.yml | head -1)
-
-        local panel_cert_domain sub_cert_domain
-        panel_cert_domain=$(grep -A5 "server_name ${panel_domain};" /opt/remnawave/nginx.conf | grep -oP 'live/\K[^/]+' | head -1)
-        sub_cert_domain=$(grep -A5 "server_name ${sub_domain};" /opt/remnawave/nginx.conf | grep -oP 'live/\K[^/]+' | head -1)
-        [ -z "$panel_cert_domain" ] && panel_cert_domain="$panel_domain"
-        [ -z "$sub_cert_domain" ] && sub_cert_domain="$sub_domain"
-
-        # Сертификат для selfsteal домена
-        echo
-        show_arrow_menu "🔐 МЕТОД ПОЛУЧЕНИЯ СЕРТИФИКАТА ДЛЯ НОДЫ" \
-            "☁️   Cloudflare DNS-01 (wildcard)" \
-            "🌐  ACME HTTP-01 (Let's Encrypt)" \
-            "──────────────────────────────────────" \
-            "❌  Назад"
-        local cert_choice=$?
-
-        local CERT_METHOD
-        case $cert_choice in
-            0) CERT_METHOD=1 ;;
-            1) CERT_METHOD=2 ;;
-            2) return ;;
-            3) return ;;
-        esac
-
-        reading "Email для Let's Encrypt:" LETSENCRYPT_EMAIL
-        echo
-
-        if [ "$CERT_METHOD" -eq 1 ]; then
-            if [ ! -f "/etc/letsencrypt/cloudflare.ini" ]; then
-                setup_cloudflare_credentials || return
-            fi
-        fi
-
-        declare -A domains_to_check
-        domains_to_check["$SELFSTEAL_DOMAIN"]=1
-        handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"
-
-        local NODE_CERT_DOMAIN
-        if [ "$CERT_METHOD" -eq 1 ]; then
-            NODE_CERT_DOMAIN=$(extract_domain "$SELFSTEAL_DOMAIN")
-        else
-            NODE_CERT_DOMAIN="$SELFSTEAL_DOMAIN"
-        fi
-
-        # Остановка сервисов
-        echo
-        print_action "Обновление конфигурации..."
-
-        (
-            cd /opt/remnawave
-            docker compose down >/dev/null 2>&1
-        ) &
-        show_spinner "Остановка сервисов"
-
-        # Перегенерация docker-compose.yml
-        (generate_docker_compose_full "$panel_cert_domain" "$sub_cert_domain" "$NODE_CERT_DOMAIN") &
-        show_spinner "Обновление docker-compose.yml"
-
-        # Восстанавливаем API токен
-        if [ -n "$existing_api_token" ] && [ "$existing_api_token" != "\$api_token" ]; then
-            sed -i "s|REMNAWAVE_API_TOKEN=\$api_token|REMNAWAVE_API_TOKEN=$existing_api_token|" /opt/remnawave/docker-compose.yml
-        fi
-
-        # Перегенерация nginx.conf
-        (generate_nginx_conf_full "$panel_domain" "$sub_domain" "$SELFSTEAL_DOMAIN" \
-            "$panel_cert_domain" "$sub_cert_domain" "$NODE_CERT_DOMAIN" \
-            "$COOKIE_NAME" "$COOKIE_VALUE") &
-        show_spinner "Обновление nginx.conf"
-
-        # UFW для ноды
-        (
-            remnawave_network_subnet=172.30.0.0/16
-            ufw allow from "$remnawave_network_subnet" to any port 2222 proto tcp >/dev/null 2>&1
-        ) &
-        show_spinner "Настройка файрвола"
-
-        # Запуск
-        echo
-        print_action "Запуск сервисов..."
-
-        (
-            cd /opt/remnawave
-            docker compose up -d >/dev/null 2>&1
-        ) &
-        show_spinner "Запуск Docker контейнеров"
-
-        show_spinner_timer 20 "Ожидание запуска Remnawave" "Запуск Remnawave"
-
-        local target_dir="${DIR_PANEL}"
-
-        show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 120
-        if [ $? -ne 0 ]; then
-            print_error "API не отвечает. Проверьте: docker compose -f /opt/remnawave/docker-compose.yml logs"
-            return
-        fi
-
-        # Повторно получаем токен (после перезапуска)
-        get_panel_token
-        if [ $? -ne 0 ]; then
-            print_error "Не удалось получить токен авторизации"
-            return
-        fi
-        token=$(cat "${DIR_REMNAWAVE}/token")
-
-        # Публичный ключ → SECRET_KEY для ноды
-        print_action "Получение публичного ключа панели..."
-        get_public_key "$domain_url" "$token" "$target_dir"
-        print_success "Установка публичного ключа"
-    fi
-
-    echo
     # ─── API: регистрация ноды ───
+    echo
     print_action "Генерация REALITY ключей..."
     local private_key
     private_key=$(generate_xray_keys "$domain_url" "$token")
@@ -1525,14 +1714,8 @@ add_node_to_panel() {
     read config_profile_uuid inbound_uuid <<< "$config_result"
     print_success "Конфигурационный профиль: $entity_name"
 
-    # Адрес ноды: 172.30.0.1 если локально, иначе домен
-    local node_address="$SELFSTEAL_DOMAIN"
-    if [ "$install_locally" = true ]; then
-        node_address="172.30.0.1"
-    fi
-
     print_action "Создание ноды ($entity_name)..."
-    create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "$node_address" "$entity_name"
+    create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "$SELFSTEAL_DOMAIN" "$entity_name"
     if [ $? -eq 0 ]; then
         print_success "Нода создана"
     else
@@ -1558,50 +1741,19 @@ add_node_to_panel() {
     fi
 
     # ─── Финал ───
-    if [ "$install_locally" = true ]; then
-        # Перезапуск с обновлённым SECRET_KEY
-        print_action "Перезапуск сервисов..."
-        (
-            cd /opt/remnawave
-            docker compose down >/dev/null 2>&1
-            docker compose up -d >/dev/null 2>&1
-        ) &
-        show_spinner "Запуск контейнеров"
-
-        randomhtml
-
-        show_spinner_timer 10 "Ожидание запуска сервисов" "Запуск сервисов"
-
-        clear
-        echo
-        echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "   ${GREEN}🎉 НОДА ДОБАВЛЕНА НА СЕРВЕР ПАНЕЛИ!${NC}"
-        echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo
-        echo -e "${WHITE}Панель:${NC}       https://$panel_domain"
-        echo -e "${WHITE}Подписка:${NC}     https://$sub_domain"
-        echo -e "${WHITE}SelfSteal:${NC}    https://$SELFSTEAL_DOMAIN"
-        echo
-        echo -e "${GREEN}✅ Нода настроена и подключена к панели${NC}"
-        echo -e "${GREEN}✅ Конфигурация nginx обновлена${NC}"
-        echo
-        echo -e "${DARKGRAY}Проверьте подключение ноды в панели Remnawave${NC}"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-        echo
-    else
-        echo
-        print_success "Нода успешно добавлена в панель!"
-        echo
-        echo -e "${RED}─────────────────────────────────────────────────${NC}"
-        echo -e "${YELLOW}Для установки ноды выполните следующие шаги:${NC}"
-        echo -e "${YELLOW}1. Запустите этот скрипт на сервере, где будет установлена нода${NC}"
-        echo -e "${YELLOW}2. Выберите 'Установить компоненты' → 'Только нода'${NC}"
-        echo -e "${RED}─────────────────────────────────────────────────${NC}"
-        echo
-        read -p "Нажмите Enter для возврата в меню..."
-    fi
+    echo
+    print_success "Нода успешно зарегистрирована в панели!"
+    echo
+    echo -e "${RED}─────────────────────────────────────────────────${NC}"
+    echo -e "${YELLOW}Для завершения установки ноды:${NC}"
+    echo -e "${WHITE}1. Запустите этот скрипт на сервере, где будет установлена нода${NC}"
+    echo -e "${WHITE}2. Выберите \"Установить компоненты\" → \"Только нода\"${NC}"
+    echo -e "${RED}─────────────────────────────────────────────────${NC}"
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
 }
+
 
 # ═══════════════════════════════════════════════
 # ШАБЛОНЫ SELFSTEAL
@@ -4324,8 +4476,9 @@ manage_reinstall() {
         "📦  Панель + Нода (один сервер)" \
         "──────────────────────────────────────" \
         "🖥️   Только панель" \
+        "🌐  Добавить ноду на сервер с панелью" \
         "🌐  Только нода" \
-        "➕  Подключить ноду в панель (на сервере с панелью)" \
+        "➕  Подключить ноду" \
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
@@ -4334,10 +4487,11 @@ manage_reinstall() {
         0) installation_full ;;
         1) continue ;;
         2) installation_panel ;;
-        3) installation_node ;;
-        4) add_node_to_panel ;;
-        5) continue ;;
-        6) return ;;
+        3) add_node_local ;;
+        4) installation_node ;;
+        5) add_node_to_panel ;;
+        6) continue ;;
+        7) return ;;
     esac
 }
 
@@ -4942,8 +5096,9 @@ main_menu() {
                         "📦  Панель + Нода (один сервер)" \
                         "──────────────────────────────────────" \
                         "🖥️   Только панель" \
+                        "🌐  Добавить ноду на сервер с панелью" \
                         "🌐  Только нода" \
-                        "➕  Подключить ноду в панель (на сервере с панелью)" \
+                        "➕  Подключить ноду" \
                         "──────────────────────────────────────" \
                         "❌  Назад"
                     local install_choice=$?
@@ -4962,16 +5117,19 @@ main_menu() {
                             installation_panel
                             ;;
                         3)
+                            add_node_local
+                            ;;
+                        4)
                             if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                                 install_packages
                             fi
                             installation_node
                             ;;
-                        4)
+                        5)
                             add_node_to_panel
                             ;;
-                        5) continue ;;
                         6) continue ;;
+                        7) continue ;;
                     esac
                     ;;
                 1) manage_reinstall ;;
@@ -5004,8 +5162,9 @@ main_menu() {
                         "📦  Панель + Нода (один сервер)" \
                         "──────────────────────────────────────" \
                         "🖥️   Только панель" \
+                        "🌐  Добавить ноду на сервер с панелью" \
                         "🌐  Только нода" \
-                        "➕  Подключить ноду в панель (на сервере с панелью)" \
+                        "➕  Подключить ноду" \
                         "──────────────────────────────────────" \
                         "❌  Назад"
                     local install_choice=$?
@@ -5020,14 +5179,17 @@ main_menu() {
                             installation_panel
                             ;;
                         3)
+                            add_node_local
+                            ;;
+                        4)
                             install_packages
                             installation_node
                             ;;
-                        4)
+                        5)
                             add_node_to_panel
                             ;;
-                        5) continue ;;
                         6) continue ;;
+                        7) continue ;;
                     esac
                     ;;
                 1) continue ;;
