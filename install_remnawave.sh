@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.2"
+SCRIPT_VERSION="0.2.3"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -4538,6 +4538,274 @@ manage_domains() {
 }
 
 # ═══════════════════════════════════════════════
+# БАЗА ДАННЫХ: ДИАГНОСТИКА И РЕМОНТ НОД
+# ═══════════════════════════════════════════════
+db_repair_nodes() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   🔧 ДИАГНОСТИКА И РЕМОНТ НОД${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем что контейнер БД запущен
+    if ! docker ps --filter "name=remnawave-db" --format "{{.Names}}" 2>/dev/null | grep -q "remnawave-db"; then
+        print_error "Контейнер remnawave-db не запущен"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        echo
+        return 1
+    fi
+
+    local psql_cmd="docker exec remnawave-db psql -U postgres -d postgres -t -A"
+
+    # ─── Сбор информации о нодах ───
+    echo -e "${WHITE}Анализ состояния нод...${NC}"
+    echo
+
+    local nodes_data
+    nodes_data=$($psql_cmd -c "
+        SELECT n.uuid, n.name, n.is_disabled, n.active_config_profile_uuid,
+               COALESCE(cp.name, '<нет профиля>') as profile_name
+        FROM nodes n
+        LEFT JOIN config_profiles cp ON cp.uuid = n.active_config_profile_uuid
+        ORDER BY n.name;
+    " 2>/dev/null)
+
+    if [ -z "$nodes_data" ]; then
+        echo -e "${YELLOW}⚠️  Ноды не найдены в базе данных${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        echo
+        return 0
+    fi
+
+    local total_nodes=0
+    local broken_nodes=0
+    local disabled_nodes=0
+    local broken_list=""
+
+    while IFS='|' read -r node_uuid node_name is_disabled profile_uuid profile_name; do
+        [ -z "$node_uuid" ] && continue
+        ((total_nodes++))
+
+        local status_icon="✅"
+        local status_text="${GREEN}OK${NC}"
+        local node_broken=false
+
+        # Проверка 1: Нода отключена
+        if [ "$is_disabled" = "t" ]; then
+            ((disabled_nodes++))
+            status_icon="⏸️"
+            status_text="${YELLOW}Отключена${NC}"
+        fi
+
+        # Проверка 2: Нет профиля
+        if [ -z "$profile_uuid" ] || [ "$profile_uuid" = "" ]; then
+            status_icon="❌"
+            status_text="${RED}Нет профиля${NC}"
+            node_broken=true
+        else
+            # Проверка 3: Есть профиль, но нет привязки к инбаунду
+            local binding_count
+            binding_count=$($psql_cmd -c "
+                SELECT COUNT(*) FROM config_profile_inbounds_to_nodes cpn
+                JOIN config_profile_inbounds cpi ON cpi.uuid = cpn.config_profile_inbound_uuid
+                WHERE cpn.node_uuid = '$node_uuid'
+                AND cpi.config_profile_uuid = '$profile_uuid';
+            " 2>/dev/null | tr -d ' ')
+
+            if [ "$binding_count" = "0" ]; then
+                status_icon="🔗"
+                status_text="${RED}Нет привязки к инбаунду${NC}"
+                node_broken=true
+            fi
+        fi
+
+        echo -e "  ${status_icon}  ${WHITE}${node_name}${NC} — $status_text"
+        if [ -n "$profile_name" ] && [ "$profile_name" != "<нет профиля>" ]; then
+            echo -e "      ${DARKGRAY}Профиль: ${profile_name}${NC}"
+        fi
+
+        if [ "$node_broken" = true ]; then
+            ((broken_nodes++))
+            broken_list="${broken_list}${node_uuid}|${node_name}|${profile_uuid}\n"
+        fi
+
+    done <<< "$nodes_data"
+
+    echo
+    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+    echo -e "${WHITE}Всего нод:${NC}     $total_nodes"
+    echo -e "${WHITE}Отключено:${NC}     $disabled_nodes"
+    echo -e "${WHITE}С проблемами:${NC}  $broken_nodes"
+    echo
+
+    if [ "$broken_nodes" -eq 0 ]; then
+        print_success "Все ноды в порядке"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        echo
+        return 0
+    fi
+
+    # ─── Предлагаем починить ───
+    echo -e "${YELLOW}⚠️  Обнаружены проблемные ноды${NC}"
+    echo -e "${WHITE}Скрипт попытается восстановить привязки инбаундов${NC}"
+    echo -e "${WHITE}и включить отключённые ноды.${NC}"
+    echo
+
+    if ! confirm_action; then
+        print_error "Операция отменена"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        echo
+        return 0
+    fi
+
+    echo
+    local fixed=0
+
+    while IFS='|' read -r node_uuid node_name profile_uuid; do
+        [ -z "$node_uuid" ] && continue
+
+        echo -e "${WHITE}Ремонт ноды: ${GREEN}${node_name}${NC}"
+
+        # Случай 1: Нода без профиля — ищем подходящий профиль
+        if [ -z "$profile_uuid" ] || [ "$profile_uuid" = "" ]; then
+            # Пробуем найти профиль с таким же именем как нода
+            local matching_profile
+            matching_profile=$($psql_cmd -c "
+                SELECT uuid FROM config_profiles WHERE name = '$node_name' LIMIT 1;
+            " 2>/dev/null | tr -d ' ')
+
+            if [ -z "$matching_profile" ]; then
+                # Берём любой доступный профиль
+                matching_profile=$($psql_cmd -c "
+                    SELECT uuid FROM config_profiles LIMIT 1;
+                " 2>/dev/null | tr -d ' ')
+            fi
+
+            if [ -z "$matching_profile" ]; then
+                echo -e "  ${RED}✖${NC} Нет доступных конфиг-профилей для назначения"
+                continue
+            fi
+
+            profile_uuid="$matching_profile"
+            # Назначаем профиль ноде
+            $psql_cmd -c "
+                UPDATE nodes SET active_config_profile_uuid = '$profile_uuid'
+                WHERE uuid = '$node_uuid';
+            " >/dev/null 2>&1
+
+            local assigned_name
+            assigned_name=$($psql_cmd -c "SELECT name FROM config_profiles WHERE uuid = '$profile_uuid';" 2>/dev/null | tr -d ' ')
+            echo -e "  ${GREEN}✅${NC} Назначен профиль: $assigned_name"
+        fi
+
+        # Случай 2: Ищем инбаунды профиля и создаём привязки
+        local inbound_uuids
+        inbound_uuids=$($psql_cmd -c "
+            SELECT uuid FROM config_profile_inbounds
+            WHERE config_profile_uuid = '$profile_uuid';
+        " 2>/dev/null)
+
+        if [ -z "$inbound_uuids" ]; then
+            echo -e "  ${RED}✖${NC} У профиля нет инбаундов"
+            continue
+        fi
+
+        local bindings_created=0
+        while IFS= read -r inbound_uuid; do
+            inbound_uuid=$(echo "$inbound_uuid" | tr -d ' ')
+            [ -z "$inbound_uuid" ] && continue
+
+            # Проверяем, нет ли уже привязки
+            local existing
+            existing=$($psql_cmd -c "
+                SELECT COUNT(*) FROM config_profile_inbounds_to_nodes
+                WHERE config_profile_inbound_uuid = '$inbound_uuid'
+                AND node_uuid = '$node_uuid';
+            " 2>/dev/null | tr -d ' ')
+
+            if [ "$existing" = "0" ]; then
+                $psql_cmd -c "
+                    INSERT INTO config_profile_inbounds_to_nodes
+                    (config_profile_inbound_uuid, node_uuid)
+                    VALUES ('$inbound_uuid', '$node_uuid');
+                " >/dev/null 2>&1
+
+                if [ $? -eq 0 ]; then
+                    ((bindings_created++))
+                    local tag_name
+                    tag_name=$($psql_cmd -c "SELECT tag FROM config_profile_inbounds WHERE uuid = '$inbound_uuid';" 2>/dev/null | tr -d ' ')
+                    echo -e "  ${GREEN}✅${NC} Привязан инбаунд: $tag_name"
+                else
+                    echo -e "  ${RED}✖${NC} Не удалось привязать инбаунд $inbound_uuid"
+                fi
+            fi
+        done <<< "$inbound_uuids"
+
+        # Включаем ноду
+        $psql_cmd -c "
+            UPDATE nodes SET is_disabled = false
+            WHERE uuid = '$node_uuid' AND is_disabled = true;
+        " >/dev/null 2>&1
+
+        local was_enabled=$($psql_cmd -c "SELECT NOT is_disabled FROM nodes WHERE uuid = '$node_uuid';" 2>/dev/null | tr -d ' ')
+        if [ "$was_enabled" = "t" ]; then
+            echo -e "  ${GREEN}✅${NC} Нода включена"
+        fi
+
+        ((fixed++))
+        echo
+
+    done < <(echo -e "$broken_list")
+
+    if [ "$fixed" -gt 0 ]; then
+        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+        echo -e "${WHITE}Перезапуск панели для применения изменений...${NC}"
+        echo
+
+        local panel_dir
+        panel_dir=$(detect_remnawave_path 2>/dev/null || echo "/opt/remnawave")
+
+        (
+            cd "$panel_dir"
+            docker compose restart remnawave >/dev/null 2>&1
+        ) &
+        show_spinner "Перезапуск панели"
+
+        show_spinner_timer 15 "Ожидание запуска панели" "Запуск панели"
+
+        # Проверяем, работает ли нода на 443
+        local has_node
+        has_node=$(grep -q "remnanode" "$panel_dir/docker-compose.yml" 2>/dev/null && echo "yes" || echo "no")
+        if [ "$has_node" = "yes" ]; then
+            (
+                cd "$panel_dir"
+                docker compose restart remnanode >/dev/null 2>&1
+            ) &
+            show_spinner "Перезапуск ноды"
+
+            show_spinner_timer 15 "Ожидание подключения ноды" "Подключение ноды"
+
+            if ss -tuln 2>/dev/null | grep -q ':443 '; then
+                print_success "Порт 443 активен — xray работает"
+            else
+                echo -e "${YELLOW}⚠️  Порт 443 не активен — может потребоваться время${NC}"
+            fi
+        fi
+
+        echo
+        print_success "Ремонт завершён. Исправлено нод: $fixed"
+    fi
+
+    echo
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    echo
+}
+
+# ═══════════════════════════════════════════════
 # БАЗА ДАННЫХ: ГЛАВНОЕ МЕНЮ
 # ═══════════════════════════════════════════════
 manage_database() {
@@ -4550,6 +4818,7 @@ manage_database() {
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
         "💾  Сохранить базу данных" \
         "📥  Загрузить базу данных" \
+        "🔧  Диагностика и ремонт нод" \
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
@@ -4557,8 +4826,9 @@ manage_database() {
     case $choice in
         0) db_backup ;;
         1) db_restore ;;
-        2) continue ;;
-        3) return ;;
+        2) db_repair_nodes ;;
+        3) continue ;;
+        4) return ;;
     esac
 }
 
