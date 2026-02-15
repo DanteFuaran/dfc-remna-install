@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.3.1"
+SCRIPT_VERSION="0.3.2"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -2729,6 +2729,9 @@ installation_full() {
         trap - INT TERM
     fi
 
+    # Автоматически включаем доступ по 8443 для panel+node
+    auto_enable_panel_access_8443 "$PANEL_DOMAIN" "$COOKIE_NAME" "$COOKIE_VALUE"
+
     # Итог
     clear
     tput civis 2>/dev/null
@@ -2737,14 +2740,11 @@ installation_full() {
     echo -e "                   ${GREEN}🎉 УСТАНОВКА ЗАВЕРШЕНА!${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo
-    echo -e "${YELLOW}⚠️  ВАЖНО: Панель временно недоступна через порт 443!${NC}"
-    echo -e "${WHITE}   XRAY (selfsteal) занимает порт 443 для работы VPN.${NC}"
+    echo -e "${YELLOW}⚠️  ВАЖНО: XRAY (selfsteal) занимает порт 443 для работы VPN.${NC}"
+    echo -e "${WHITE}   Панель доступна через порт 8443 (автоматически включен).${NC}"
     echo
-    echo -e "${YELLOW}🔗 Для доступа к панели включите порт 8443:${NC}"
-    echo -e "${GREEN}   dfc-remna-install → Управление панелью → Открыть доступ по 8443${NC}"
-    echo
-    echo -e "${DARKGRAY}После включения доступ будет по ссылке:${NC}"
-    echo -e "${DARKGRAY}https://${PANEL_DOMAIN}:8443/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+    echo -e "${YELLOW}🔗 Ссылка для входа в панель:${NC}"
+    echo -e "${WHITE}https://${PANEL_DOMAIN}:8443/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     echo
     echo -e "${YELLOW}📋 Команды запуска меню управления:${NC}"
     echo -e "${GREEN}dfc-remna-install${NC} или ${GREEN}dfc-ri${NC}"
@@ -3417,6 +3417,16 @@ installation_node_local() {
         echo
     fi
 
+    # Автоматически включаем доступ по 8443 (нода занимает 443)
+    local local_cookie_name="$COOKIE_NAME"
+    local local_cookie_value="$COOKIE_VALUE"
+    if [ -z "$local_cookie_name" ] || [ -z "$local_cookie_value" ]; then
+        get_cookie_from_nginx
+        local_cookie_name="$COOKIE_NAME"
+        local_cookie_value="$COOKIE_VALUE"
+    fi
+    auto_enable_panel_access_8443 "$panel_domain" "$local_cookie_name" "$local_cookie_value"
+
     # ─── Итог ───
     clear
     echo
@@ -3424,7 +3434,7 @@ installation_node_local() {
     echo -e "    ${GREEN}🎉 Нода добавлена на сервер панели${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
-    echo -e "${WHITE}Панель:${NC}       https://$panel_domain"
+    echo -e "${WHITE}Панель:${NC}       https://$panel_domain:8443"
     echo -e "${WHITE}Подписка:${NC}     https://$sub_domain"
     echo -e "${WHITE}SelfSteal:${NC}    https://$SELFSTEAL_DOMAIN"
     echo
@@ -3433,6 +3443,7 @@ installation_node_local() {
     echo -e "${GREEN}✅ Нода зарегистрирована в панели${NC}"
     echo -e "${GREEN}✅ Docker Compose обновлён (nginx + remnanode)${NC}"
     echo -e "${GREEN}✅ Nginx перенастроен (unix socket + proxy_protocol)${NC}"
+    echo -e "${GREEN}✅ Доступ к панели по порту 8443 автоматически включён${NC}"
     if [ "$verify_ok" = true ]; then
         echo -e "${GREEN}✅ Порт 443 активен — xray (remnanode) работает${NC}"
     else
@@ -3440,11 +3451,7 @@ installation_node_local() {
     fi
     echo
     echo -e "${DARKGRAY}Архитектура: Xray (порт 443) → unix socket → Nginx → панель${NC}"
-    echo
-    echo -e "${YELLOW}⚠️  ВАЖНО: Панель временно недоступна через порт 443!${NC}"
-    echo -e "${WHITE}   XRAY (selfsteal) теперь занимает порт 443.${NC}"
-    echo -e "${WHITE}   Для доступа к панели включите порт 8443:${NC}"
-    echo -e "${GREEN}   dfc-remna-install → Управление панелью → Открыть доступ по 8443${NC}"
+    echo -e "${DARKGRAY}Панель доступна по порту 8443 (XRAY занимает 443)${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -4596,274 +4603,6 @@ manage_domains() {
 }
 
 # ═══════════════════════════════════════════════
-# БАЗА ДАННЫХ: ДИАГНОСТИКА И РЕМОНТ НОД
-# ═══════════════════════════════════════════════
-db_repair_nodes() {
-    clear
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   🔧 ДИАГНОСТИКА И РЕМОНТ НОД${NC}"
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo
-
-    # Проверяем что контейнер БД запущен
-    if ! docker ps --filter "name=remnawave-db" --format "{{.Names}}" 2>/dev/null | grep -q "remnawave-db"; then
-        print_error "Контейнер remnawave-db не запущен"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
-        echo
-        return 1
-    fi
-
-    local psql_cmd="docker exec remnawave-db psql -U postgres -d postgres -t -A"
-
-    # ─── Сбор информации о нодах ───
-    echo -e "${WHITE}Анализ состояния нод...${NC}"
-    echo
-
-    local nodes_data
-    nodes_data=$($psql_cmd -c "
-        SELECT n.uuid, n.name, n.is_disabled, n.active_config_profile_uuid,
-               COALESCE(cp.name, '<нет профиля>') as profile_name
-        FROM nodes n
-        LEFT JOIN config_profiles cp ON cp.uuid = n.active_config_profile_uuid
-        ORDER BY n.name;
-    " 2>/dev/null)
-
-    if [ -z "$nodes_data" ]; then
-        echo -e "${YELLOW}⚠️  Ноды не найдены в базе данных${NC}"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
-        echo
-        return 0
-    fi
-
-    local total_nodes=0
-    local broken_nodes=0
-    local disabled_nodes=0
-    local broken_list=""
-
-    while IFS='|' read -r node_uuid node_name is_disabled profile_uuid profile_name; do
-        [ -z "$node_uuid" ] && continue
-        ((total_nodes++))
-
-        local status_icon="✅"
-        local status_text="${GREEN}OK${NC}"
-        local node_broken=false
-
-        # Проверка 1: Нода отключена
-        if [ "$is_disabled" = "t" ]; then
-            ((disabled_nodes++))
-            status_icon="⏸️"
-            status_text="${YELLOW}Отключена${NC}"
-        fi
-
-        # Проверка 2: Нет профиля
-        if [ -z "$profile_uuid" ] || [ "$profile_uuid" = "" ]; then
-            status_icon="❌"
-            status_text="${RED}Нет профиля${NC}"
-            node_broken=true
-        else
-            # Проверка 3: Есть профиль, но нет привязки к инбаунду
-            local binding_count
-            binding_count=$($psql_cmd -c "
-                SELECT COUNT(*) FROM config_profile_inbounds_to_nodes cpn
-                JOIN config_profile_inbounds cpi ON cpi.uuid = cpn.config_profile_inbound_uuid
-                WHERE cpn.node_uuid = '$node_uuid'
-                AND cpi.config_profile_uuid = '$profile_uuid';
-            " 2>/dev/null | tr -d ' ')
-
-            if [ "$binding_count" = "0" ]; then
-                status_icon="🔗"
-                status_text="${RED}Нет привязки к инбаунду${NC}"
-                node_broken=true
-            fi
-        fi
-
-        echo -e "  ${status_icon}  ${WHITE}${node_name}${NC} — $status_text"
-        if [ -n "$profile_name" ] && [ "$profile_name" != "<нет профиля>" ]; then
-            echo -e "      ${DARKGRAY}Профиль: ${profile_name}${NC}"
-        fi
-
-        if [ "$node_broken" = true ]; then
-            ((broken_nodes++))
-            broken_list="${broken_list}${node_uuid}|${node_name}|${profile_uuid}\n"
-        fi
-
-    done <<< "$nodes_data"
-
-    echo
-    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-    echo -e "${WHITE}Всего нод:${NC}     $total_nodes"
-    echo -e "${WHITE}Отключено:${NC}     $disabled_nodes"
-    echo -e "${WHITE}С проблемами:${NC}  $broken_nodes"
-    echo
-
-    if [ "$broken_nodes" -eq 0 ]; then
-        print_success "Все ноды в порядке"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
-        echo
-        return 0
-    fi
-
-    # ─── Предлагаем починить ───
-    echo -e "${YELLOW}⚠️  Обнаружены проблемные ноды${NC}"
-    echo -e "${WHITE}Скрипт попытается восстановить привязки инбаундов${NC}"
-    echo -e "${WHITE}и включить отключённые ноды.${NC}"
-    echo
-
-    if ! confirm_action; then
-        print_error "Операция отменена"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
-        echo
-        return 0
-    fi
-
-    echo
-    local fixed=0
-
-    while IFS='|' read -r node_uuid node_name profile_uuid; do
-        [ -z "$node_uuid" ] && continue
-
-        echo -e "${WHITE}Ремонт ноды: ${GREEN}${node_name}${NC}"
-
-        # Случай 1: Нода без профиля — ищем подходящий профиль
-        if [ -z "$profile_uuid" ] || [ "$profile_uuid" = "" ]; then
-            # Пробуем найти профиль с таким же именем как нода
-            local matching_profile
-            matching_profile=$($psql_cmd -c "
-                SELECT uuid FROM config_profiles WHERE name = '$node_name' LIMIT 1;
-            " 2>/dev/null | tr -d ' ')
-
-            if [ -z "$matching_profile" ]; then
-                # Берём любой доступный профиль
-                matching_profile=$($psql_cmd -c "
-                    SELECT uuid FROM config_profiles LIMIT 1;
-                " 2>/dev/null | tr -d ' ')
-            fi
-
-            if [ -z "$matching_profile" ]; then
-                echo -e "  ${RED}✖${NC} Нет доступных конфиг-профилей для назначения"
-                continue
-            fi
-
-            profile_uuid="$matching_profile"
-            # Назначаем профиль ноде
-            $psql_cmd -c "
-                UPDATE nodes SET active_config_profile_uuid = '$profile_uuid'
-                WHERE uuid = '$node_uuid';
-            " >/dev/null 2>&1
-
-            local assigned_name
-            assigned_name=$($psql_cmd -c "SELECT name FROM config_profiles WHERE uuid = '$profile_uuid';" 2>/dev/null | tr -d ' ')
-            echo -e "  ${GREEN}✅${NC} Назначен профиль: $assigned_name"
-        fi
-
-        # Случай 2: Ищем инбаунды профиля и создаём привязки
-        local inbound_uuids
-        inbound_uuids=$($psql_cmd -c "
-            SELECT uuid FROM config_profile_inbounds
-            WHERE config_profile_uuid = '$profile_uuid';
-        " 2>/dev/null)
-
-        if [ -z "$inbound_uuids" ]; then
-            echo -e "  ${RED}✖${NC} У профиля нет инбаундов"
-            continue
-        fi
-
-        local bindings_created=0
-        while IFS= read -r inbound_uuid; do
-            inbound_uuid=$(echo "$inbound_uuid" | tr -d ' ')
-            [ -z "$inbound_uuid" ] && continue
-
-            # Проверяем, нет ли уже привязки
-            local existing
-            existing=$($psql_cmd -c "
-                SELECT COUNT(*) FROM config_profile_inbounds_to_nodes
-                WHERE config_profile_inbound_uuid = '$inbound_uuid'
-                AND node_uuid = '$node_uuid';
-            " 2>/dev/null | tr -d ' ')
-
-            if [ "$existing" = "0" ]; then
-                $psql_cmd -c "
-                    INSERT INTO config_profile_inbounds_to_nodes
-                    (config_profile_inbound_uuid, node_uuid)
-                    VALUES ('$inbound_uuid', '$node_uuid');
-                " >/dev/null 2>&1
-
-                if [ $? -eq 0 ]; then
-                    ((bindings_created++))
-                    local tag_name
-                    tag_name=$($psql_cmd -c "SELECT tag FROM config_profile_inbounds WHERE uuid = '$inbound_uuid';" 2>/dev/null | tr -d ' ')
-                    echo -e "  ${GREEN}✅${NC} Привязан инбаунд: $tag_name"
-                else
-                    echo -e "  ${RED}✖${NC} Не удалось привязать инбаунд $inbound_uuid"
-                fi
-            fi
-        done <<< "$inbound_uuids"
-
-        # Включаем ноду
-        $psql_cmd -c "
-            UPDATE nodes SET is_disabled = false
-            WHERE uuid = '$node_uuid' AND is_disabled = true;
-        " >/dev/null 2>&1
-
-        local was_enabled=$($psql_cmd -c "SELECT NOT is_disabled FROM nodes WHERE uuid = '$node_uuid';" 2>/dev/null | tr -d ' ')
-        if [ "$was_enabled" = "t" ]; then
-            echo -e "  ${GREEN}✅${NC} Нода включена"
-        fi
-
-        ((fixed++))
-        echo
-
-    done < <(echo -e "$broken_list")
-
-    if [ "$fixed" -gt 0 ]; then
-        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-        echo -e "${WHITE}Перезапуск панели для применения изменений...${NC}"
-        echo
-
-        local panel_dir
-        panel_dir=$(detect_remnawave_path 2>/dev/null || echo "/opt/remnawave")
-
-        (
-            cd "$panel_dir"
-            docker compose restart remnawave >/dev/null 2>&1
-        ) &
-        show_spinner "Перезапуск панели"
-
-        show_spinner_timer 15 "Ожидание запуска панели" "Запуск панели"
-
-        # Проверяем, работает ли нода на 443
-        local has_node
-        has_node=$(grep -q "remnanode" "$panel_dir/docker-compose.yml" 2>/dev/null && echo "yes" || echo "no")
-        if [ "$has_node" = "yes" ]; then
-            (
-                cd "$panel_dir"
-                docker compose restart remnanode >/dev/null 2>&1
-            ) &
-            show_spinner "Перезапуск ноды"
-
-            show_spinner_timer 15 "Ожидание подключения ноды" "Подключение ноды"
-
-            if ss -tuln 2>/dev/null | grep -q ':443 '; then
-                print_success "Порт 443 активен — xray работает"
-            else
-                echo -e "${YELLOW}⚠️  Порт 443 не активен — может потребоваться время${NC}"
-            fi
-        fi
-
-        echo
-        print_success "Ремонт завершён. Исправлено нод: $fixed"
-    fi
-
-    echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
-    echo
-}
-
-# ═══════════════════════════════════════════════
 # БАЗА ДАННЫХ: ГЛАВНОЕ МЕНЮ
 # ═══════════════════════════════════════════════
 manage_database() {
@@ -4876,7 +4615,6 @@ manage_database() {
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
         "💾  Сохранить базу данных" \
         "📥  Загрузить базу данных" \
-        "🔧  Диагностика и ремонт нод" \
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
@@ -4884,9 +4622,8 @@ manage_database() {
     case $choice in
         0) db_backup ;;
         1) db_restore ;;
-        2) db_repair_nodes ;;
-        3) continue ;;
-        4) return ;;
+        2) continue ;;
+        3) return ;;
     esac
 }
 
@@ -5079,6 +4816,138 @@ manage_panel_access() {
         7) ;;
         8) return ;;
     esac
+}
+
+# ═══════════════════════════════════════════════════
+# АВТОМАТИЧЕСКОЕ ВКЛЮЧЕНИЕ ДОСТУПА ПО 8443
+# ═════════════════════════════════════════════════==
+auto_enable_panel_access_8443() {
+    local panel_domain="${1:-}"
+    local cookie_name="${2:-}"
+    local cookie_value="${3:-}"
+    local dir="/opt/remnawave"
+
+    # Проверяем, что nginx.conf существует
+    [ ! -f "$dir/nginx.conf" ] && return 1
+
+    # Если домен не передан, получаем из конфига
+    if [ -z "$panel_domain" ]; then
+        panel_domain=$(grep -oP 'server_name\s+\K[^;]+' "$dir/nginx.conf" | head -1)
+    fi
+
+    # Определяем сертификат панели
+    local panel_cert
+    panel_cert=$(grep -A 5 "server_name ${panel_domain};" "$dir/nginx.conf" | grep -oP 'ssl_certificate\s+"/etc/nginx/ssl/\K[^/]+' | head -1)
+
+    # Проверяем, уже настроен ли 8443
+    if grep -q "# ─── 8443 Fallback" "$dir/nginx.conf" 2>/dev/null; then
+        # Уже настроен - просто открываем в UFW
+        ufw allow 8443/tcp >/dev/null 2>&1
+        return 0
+    fi
+
+    # Проверяем, не занят ли порт 8443
+    if command -v ss >/dev/null 2>&1; then
+        ss -tuln | grep -q ":8443" && return 1
+    elif command -v netstat >/dev/null 2>&1; then
+        netstat -tuln | grep -q ":8443" && return 1
+    fi
+
+    # Находим номер строки с закрывающей скобкой последнего server блока
+    local insert_after_line
+    insert_after_line=$(awk '/^server \{/ {start=NR; brace=1} 
+        brace {if (/\{/) brace++; if (/\}/) brace--} 
+        brace==0 && start {print NR; exit}' "$dir/nginx.conf")
+    
+    if [ -z "$insert_after_line" ]; then
+        insert_after_line=$(grep -n "^}$" "$dir/nginx.conf" | tail -1 | cut -d: -f1)
+    fi
+
+    # Создаем временный файл с блоком
+    local temp_file="/tmp/remnawave_8443_auto_$$.conf"
+    cat > "$temp_file" << 'EOF'
+
+# ─── 8443 Fallback (direct access) ───
+server {
+    server_name PANEL_DOMAIN;
+    listen 8443 ssl;
+    listen [::]:8443 ssl;
+    http2 on;
+
+    ssl_certificate "/etc/nginx/ssl/PANEL_CERT/fullchain.pem";
+    ssl_certificate_key "/etc/nginx/ssl/PANEL_CERT/privkey.pem";
+    ssl_trusted_certificate "/etc/nginx/ssl/PANEL_CERT/fullchain.pem";
+
+    add_header Set-Cookie $set_cookie_header;
+
+    # API endpoints - no auth required for auth status
+    location ^~ /api/auth/ {
+        proxy_http_version 1.1;
+        proxy_pass http://remnawave;
+        proxy_set_header Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port 8443;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location / {
+        error_page 418 = @unauthorized;
+        recursive_error_pages on;
+        if ($authorized = 0) {
+            return 418;
+        }
+        proxy_http_version 1.1;
+        proxy_pass http://remnawave;
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port 8443;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location @unauthorized {
+        root /var/www/html;
+        index index.html;
+    }
+}
+EOF
+
+    # Заменяем плейсхолдеры
+    sed -i "s/PANEL_DOMAIN/${panel_domain}/g" "$temp_file"
+    sed -i "s/PANEL_CERT/${panel_cert}/g" "$temp_file"
+
+    if [ -n "$insert_after_line" ]; then
+        sed -i "${insert_after_line}r ${temp_file}" "$dir/nginx.conf"
+    else
+        cat "$temp_file" >> "$dir/nginx.conf"
+    fi
+
+    rm -f "$temp_file"
+
+    # Перезапускаем nginx
+    (
+        cd "$dir"
+        docker compose restart remnawave-nginx >/dev/null 2>&1
+    ) &
+
+    # Открываем порт в UFW
+    ufw allow 8443/tcp >/dev/null 2>&1
+
+    return 0
 }
 
 open_panel_access() {
