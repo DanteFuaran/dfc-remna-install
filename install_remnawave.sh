@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.1"
+SCRIPT_VERSION="0.2.2"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -5251,7 +5251,7 @@ main_menu() {
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
             local update_notice=""
-            local menu_title="           🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\nПроект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
+            local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
             if [ -f /tmp/remna_update_available ]; then
                 local new_version
                 new_version=$(cat /tmp/remna_update_available)
@@ -5333,7 +5333,7 @@ main_menu() {
             esac
         else
             # Для неустановленного состояния
-            local menu_title="🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\n${DARKGRAY}Проект развивается благодаря вашей поддержке\nhttps://github.com/DanteFuaran${NC}"
+            local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
             
             show_arrow_menu "$menu_title" \
                 "📦  Установить компоненты" \
