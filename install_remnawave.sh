@@ -5251,7 +5251,7 @@ main_menu() {
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
             local update_notice=""
-            local menu_title="                    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\nПроект развивается благодаря вашей поддержке\n                https://github.com/DanteFuaran${NC}"
+            local menu_title="           🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\nПроект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
             if [ -f /tmp/remna_update_available ]; then
                 local new_version
                 new_version=$(cat /tmp/remna_update_available)
