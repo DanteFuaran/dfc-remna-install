@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.1.2"
+SCRIPT_VERSION="0.1.3"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -1046,9 +1046,6 @@ get_panel_token() {
         fi
 
         echo "$token" > "$TOKEN_FILE"
-        print_success "Токен успешно получен и сохранён"
-    else
-        print_success "Токен успешно использован"
     fi
 
     # Финальная проверка
@@ -3038,11 +3035,9 @@ installation_node_local() {
     print_success "Панель: $panel_domain"
     print_success "Подписка: $sub_domain"
     print_success "Метод сертификатов: $([ "$AUTO_CERT_METHOD" = "1" ] && echo "Cloudflare DNS-01" || echo "ACME HTTP-01")"
+    echo -e "${BLUE}──────────────────────────────────────${NC}"
 
     # ─── Запрашиваем selfsteal домен ───
-    echo
-    echo -e "${GREEN}Введите домен для selfsteal ноды.${NC}"
-    echo -e "${DARKGRAY}DNS-запись должна указывать на IP этого сервера.${NC}"
 
     local SELFSTEAL_DOMAIN
     prompt_domain_with_retry "Домен selfsteal ноды (например node.example.com):" SELFSTEAL_DOMAIN true || return
@@ -3132,7 +3127,9 @@ installation_node_local() {
 
         handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"
     else
+        echo -e "${BLUE}──────────────────────────────────────${NC}"
         print_success "Сертификат для $SELFSTEAL_DOMAIN уже существует"
+        echo
     fi
 
     local NODE_CERT_DOMAIN
@@ -3279,19 +3276,20 @@ installation_node_local() {
     clear
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "   ${GREEN}🎉 НОДА ДОБАВЛЕНА НА СЕРВЕР ПАНЕЛИ!${NC}"
+    echo -e "    ${GREEN}🎉 Нода успешно добавлена на сервер панели${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
     echo -e "${WHITE}Панель:${NC}       https://$panel_domain"
     echo -e "${WHITE}Подписка:${NC}     https://$sub_domain"
     echo -e "${WHITE}SelfSteal:${NC}    https://$SELFSTEAL_DOMAIN"
     echo
-    echo -e "${GREEN}✅ Нода настроена и подключена к панели${NC}"
-    echo -e "${GREEN}✅ Конфигурация nginx обновлена${NC}"
-    echo -e "${GREEN}✅ Docker Compose обновлён${NC}"
+    echo -e "${BLUE}──────────────────────────────────────${NC}"
     echo
-    echo -e "${DARKGRAY}Проверьте подключение ноды в панели Remnawave${NC}"
+    echo -e "${GREEN}✅ Нода настроена и подключена к панели!${NC}"
+    echo -e "${GREEN}✅ Конфигурация nginx обновлена!${NC}"
+    echo -e "${GREEN}✅ Docker Compose обновлён!${NC}"
     echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
     echo
 }
