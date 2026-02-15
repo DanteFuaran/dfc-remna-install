@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.1.7"
+SCRIPT_VERSION="0.1.8"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -3066,7 +3066,6 @@ installation_node_local() {
     print_success "Подписка: $sub_domain"
     print_success "Метод сертификатов: $([ "$AUTO_CERT_METHOD" = "1" ] && echo "Cloudflare DNS-01" || echo "ACME HTTP-01")"
     echo -e "${BLUE}──────────────────────────────────────${NC}"
-
     # ─── Запрашиваем selfsteal домен ───
 
     local SELFSTEAL_DOMAIN
@@ -3088,7 +3087,6 @@ installation_node_local() {
     done
 
     # ─── Авторизация в панели (до изменения конфигов) ───
-    echo
     get_panel_token
     if [ $? -ne 0 ]; then
         echo -e "${YELLOW}Установка отменена${NC}"
