@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.5"
+SCRIPT_VERSION="0.2.6"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -1669,6 +1669,12 @@ generate_docker_compose_full() {
     local sub_cert_domain=$2
     local node_cert_domain=$3
 
+    # Проверяем, существует ли сеть remnawave-network
+    local network_exists=false
+    if docker network ls | grep -q "remnawave-network"; then
+        network_exists=true
+    fi
+
     cat > /opt/remnawave/docker-compose.yml <<'COMPOSE_HEAD'
 services:
   remnawave-db:
@@ -1691,7 +1697,7 @@ services:
     volumes:
       - remnawave-db-data:/var/lib/postgresql/data
     networks:
-      - rw-network
+      - remnawave-network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
       interval: 3s
@@ -1718,7 +1724,7 @@ services:
       - '127.0.0.1:3000:${APP_PORT:-3000}'
       - '127.0.0.1:3001:${METRICS_PORT:-3001}'
     networks:
-      - rw-network
+      - remnawave-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:${METRICS_PORT:-3001}/health']
       interval: 30s
@@ -1746,7 +1752,7 @@ services:
         soft: 1048576
         hard: 1048576
     networks:
-      - rw-network
+      - remnawave-network
     command: >
       valkey-server
       --save ""
@@ -1818,7 +1824,7 @@ COMPOSE_CERT
     ports:
       - '127.0.0.1:3010:3010'
     networks:
-      - rw-network
+      - remnawave-network
     logging:
       driver: 'json-file'
       options:
@@ -1846,26 +1852,49 @@ COMPOSE_CERT
         max-size: '30m'
         max-file: '5'
 
+COMPOSE_TAIL
+
+    # Добавляем networks секцию в зависимости от существования сети
+    if [ "$network_exists" = true ]; then
+        cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_NETWORK_EXTERNAL'
 networks:
-  rw-network:
-    name: rw-network
+  remnawave-network:
+    name: remnawave-network
+    external: true
+
+COMPOSE_NETWORK_EXTERNAL
+    else
+        cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_NETWORK_NEW'
+networks:
+  remnawave-network:
+    name: remnawave-network
     driver: bridge
     ipam:
       config:
-        - subnet: 172.31.0.0/16
+        - subnet: 172.30.0.0/16
     external: false
 
+COMPOSE_NETWORK_NEW
+    fi
+
+    cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_VOLUMES'
 volumes:
   remnawave-db-data:
     driver: local
     external: false
     name: remnawave-db-data
-COMPOSE_TAIL
+COMPOSE_VOLUMES
 }
 
 generate_docker_compose_panel() {
     local panel_cert_domain=$1
     local sub_cert_domain=$2
+
+    # Проверяем, существует ли сеть remnawave-network
+    local network_exists=false
+    if docker network ls | grep -q "remnawave-network"; then
+        network_exists=true
+    fi
 
     cat > /opt/remnawave/docker-compose.yml <<'COMPOSE_TAIL'
 services:
@@ -1889,7 +1918,7 @@ services:
     volumes:
       - remnawave-db-data:/var/lib/postgresql/data
     networks:
-      - rw-network
+      - remnawave-network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
       interval: 3s
@@ -1916,7 +1945,7 @@ services:
       - '127.0.0.1:3000:${APP_PORT:-3000}'
       - '127.0.0.1:3001:${METRICS_PORT:-3001}'
     networks:
-      - rw-network
+      - remnawave-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:${METRICS_PORT:-3001}/health']
       interval: 30s
@@ -1944,7 +1973,7 @@ services:
         soft: 1048576
         hard: 1048576
     networks:
-      - rw-network
+      - remnawave-network
     command: >
       valkey-server
       --save ""
@@ -2004,25 +2033,42 @@ services:
     ports:
       - '127.0.0.1:3010:3010'
     networks:
-      - rw-network
+      - remnawave-network
     logging:
       driver: 'json-file'
       options:
         max-size: '30m'
         max-file: '5'
 
+COMPOSE_TAIL
+
+    # Добавляем networks секцию в зависимости от существования сети
+    if [ "$network_exists" = true ]; then
+        cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_NETWORK_EXTERNAL'
 networks:
-  rw-network:
-    name: rw-network
+  remnawave-network:
+    name: remnawave-network
+    external: true
+
+COMPOSE_NETWORK_EXTERNAL
+    else
+        cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_NETWORK_NEW'
+networks:
+  remnawave-network:
+    name: remnawave-network
     driver: bridge
     external: false
 
+COMPOSE_NETWORK_NEW
+    fi
+
+    cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_VOLUMES'
 volumes:
   remnawave-db-data:
     driver: local
     external: false
     name: remnawave-db-data
-COMPOSE_TAIL
+COMPOSE_VOLUMES
 }
 
 # ═══════════════════════════════════════════════
