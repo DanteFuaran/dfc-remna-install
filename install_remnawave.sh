@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.4"
+SCRIPT_VERSION="0.2.5"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -1691,7 +1691,7 @@ services:
     volumes:
       - remnawave-db-data:/var/lib/postgresql/data
     networks:
-      - remnawave-network
+      - rw-network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
       interval: 3s
@@ -1718,7 +1718,7 @@ services:
       - '127.0.0.1:3000:${APP_PORT:-3000}'
       - '127.0.0.1:3001:${METRICS_PORT:-3001}'
     networks:
-      - remnawave-network
+      - rw-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:${METRICS_PORT:-3001}/health']
       interval: 30s
@@ -1746,7 +1746,7 @@ services:
         soft: 1048576
         hard: 1048576
     networks:
-      - remnawave-network
+      - rw-network
     command: >
       valkey-server
       --save ""
@@ -1818,7 +1818,7 @@ COMPOSE_CERT
     ports:
       - '127.0.0.1:3010:3010'
     networks:
-      - remnawave-network
+      - rw-network
     logging:
       driver: 'json-file'
       options:
@@ -1847,12 +1847,12 @@ COMPOSE_CERT
         max-file: '5'
 
 networks:
-  remnawave-network:
-    name: remnawave-network
+  rw-network:
+    name: rw-network
     driver: bridge
     ipam:
       config:
-        - subnet: 172.30.0.0/16
+        - subnet: 172.31.0.0/16
     external: false
 
 volumes:
@@ -1889,7 +1889,7 @@ services:
     volumes:
       - remnawave-db-data:/var/lib/postgresql/data
     networks:
-      - remnawave-network
+      - rw-network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
       interval: 3s
@@ -1916,7 +1916,7 @@ services:
       - '127.0.0.1:3000:${APP_PORT:-3000}'
       - '127.0.0.1:3001:${METRICS_PORT:-3001}'
     networks:
-      - remnawave-network
+      - rw-network
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:${METRICS_PORT:-3001}/health']
       interval: 30s
@@ -1944,7 +1944,7 @@ services:
         soft: 1048576
         hard: 1048576
     networks:
-      - remnawave-network
+      - rw-network
     command: >
       valkey-server
       --save ""
@@ -2004,7 +2004,7 @@ services:
     ports:
       - '127.0.0.1:3010:3010'
     networks:
-      - remnawave-network
+      - rw-network
     logging:
       driver: 'json-file'
       options:
@@ -2012,8 +2012,8 @@ services:
         max-file: '5'
 
 networks:
-  remnawave-network:
-    name: remnawave-network
+  rw-network:
+    name: rw-network
     driver: bridge
     external: false
 
