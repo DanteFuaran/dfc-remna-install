@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexCore — Enterprise Solutions</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--primary:#06b6d4;--primary-dark:#0891b2;--accent:#0ea5e9;--dark:#0a0a0a;--dark2:#111827;--glass:rgba(255,255,255,.04)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--dark);color:#d1d5db;overflow-x:hidden}
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 80%,rgba(6,182,212,.07) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(14,165,233,.05) 0%,transparent 50%);pointer-events:none;z-index:-1}
+        .navbar{background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(107,114,128,.15);padding:1rem 0}
+        .navbar-brand{font-weight:800;font-size:1.5rem;color:#fff!important}
+        .navbar-brand i{color:var(--primary)}
+        .nav-link{color:#9ca3af!important;font-weight:500;transition:.3s}
+        .nav-link:hover{color:var(--primary)!important}
+        .hero{padding:120px 0 100px;position:relative}
+        .hero h1{font-size:3.8rem;font-weight:800;line-height:1.1;background:linear-gradient(135deg,#fff 0%,var(--primary) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fadeUp .8s ease}
+        .hero p{font-size:1.25rem;color:#9ca3af;max-width:600px;animation:fadeUp 1s ease}
+        .btn-primary-glow{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:none;color:#fff;padding:14px 36px;border-radius:12px;font-weight:600;box-shadow:0 4px 25px rgba(6,182,212,.35);transition:.3s}
+        .btn-primary-glow:hover{transform:translateY(-3px);box-shadow:0 8px 35px rgba(6,182,212,.5);color:#fff}
+        .btn-outline-glass{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:#fff;padding:14px 36px;border-radius:12px;font-weight:600;transition:.3s}
+        .btn-outline-glass:hover{background:rgba(255,255,255,.1);border-color:var(--primary);color:#fff}
+        .stat-card{background:var(--glass);border:1px solid rgba(107,114,128,.15);border-radius:16px;padding:32px;text-align:center;transition:.3s;backdrop-filter:blur(10px)}
+        .stat-card:hover{border-color:rgba(6,182,212,.4);transform:translateY(-5px);box-shadow:0 15px 40px rgba(6,182,212,.15)}
+        .stat-value{font-size:2.8rem;font-weight:800;color:#fff}
+        .stat-label{color:#6b7280;font-size:.9rem;margin-top:4px}
+        .section-label{display:inline-block;padding:6px 16px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:50px;color:var(--primary);font-size:.85rem;font-weight:600;margin-bottom:16px}
+        .section-title{font-size:2.5rem;font-weight:800;color:#fff;margin-bottom:16px}
+        .section-desc{color:#6b7280;font-size:1.1rem;max-width:600px}
+        .service-card{background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(14,165,233,.04));border:1px solid rgba(6,182,212,.2);border-radius:20px;padding:40px 30px;transition:.4s;position:relative;overflow:hidden}
+        .service-card::before{content:'';position:absolute;top:-50px;right:-50px;width:150px;height:150px;background:radial-gradient(circle,rgba(6,182,212,.12),transparent 70%);border-radius:50%;transition:.4s}
+        .service-card:hover{transform:translateY(-8px);border-color:rgba(6,182,212,.5);box-shadow:0 20px 50px rgba(6,182,212,.15)}
+        .service-card:hover::before{transform:scale(1.5)}
+        .service-icon{width:60px;height:60px;background:rgba(6,182,212,.12);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--primary);margin-bottom:20px}
+        .team-card{background:var(--dark2);border:1px solid rgba(107,114,128,.15);border-radius:16px;padding:30px;text-align:center;transition:.3s}
+        .team-card:hover{border-color:rgba(6,182,212,.3);transform:translateY(-5px)}
+        .team-avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 16px;object-fit:cover;border:3px solid rgba(6,182,212,.3)}
+        .testimonial{background:var(--glass);border:1px solid rgba(107,114,128,.12);border-radius:16px;padding:32px;border-left:4px solid var(--primary)}
+        .cta-section{background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(14,165,233,.08));border:1px solid rgba(6,182,212,.2);border-radius:24px;padding:60px;text-align:center}
+        footer{background:var(--dark2);border-top:1px solid rgba(107,114,128,.12);padding:50px 0 30px}
+        .footer-title{color:#fff;font-weight:600;margin-bottom:16px}
+        .footer-link{color:#6b7280;text-decoration:none;display:block;margin-bottom:8px;transition:.3s;font-size:.9rem}
+        .footer-link:hover{color:var(--primary)}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        .anim{opacity:0;transform:translateY(30px);transition:.6s ease}
+        .anim.visible{opacity:1;transform:translateY(0)}
+        @media(max-width:768px){.hero h1{font-size:2.2rem}.section-title{font-size:1.8rem}.cta-section{padding:30px}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="bi bi-hexagon-fill me-2"></i>NexCore</a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav1">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="nav1">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#services"><i class="bi bi-grid me-1"></i>Услуги</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#team"><i class="bi bi-people me-1"></i>Команда</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#reviews"><i class="bi bi-chat-dots me-1"></i>Отзывы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact"><i class="bi bi-envelope me-1"></i>Контакты</a></li>
+                </ul>
+                <a href="#contact" class="btn btn-primary-glow btn-sm ms-lg-3 mt-2 mt-lg-0" data-bs-toggle="modal" data-bs-target="#consultModal">Связаться</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <span class="section-label"><i class="bi bi-lightning-fill me-1"></i>Enterprise Solutions</span>
+                    <h1>Комплексные IT-решения для бизнеса</h1>
+                    <p class="mb-4">Автоматизация процессов, облачная инфраструктура и безопасность корпоративного уровня. Более 500 успешных проектов.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#services" class="btn btn-primary-glow"><i class="bi bi-arrow-right me-2"></i>Наши решения</a>
+                        <a href="#contact" class="btn btn-outline-glass"><i class="bi bi-play-circle me-2"></i>Видео-обзор</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-flex justify-content-center">
+                    <i class="bi bi-shield-check" style="font-size:14rem;opacity:.08;color:var(--primary)"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-6 col-md-3 anim"><div class="stat-card"><div class="stat-value" data-target="500">0</div><div class="stat-label">Проектов</div></div></div>
+                <div class="col-6 col-md-3 anim"><div class="stat-card"><div class="stat-value" data-target="98">0</div><div class="stat-label">% Удовлетворённость</div></div></div>
+                <div class="col-6 col-md-3 anim"><div class="stat-card"><div class="stat-value" data-target="24">0</div><div class="stat-label">Часа поддержка</div></div></div>
+                <div class="col-6 col-md-3 anim"><div class="stat-card"><div class="stat-value" data-target="12">0</div><div class="stat-label">Лет на рынке</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="py-5 mt-4">
+        <div class="container">
+            <span class="section-label">Услуги</span>
+            <h2 class="section-title">Что мы предлагаем</h2>
+            <p class="section-desc mb-5">Полный спектр IT-услуг для вашего бизнеса — от консультаций до внедрения</p>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4 anim"><div class="service-card h-100"><div class="service-icon"><i class="bi bi-cloud-arrow-up"></i></div><h5 class="text-white fw-semibold">Облачные решения</h5><p class="text-secondary mb-0">Миграция в облако, настройка AWS/GCP/Azure, оптимизация стоимости инфраструктуры</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="service-card h-100"><div class="service-icon"><i class="bi bi-shield-lock"></i></div><h5 class="text-white fw-semibold">Кибербезопасность</h5><p class="text-secondary mb-0">Аудит безопасности, защита данных, мониторинг угроз и инцидентов 24/7</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="service-card h-100"><div class="service-icon"><i class="bi bi-code-slash"></i></div><h5 class="text-white fw-semibold">Разработка ПО</h5><p class="text-secondary mb-0">Заказная разработка веб и мобильных приложений, API интеграции</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="service-card h-100"><div class="service-icon"><i class="bi bi-diagram-3"></i></div><h5 class="text-white fw-semibold">Сети и инфраструктура</h5><p class="text-secondary mb-0">Проектирование сетей, настройка серверов, виртуализация</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="service-card h-100"><div class="service-icon"><i class="bi bi-graph-up-arrow"></i></div><h5 class="text-white fw-semibold">Аналитика данных</h5><p class="text-secondary mb-0">BI-системы, визуализация данных, прогнозная аналитика</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="service-card h-100"><div class="service-icon"><i class="bi bi-headset"></i></div><h5 class="text-white fw-semibold">Техподдержка</h5><p class="text-secondary mb-0">Сопровождение IT-систем, HelpDesk, SLA с гарантией времени реакции</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="py-5 mt-4">
+        <div class="container">
+            <span class="section-label">Команда</span>
+            <h2 class="section-title">Наши специалисты</h2>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6 col-lg-3 anim"><div class="team-card"><img src="https://i.pravatar.cc/80?img=12" class="team-avatar" alt="Алексей Иванов"><h6 class="text-white fw-semibold">Алексей Иванов</h6><small class="text-secondary">CTO / Архитектор</small></div></div>
+                <div class="col-md-6 col-lg-3 anim"><div class="team-card"><img src="https://i.pravatar.cc/80?img=47" class="team-avatar" alt="Мария Козлова"><h6 class="text-white fw-semibold">Мария Козлова</h6><small class="text-secondary">Lead Developer</small></div></div>
+                <div class="col-md-6 col-lg-3 anim"><div class="team-card"><img src="https://i.pravatar.cc/80?img=33" class="team-avatar" alt="Дмитрий Смирнов"><h6 class="text-white fw-semibold">Дмитрий Смирнов</h6><small class="text-secondary">DevOps Engineer</small></div></div>
+                <div class="col-md-6 col-lg-3 anim"><div class="team-card"><img src="https://i.pravatar.cc/80?img=28" class="team-avatar" alt="Елена Новикова"><h6 class="text-white fw-semibold">Елена Новикова</h6><small class="text-secondary">Security Analyst</small></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews" class="py-5 mt-4">
+        <div class="container">
+            <span class="section-label">Отзывы</span>
+            <h2 class="section-title">Нас рекомендуют</h2>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6 anim"><div class="testimonial"><div class="d-flex align-items-center mb-3"><img src="https://i.pravatar.cc/48?img=60" class="team-avatar" style="width:48px;height:48px;margin:0" alt="Олег Романов"><div class="ms-3"><h6 class="text-white mb-0">Олег Романов</h6><small class="text-secondary">CEO, TechStart</small></div></div><p class="mb-0 text-secondary">"NexCore помогли нам перенести инфраструктуру в облако за 2 недели. Снизили расходы на 40% и повысили отказоустойчивость."</p></div></div>
+                <div class="col-md-6 anim"><div class="testimonial"><div class="d-flex align-items-center mb-3"><img src="https://i.pravatar.cc/48?img=45" class="team-avatar" style="width:48px;height:48px;margin:0" alt="Анна Волкова"><div class="ms-3"><h6 class="text-white mb-0">Анна Волкова</h6><small class="text-secondary">CTO, FinGroup</small></div></div><p class="mb-0 text-secondary">"Отличная команда! Провели аудит безопасности и устранили критические уязвимости. Работают быстро и профессионально."</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="py-5 mt-4 mb-5">
+        <div class="container">
+            <div class="cta-section anim">
+                <h2 class="section-title">Готовы начать проект?</h2>
+                <p class="text-secondary mb-4 mx-auto" style="max-width:500px">Оставьте заявку и мы свяжемся с вами в течение 24 часов для бесплатной консультации</p>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="mailto:info@nexcore.com" class="btn btn-primary-glow"><i class="bi bi-envelope me-2"></i>info@nexcore.com</a>
+                    <a href="tel:+74951234567" class="btn btn-outline-glass"><i class="bi bi-telephone me-2"></i>+7 (495) 123-45-67</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-white fw-bold mb-3"><i class="bi bi-hexagon-fill me-2" style="color:var(--primary)"></i>NexCore</h5>
+                    <p class="text-secondary small">Комплексные IT-решения корпоративного уровня. Работаем с 2012 года.</p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-secondary"><i class="bi bi-telegram fs-5"></i></a>
+                        <a href="#" class="text-secondary"><i class="bi bi-github fs-5"></i></a>
+                        <a href="#" class="text-secondary"><i class="bi bi-linkedin fs-5"></i></a>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-2 mb-4">
+                    <h6 class="footer-title">Услуги</h6>
+                    <a href="#" class="footer-link">Облако</a><a href="#" class="footer-link">Безопасность</a><a href="#" class="footer-link">Разработка</a><a href="#" class="footer-link">Поддержка</a>
+                </div>
+                <div class="col-6 col-lg-2 mb-4">
+                    <h6 class="footer-title">Компания</h6>
+                    <a href="#" class="footer-link">О нас</a><a href="#" class="footer-link">Команда</a><a href="#" class="footer-link">Блог</a><a href="#" class="footer-link">Карьера</a>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h6 class="footer-title">Контакты</h6>
+                    <p class="text-secondary small mb-1"><i class="bi bi-geo-alt me-2"></i>Москва, ул. Кибернетиков, 42</p>
+                    <p class="text-secondary small mb-1"><i class="bi bi-telephone me-2"></i>+7 (495) 123-45-67</p>
+                    <p class="text-secondary small"><i class="bi bi-envelope me-2"></i>info@nexcore.com</p>
+                </div>
+            </div>
+            <hr style="border-color:rgba(107,114,128,.15)">
+            <p class="text-center text-secondary small mb-0">&copy; 2024 NexCore. Все права защищены.</p>
+        </div>
+    </footer>
+
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Scroll animations
+        const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:.15});
+        document.querySelectorAll('.anim').forEach(el=>obs.observe(el));
+        // Counter animation
+        document.querySelectorAll('[data-target]').forEach(el=>{
+            const target=+el.dataset.target;let current=0;
+            const step=target/40;
+            const timer=setInterval(()=>{current+=step;if(current>=target){el.textContent=target+'+';clearInterval(timer)}else{el.textContent=Math.floor(current)}},50);
+        });
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

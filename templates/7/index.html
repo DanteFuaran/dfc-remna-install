@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopWave — Лучшие товары онлайн</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--orange:#f97316;--orange-dark:#ea580c;--bg:#ffffff;--light:#f9fafb;--dark:#111827}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Rubik',sans-serif;background:var(--bg);color:#374151}
+        .top-bar{background:var(--dark);color:#fff;padding:8px 0;font-size:.8rem}
+        .navbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 0}
+        .navbar-brand{font-weight:700;font-size:1.6rem;color:var(--orange)!important}
+        .search-box{max-width:480px;flex:1}
+        .search-box .form-control{border:2px solid #e5e7eb;border-radius:50px 0 0 50px;padding:10px 20px;font-size:.9rem}
+        .search-box .form-control:focus{border-color:var(--orange);box-shadow:none}
+        .search-box .btn-search{background:var(--orange);color:#fff;border:none;border-radius:0 50px 50px 0;padding:0 24px;font-weight:600}
+        .search-box .btn-search:hover{background:var(--orange-dark)}
+        .icon-btn{color:#374151;font-size:1.3rem;position:relative;text-decoration:none;transition:.3s}
+        .icon-btn:hover{color:var(--orange)}
+        .cart-count{position:absolute;top:-6px;right:-8px;background:var(--orange);color:#fff;width:18px;height:18px;border-radius:50%;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:600}
+        .cat-nav{background:var(--light);border-bottom:1px solid #e5e7eb;padding:10px 0;overflow-x:auto;white-space:nowrap}
+        .cat-link{color:#6b7280;text-decoration:none;padding:6px 16px;font-size:.85rem;font-weight:500;transition:.3s;border-radius:50px}
+        .cat-link:hover,.cat-link.active{color:var(--orange);background:rgba(249,115,22,.08)}
+        .promo-banner{background:linear-gradient(135deg,#ff6b00,#ff8c42);border-radius:20px;padding:40px;color:#fff;position:relative;overflow:hidden}
+        .promo-banner::after{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;background:rgba(255,255,255,.1);border-radius:50%}
+        .discount-badge{position:absolute;top:12px;left:12px;background:var(--orange);color:#fff;padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+        .product-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;transition:.3s;height:100%}
+        .product-card:hover{border-color:var(--orange);box-shadow:0 8px 30px rgba(0,0,0,.08);transform:translateY(-4px)}
+        .product-img{width:100%;height:220px;object-fit:cover;background:var(--light)}
+        .product-body{padding:16px}
+        .product-title{font-size:.9rem;font-weight:500;color:var(--dark);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+        .product-price{font-size:1.25rem;font-weight:700;color:var(--dark)}
+        .product-old-price{font-size:.85rem;color:#9ca3af;text-decoration:line-through}
+        .rating{color:#facc15;font-size:.8rem}
+        .btn-cart{background:var(--orange);color:#fff;border:none;border-radius:10px;padding:8px 20px;font-weight:600;font-size:.85rem;transition:.3s;width:100%}
+        .btn-cart:hover{background:var(--orange-dark);transform:scale(1.02)}
+        .sidebar-cat{background:var(--light);border-radius:16px;padding:20px}
+        .sidebar-cat h6{font-weight:700;margin-bottom:12px}
+        .sidebar-link{display:block;color:#6b7280;text-decoration:none;padding:6px 0;font-size:.85rem;transition:.3s}.sidebar-link:hover{color:var(--orange);padding-left:6px}
+        .feature-box{text-align:center;padding:30px 20px}
+        .feature-icon{width:60px;height:60px;background:rgba(249,115,22,.1);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.5rem;color:var(--orange)}
+        .deals-timer{background:#fef3c7;border-radius:12px;padding:4px 12px;font-size:.8rem;color:#92400e;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+        footer{background:var(--dark);color:#9ca3af;padding:50px 0 30px}
+        footer h6{color:#fff;font-weight:600;margin-bottom:16px}
+        .f-link{color:#9ca3af;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem;transition:.2s}.f-link:hover{color:var(--orange)}
+        .pay-icons{display:flex;gap:8px;margin-top:12px}
+        .pay-icon{width:48px;height:30px;background:#1f2937;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:.65rem;font-weight:600}
+        @media(max-width:768px){.search-box{max-width:100%;margin:10px 0}.product-img{height:160px}}
+    </style>
+</head>
+<body>
+    <div class="top-bar d-none d-md-block">
+        <div class="container d-flex justify-content-between">
+            <div><i class="bi bi-truck me-1"></i> Бесплатная доставка от 3 000 ₽</div>
+            <div class="d-flex gap-3"><a data-bs-toggle="modal" data-bs-target="#consultModal" href="#" class="text-white text-decoration-none">Помощь</a><a href="#" class="text-white text-decoration-none">Отследить заказ</a></div>
+        </div>
+    </div>
+
+    <nav class="navbar sticky-top">
+        <div class="container d-flex align-items-center gap-3 flex-wrap">
+            <a class="navbar-brand mb-0" href="#">ShopWave</a>
+            <div class="search-box d-flex">
+                <input class="form-control" type="search" placeholder="Искать товары...">
+                <button class="btn-search" type="button"><i class="bi bi-search"></i></button>
+            </div>
+            <div class="d-flex gap-3 ms-auto">
+                <a href="#" class="icon-btn"><i class="bi bi-person"></i></a>
+                <a href="#" class="icon-btn"><i class="bi bi-heart"></i></a>
+                <a href="#" class="icon-btn"><i class="bi bi-cart3"></i><span class="cart-count">3</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="cat-nav d-none d-md-block">
+        <div class="container d-flex gap-1">
+            <a href="#" class="cat-link active" data-category="all">Все</a>
+            <a href="#" class="cat-link" data-category="electronics">Электроника</a>
+            <a href="#" class="cat-link" data-category="clothing">Одежда</a>
+            <a href="#" class="cat-link" data-category="home">Дом и сад</a>
+            <a href="#" class="cat-link" data-category="sport">Спорт</a>
+            <a href="#" class="cat-link" data-category="beauty">Красота</a>
+            <a href="#" class="cat-link" data-category="books">Книги</a>
+            <a href="#" class="cat-link" data-category="toys">Игрушки</a>
+            <a href="#" class="cat-link" data-category="auto">Авто</a>
+        </div>
+    </div>
+
+    <section class="py-4">
+        <div class="container">
+            <div class="promo-banner mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <span class="badge bg-white text-dark rounded-pill px-3 py-2 mb-3">🔥 Летняя распродажа</span>
+                        <h2 class="fw-bold" style="font-size:2.2rem">Скидки до 70%</h2>
+                        <p class="mb-3" style="opacity:.9">На тысячи товаров из каталога. Только до конца месяца!</p>
+                        <button class="btn btn-light fw-bold px-4 py-2 rounded-pill">Смотреть товары <i class="bi bi-arrow-right ms-1"></i></button>
+                    </div>
+                    <div class="col-md-5 text-end d-none d-md-block">
+                        <img src="https://loremflickr.com/300/200/shopping,sale?lock=150" alt="" style="border-radius:16px;max-width:280px;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3 d-none d-lg-block">
+                    <div class="sidebar-cat mb-4">
+                        <h6><i class="bi bi-grid me-2"></i>Категории</h6>
+                        <a href="#" class="sidebar-link">📱 Смартфоны</a>
+                        <a href="#" class="sidebar-link">💻 Ноутбуки</a>
+                        <a href="#" class="sidebar-link">🎧 Наушники</a>
+                        <a href="#" class="sidebar-link">⌚ Смарт-часы</a>
+                        <a href="#" class="sidebar-link">🎮 Игры</a>
+                        <a href="#" class="sidebar-link">📷 Камеры</a>
+                        <a href="#" class="sidebar-link">🔌 Аксессуары</a>
+                    </div>
+                    <div class="sidebar-cat">
+                        <h6>💰 Цена</h6>
+                        <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-label small">До 1 000 ₽</label></div>
+                        <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-label small">1 000 — 5 000 ₽</label></div>
+                        <div class="form-check mb-1"><input class="form-check-input" type="checkbox"><label class="form-check-label small">5 000 — 15 000 ₽</label></div>
+                        <div class="form-check mb-1"><input class="form-check-input" type="checkbox" checked><label class="form-check-label small">15 000+ ₽</label></div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="fw-700 mb-0"><span class="deals-timer"><i class="bi bi-lightning-charge-fill"></i> 05:42:18</span> <span id="categoryTitle">Горячие предложения</span></h5>
+                        <a href="#" class="text-decoration-none" style="color:var(--orange);font-size:.9rem;font-weight:500">Все товары →</a>
+                    </div>
+                    <div class="row g-3" id="productsContainer">
+                        <!-- Электроника -->
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><span class="discount-badge">-35%</span><img src="https://loremflickr.com/300/220/headphones,wireless?lock=1" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(128)</span></div><div class="product-title">Беспроводные наушники ProMax Air</div><div class="mt-2"><span class="product-price">4 990 ₽</span> <span class="product-old-price">7 690 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><span class="discount-badge">-20%</span><img src="https://loremflickr.com/300/220/smartwatch,wearable?lock=2" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(85)</span></div><div class="product-title">Смарт-часы FitBand Ultra 7 с GPS</div><div class="mt-2"><span class="product-price">12 490 ₽</span> <span class="product-old-price">15 590 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/bluetooth,speaker?lock=3" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(312)</span></div><div class="product-title">Портативная Bluetooth-колонка SoundMax</div><div class="mt-2"><span class="product-price">3 290 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><span class="discount-badge">-40%</span><img src="https://loremflickr.com/300/220/keyboard,mechanical?lock=4" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(67)</span></div><div class="product-title">Игровая клавиатура MechForce RGB</div><div class="mt-2"><span class="product-price">5 990 ₽</span> <span class="product-old-price">9 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/webcam,camera?lock=5" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(156)</span></div><div class="product-title">Веб-камера HD Pro 1080p</div><div class="mt-2"><span class="product-price">3 490 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><span class="discount-badge">-25%</span><img src="https://loremflickr.com/300/220/powerbank,charger?lock=6" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(89)</span></div><div class="product-title">Powerbank 20000 mAh Quick Charge</div><div class="mt-2"><span class="product-price">2 990 ₽</span> <span class="product-old-price">3 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        
+                        <!-- Одежда -->
+                        <div class="col-6 col-md-4 product-item" data-category="clothing"><div class="product-card"><div class="position-relative"><span class="discount-badge">-50%</span><img src="https://loremflickr.com/300/220/jeans,denim?lock=8" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(234)</span></div><div class="product-title">Джинсы Premium Denim Slim Fit</div><div class="mt-2"><span class="product-price">2 490 ₽</span> <span class="product-old-price">4 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="clothing"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/jacket,fashion?lock=9" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(145)</span></div><div class="product-title">Куртка Urban Style ветровка</div><div class="mt-2"><span class="product-price">5 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="clothing"><div class="product-card"><div class="position-relative"><span class="discount-badge">-30%</span><img src="https://loremflickr.com/300/220/sweatshirt,hoodie?lock=10" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(89)</span></div><div class="product-title">Свитшот oversized базовый</div><div class="mt-2"><span class="product-price">1 990 ₽</span> <span class="product-old-price">2 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="clothing"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/sneakers,running?lock=11" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(312)</span></div><div class="product-title">Кроссовки Running Pro белые</div><div class="mt-2"><span class="product-price">4 490 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="clothing"><div class="product-card"><div class="position-relative"><span class="discount-badge">-40%</span><img src="https://loremflickr.com/300/220/dress,summer?lock=12" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(67)</span></div><div class="product-title">Платье летнее миди принт</div><div class="mt-2"><span class="product-price">2 990 ₽</span> <span class="product-old-price">4 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="clothing"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/shirt,cotton?lock=13" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(178)</span></div><div class="product-title">Рубашка классическая хлопок</div><div class="mt-2"><span class="product-price">2 290 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+
+                        <!-- Дом и сад -->
+                        <div class="col-6 col-md-4 product-item" data-category="home"><div class="product-card"><div class="position-relative"><span class="discount-badge">-35%</span><img src="https://loremflickr.com/300/220/knife,kitchen?lock=14" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(456)</span></div><div class="product-title">Набор кухонных ножей 6 шт</div><div class="mt-2"><span class="product-price">3 490 ₽</span> <span class="product-old-price">5 390 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="home"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/bedding,bedroom?lock=15" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(234)</span></div><div class="product-title">Постельное белье сатин евро</div><div class="mt-2"><span class="product-price">2 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="home"><div class="product-card"><div class="position-relative"><span class="discount-badge">-20%</span><img src="https://loremflickr.com/300/220/organizer,closet?lock=16" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(89)</span></div><div class="product-title">Органайзер для обуви 12 пар</div><div class="mt-2"><span class="product-price">1 590 ₽</span> <span class="product-old-price">1 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="home"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/blanket,cozy?lock=17" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(567)</span></div><div class="product-title">Плед флисовый 200x220 см</div><div class="mt-2"><span class="product-price">1 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="home"><div class="product-card"><div class="position-relative"><span class="discount-badge">-45%</span><img src="https://loremflickr.com/300/220/humidifier,home?lock=18" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(123)</span></div><div class="product-title">Увлажнитель воздуха ультразвук</div><div class="mt-2"><span class="product-price">2 190 ₽</span> <span class="product-old-price">3 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="home"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/lamp,modern?lock=19" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(234)</span></div><div class="product-title">Торшер LED с диммером</div><div class="mt-2"><span class="product-price">4 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+
+                        <!-- Спорт -->
+                        <div class="col-6 col-md-4 product-item" data-category="sport"><div class="product-card"><div class="position-relative"><span class="discount-badge">-30%</span><img src="https://loremflickr.com/300/220/yoga,mat?lock=20" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(389)</span></div><div class="product-title">Коврик для йоги TPE 183x61 см</div><div class="mt-2"><span class="product-price">1 390 ₽</span> <span class="product-old-price">1 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="sport"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/dumbbells,gym?lock=21" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(156)</span></div><div class="product-title">Гантели разборные 2x10 кг</div><div class="mt-2"><span class="product-price">3 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="sport"><div class="product-card"><div class="position-relative"><span class="discount-badge">-25%</span><img src="https://loremflickr.com/300/220/fitness,resistance?lock=22" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(278)</span></div><div class="product-title">Фитнес-резинки набор 5 шт</div><div class="mt-2"><span class="product-price">890 ₽</span> <span class="product-old-price">1 190 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="sport"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/jumprope,fitness?lock=23" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(423)</span></div><div class="product-title">Скакалка скоростная с счетчиком</div><div class="mt-2"><span class="product-price">690 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="sport"><div class="product-card"><div class="position-relative"><span class="discount-badge">-40%</span><img src="https://loremflickr.com/300/220/bicycle,mountain?lock=24" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(89)</span></div><div class="product-title">Велосипед горный 26 дюймов</div><div class="mt-2"><span class="product-price">17 990 ₽</span> <span class="product-old-price">29 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="sport"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/bottle,sport?lock=25" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(234)</span></div><div class="product-title">Бутылка спортивная 1л с трубочкой</div><div class="mt-2"><span class="product-price">590 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+
+                        <!-- Красота -->
+                        <div class="col-6 col-md-4 product-item" data-category="beauty"><div class="product-card"><div class="position-relative"><span class="discount-badge">-15%</span><img src="https://loremflickr.com/300/220/toothbrush,electric?lock=26" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(441)</span></div><div class="product-title">Электрическая зубная щётка SonicCare</div><div class="mt-2"><span class="product-price">4 490 ₽</span> <span class="product-old-price">5 290 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="beauty"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/makeup,brushes?lock=27" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(178)</span></div><div class="product-title">Набор кистей для макияжа 12 шт</div><div class="mt-2"><span class="product-price">1 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="beauty"><div class="product-card"><div class="position-relative"><span class="discount-badge">-50%</span><img src="https://loremflickr.com/300/220/serum,skincare?lock=28" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(567)</span></div><div class="product-title">Сыворотка с витамином C 30 мл</div><div class="mt-2"><span class="product-price">990 ₽</span> <span class="product-old-price">1 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="beauty"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/hairdryer,beauty?lock=29" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(312)</span></div><div class="product-title">Фен для волос ProDry 2000W</div><div class="mt-2"><span class="product-price">3 490 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="beauty"><div class="product-card"><div class="position-relative"><span class="discount-badge">-35%</span><img src="https://loremflickr.com/300/220/facemask,skincare?lock=30" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(89)</span></div><div class="product-title">Маска для лица с гиалуроном</div><div class="mt-2"><span class="product-price">790 ₽</span> <span class="product-old-price">1 210 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="beauty"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/straightener,hair?lock=31" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(234)</span></div><div class="product-title">Утюжок для волос керамика</div><div class="mt-2"><span class="product-price">2 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+
+                        <!-- Другие категории -->
+                        <div class="col-6 col-md-4 product-item" data-category="books"><div class="product-card"><div class="position-relative"><span class="discount-badge">-20%</span><img src="https://loremflickr.com/300/220/book,reading?lock=32" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(567)</span></div><div class="product-title">Бестселлер "Атомные привычки"</div><div class="mt-2"><span class="product-price">790 ₽</span> <span class="product-old-price">990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="toys"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/lego,toys?lock=33" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★★ <span class="text-muted">(234)</span></div><div class="product-title">Конструктор LEGO City 500 деталей</div><div class="mt-2"><span class="product-price">3 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        <div class="col-6 col-md-4 product-item" data-category="auto"><div class="product-card"><div class="position-relative"><span class="discount-badge">-30%</span><img src="https://loremflickr.com/300/220/dashcam,car?lock=34" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(123)</span></div><div class="product-title">Видеорегистратор Full HD 1080p</div><div class="mt-2"><span class="product-price">2 790 ₽</span> <span class="product-old-price">3 990 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                        
+                        <!-- Дополнительные товары для "Все" -->
+                        <div class="col-6 col-md-4 product-item" data-category="electronics"><div class="product-card"><div class="position-relative"><img src="https://loremflickr.com/300/220/backpack,travel?lock=7" class="product-img" alt=""></div><div class="product-body"><div class="rating mb-1">★★★★☆ <span class="text-muted">(203)</span></div><div class="product-title">Рюкзак Urban Travel с USB зарядкой</div><div class="mt-2"><span class="product-price">2 790 ₽</span></div><button class="btn-cart mt-2"><i class="bi bi-cart-plus me-1"></i>В корзину</button></div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" style="background:var(--light)">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-3 col-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-truck"></i></div><h6 class="fw-600">Быстрая доставка</h6><p class="small text-muted mb-0">По всей России от 1 дня</p></div></div>
+                <div class="col-md-3 col-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h6 class="fw-600">Гарантия</h6><p class="small text-muted mb-0">Возврат в течение 30 дней</p></div></div>
+                <div class="col-md-3 col-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-credit-card"></i></div><h6 class="fw-600">Безопасно</h6><p class="small text-muted mb-0">Защита платежей SSL</p></div></div>
+                <div class="col-md-3 col-6"><div class="feature-box"><div class="feature-icon"><i class="bi bi-headset"></i></div><h6 class="fw-600">Поддержка 24/7</h6><p class="small text-muted mb-0">Всегда на связи</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 style="color:var(--orange);font-weight:700">ShopWave</h5>
+                    <p class="small">Ваш любимый онлайн-магазин. С 2018 года доставляем радость по всей России.</p>
+                    <div class="pay-icons">
+                        <div class="pay-icon">VISA</div><div class="pay-icon">MC</div><div class="pay-icon">МИР</div><div class="pay-icon">SBP</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2"><h6>Покупателям</h6><a href="#" class="f-link">Доставка</a><a href="#" class="f-link">Оплата</a><a href="#" class="f-link">Возвраты</a><a href="#" class="f-link">Отзывы</a></div>
+                <div class="col-6 col-md-2"><h6>Компания</h6><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Контакты</a><a href="#" class="f-link">Вакансии</a><a href="#" class="f-link">Блог</a></div>
+                <div class="col-md-4"><h6>Рассылка</h6><p class="small">Подпишитесь на скидки и акции</p><div class="d-flex gap-2"><input class="form-control form-control-sm" placeholder="email@example.com" style="background:#1f2937;border:1px solid #374151;color:#fff;border-radius:8px"><button class="btn btn-sm px-3" style="background:var(--orange);color:#fff;border-radius:8px;font-weight:600;white-space:nowrap">OK</button></div></div>
+            </div>
+            <hr style="border-color:#1f2937">
+            <p class="small mb-0 text-center">&copy; 2024 ShopWave. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Форма консультации
+        document.getElementById('consultForm')?.addEventListener('submit',function(e){
+            e.preventDefault();
+            this.classList.add('d-none');
+            document.getElementById('successMessage').classList.remove('d-none');
+            setTimeout(()=>{
+                bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();
+                this.reset();
+                this.classList.remove('d-none');
+                document.getElementById('successMessage').classList.add('d-none');
+            },3000);
+        });
+
+        // Фильтрация товаров по категориям
+        const categoryLinks = document.querySelectorAll('.cat-link');
+        const productItems = document.querySelectorAll('.product-item');
+        const categoryTitle = document.getElementById('categoryTitle');
+        
+        const categoryTitles = {
+            'all': 'Горячие предложения',
+            'electronics': 'Электроника',
+            'clothing': 'Одежда',
+            'home': 'Дом и сад',
+            'sport': 'Спорт',
+            'beauty': 'Красота',
+            'books': 'Книги',
+            'toys': 'Игрушки',
+            'auto': 'Авто'
+        };
+        
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Убираем active у всех ссылок
+                categoryLinks.forEach(l => l.classList.remove('active'));
+                // Добавляем active к выбранной
+                this.classList.add('active');
+                
+                const category = this.getAttribute('data-category');
+                
+                // Обновляем заголовок
+                if (categoryTitle && categoryTitles[category]) {
+                    categoryTitle.textContent = categoryTitles[category];
+                }
+                
+                // Фильтруем товары
+                productItems.forEach(item => {
+                    if (category === 'all') {
+                        item.style.display = '';
+                    } else {
+                        if (item.getAttribute('data-category') === category) {
+                            item.style.display = '';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

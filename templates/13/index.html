@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IronPulse — Фитнес платформа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--lime:#84cc16;--lime-dark:#65a30d;--bg:#111111;--surface:#1a1a1a;--border:#2a2a2a;--text:#a1a1a1}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+        .navbar{background:rgba(17,17,17,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:12px 0;position:sticky;top:0;z-index:1000}
+        .navbar-brand{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#fff!important;letter-spacing:3px}
+        .navbar-brand span{color:var(--lime)}
+        .nav-link{color:#888!important;font-weight:600;text-transform:uppercase;font-size:.8rem;letter-spacing:1.5px;transition:.3s}.nav-link:hover{color:var(--lime)!important}
+        .btn-join{background:var(--lime);color:#000;border:none;border-radius:6px;padding:10px 28px;font-weight:800;text-transform:uppercase;letter-spacing:1px;font-size:.8rem;transition:.3s}
+        .btn-join:hover{background:var(--lime-dark);transform:translateY(-2px);box-shadow:0 8px 24px rgba(132,204,22,.3)}
+        .hero{min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,var(--bg) 40%,transparent),url('https://loremflickr.com/1400/900/gym,fitness?lock=90') center/cover;opacity:.7}
+        .hero-content{position:relative;z-index:2}
+        .hero-label{display:inline-flex;align-items:center;gap:6px;background:rgba(132,204,22,.1);border:1px solid rgba(132,204,22,.3);border-radius:50px;padding:6px 16px;font-size:.75rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:2px;margin-bottom:20px}
+        .hero h1{font-family:'Bebas Neue',sans-serif;font-size:6rem;color:#fff;letter-spacing:4px;line-height:.9;margin-bottom:20px}
+        .hero h1 span{color:var(--lime)}
+        .hero p{font-size:1.1rem;color:#888;max-width:480px;line-height:1.6}
+        .timer-display{display:flex;gap:16px;margin:30px 0}
+        .timer-item{text-align:center}
+        .timer-num{font-family:'Bebas Neue';font-size:3rem;color:#fff;line-height:1;display:block;background:var(--surface);border:1px solid var(--border);border-radius:10px;width:70px;height:70px;display:flex;align-items:center;justify-content:center}
+        .timer-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1px;margin-top:4px;color:#666}
+        .section-head{margin-bottom:48px}
+        .section-head h2{font-family:'Bebas Neue';font-size:3rem;color:#fff;letter-spacing:3px}
+        .section-head .line{width:60px;height:4px;background:var(--lime);margin-top:10px}
+        .workout-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:.3s;height:100%}
+        .workout-card:hover{border-color:var(--lime);transform:translateY(-6px);box-shadow:0 12px 40px rgba(132,204,22,.08)}
+        .workout-img{width:100%;height:200px;object-fit:cover}
+        .workout-body{padding:20px}
+        .workout-tag{display:inline-block;background:rgba(132,204,22,.15);color:var(--lime);padding:4px 12px;border-radius:4px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+        .workout-name{font-family:'Bebas Neue';font-size:1.5rem;color:#fff;letter-spacing:1px;margin:8px 0 4px}
+        .workout-meta{display:flex;gap:12px;font-size:.8rem;color:#666}
+        .workout-meta i{color:var(--lime)}
+        .progress-ring{width:100px;height:100px;position:relative;margin:0 auto}
+        .progress-ring svg{transform:rotate(-90deg)}
+        .progress-ring circle{fill:none;stroke-width:6}
+        .progress-ring .bg{stroke:var(--border)}
+        .progress-ring .fill{stroke:var(--lime);stroke-linecap:round;stroke-dasharray:283;transition:stroke-dashoffset 1.5s ease}
+        .progress-value{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue';font-size:1.5rem;color:#fff}
+        .trainer-card{text-align:center}
+        .trainer-img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--border);margin:0 auto 12px;transition:.3s}
+        .trainer-card:hover .trainer-img{border-color:var(--lime)}
+        .trainer-name{font-family:'Bebas Neue';font-size:1.3rem;color:#fff;letter-spacing:1px}
+        .trainer-role{font-size:.8rem;color:var(--lime)}
+        .pricing-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:30px;text-align:center;transition:.3s;height:100%}
+        .pricing-card:hover{border-color:var(--lime)}
+        .pricing-card.featured{border-color:var(--lime);background:linear-gradient(180deg,rgba(132,204,22,.08),var(--surface))}
+        .pricing-card .badge-pop{display:inline-block;background:var(--lime);color:#000;padding:4px 12px;border-radius:4px;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+        .pricing-name{font-family:'Bebas Neue';font-size:1.8rem;color:#fff;letter-spacing:2px}
+        .pricing-amount{font-family:'Bebas Neue';font-size:3.5rem;color:#fff;line-height:1;margin:10px 0 4px}
+        .pricing-period{font-size:.85rem;color:#666}
+        .pricing-features{list-style:none;padding:0;margin:20px 0;text-align:left}
+        .pricing-features li{padding:6px 0;font-size:.85rem;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+        .pricing-features li i{color:var(--lime);font-size:.9rem}
+        footer{background:#0a0a0a;border-top:1px solid var(--border);padding:40px 0}
+        .f-link{color:#666;text-decoration:none;font-size:.8rem;transition:.2s}.f-link:hover{color:var(--lime)}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .pulse{animation:pulse 2s ease-in-out infinite}
+        @media(max-width:768px){.hero h1{font-size:3.5rem}.timer-num{width:55px;height:55px;font-size:2.2rem}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">IRON<span>PULSE</span></a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav13"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav13">
+                <ul class="navbar-nav mx-auto gap-2">
+                    <li class="nav-item"><a class="nav-link" href="#programs">Программы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#trainers">Тренеры</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing">Абонементы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Расписание</a></li>
+                </ul>
+                <button class="btn-join" data-bs-toggle="modal" data-bs-target="#consultModal">Записаться</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="hero-label"><span class="pulse" style="width:6px;height:6px;background:var(--lime);border-radius:50%;display:inline-block"></span>Открыт набор</div>
+                    <h1>СТАНЬ<br>СИЛЬНЕЕ<br><span>КАЖДЫЙ ДЕНЬ</span></h1>
+                    <p>Персональные программы тренировок, профессиональные тренеры и современное оборудование. Твоя трансформация начинается здесь.</p>
+                    <div class="timer-display">
+                        <div class="timer-item"><div class="timer-num" id="days">14</div><div class="timer-label">Дней</div></div>
+                        <div class="timer-item"><div class="timer-num" id="hours">08</div><div class="timer-label">Часов</div></div>
+                        <div class="timer-item"><div class="timer-num" id="mins">42</div><div class="timer-label">Минут</div></div>
+                        <div class="timer-item"><div class="timer-num" id="secs">15</div><div class="timer-label">Секунд</div></div>
+                    </div>
+                    <p style="font-size:.8rem;color:var(--lime)">⚡ Скидка 40% на годовой абонемент — осталось мест: 12</p>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block text-center">
+                    <div class="d-flex justify-content-center gap-4">
+                        <div><div class="progress-ring"><svg width="100" height="100"><circle class="bg" cx="50" cy="50" r="45"/><circle class="fill" cx="50" cy="50" r="45" style="stroke-dashoffset:56"/></svg><div class="progress-value">80%</div></div><div class="text-center mt-2" style="font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:1px">Сила</div></div>
+                        <div><div class="progress-ring"><svg width="100" height="100"><circle class="bg" cx="50" cy="50" r="45"/><circle class="fill" cx="50" cy="50" r="45" style="stroke-dashoffset:113"/></svg><div class="progress-value">60%</div></div><div class="text-center mt-2" style="font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:1px">Кардио</div></div>
+                        <div><div class="progress-ring"><svg width="100" height="100"><circle class="bg" cx="50" cy="50" r="45"/><circle class="fill" cx="50" cy="50" r="45" style="stroke-dashoffset:28"/></svg><div class="progress-value">90%</div></div><div class="text-center mt-2" style="font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:1px">Гибкость</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="programs">
+        <div class="container">
+            <div class="section-head"><h2>ПРОГРАММЫ ТРЕНИРОВОК</h2><div class="line"></div></div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3"><div class="workout-card"><img src="https://loremflickr.com/300/200/weightlifting,gym?lock=91" class="workout-img" alt=""><div class="workout-body"><span class="workout-tag">Силовая</span><div class="workout-name">POWER LIFT</div><p class="small mb-2">Интенсивная программа для набора мышечной массы и развития силы</p><div class="workout-meta"><span><i class="bi bi-clock"></i> 60 мин</span><span><i class="bi bi-fire"></i> 650 ккал</span></div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="workout-card"><img src="https://loremflickr.com/300/200/cardio,hiit?lock=92" class="workout-img" alt=""><div class="workout-body"><span class="workout-tag">Кардио</span><div class="workout-name">HIIT BURN</div><p class="small mb-2">Высокоинтенсивные интервальные тренировки для сжигания жира</p><div class="workout-meta"><span><i class="bi bi-clock"></i> 45 мин</span><span><i class="bi bi-fire"></i> 800 ккал</span></div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="workout-card"><img src="https://loremflickr.com/300/200/crossfit,workout?lock=93" class="workout-img" alt=""><div class="workout-body"><span class="workout-tag">Функционал</span><div class="workout-name">CROSS FIT</div><p class="small mb-2">Комплексная тренировка на выносливость и координацию</p><div class="workout-meta"><span><i class="bi bi-clock"></i> 50 мин</span><span><i class="bi bi-fire"></i> 750 ккал</span></div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="workout-card"><img src="https://loremflickr.com/300/200/yoga,stretching?lock=94" class="workout-img" alt=""><div class="workout-body"><span class="workout-tag">Растяжка</span><div class="workout-name">FLEX FLOW</div><p class="small mb-2">Йога и растяжка для восстановления и гибкости тела</p><div class="workout-meta"><span><i class="bi bi-clock"></i> 40 мин</span><span><i class="bi bi-fire"></i> 300 ккал</span></div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" style="background:var(--surface)" id="trainers">
+        <div class="container">
+            <div class="section-head text-center"><h2>НАШИ ТРЕНЕРЫ</h2><div class="line mx-auto"></div></div>
+            <div class="row g-4 justify-content-center">
+                <div class="col-6 col-md-3"><div class="trainer-card"><img src="https://i.pravatar.cc/120?img=12" class="trainer-img" alt=""><div class="trainer-name">ДМИТРИЙ ВОЛКОВ</div><div class="trainer-role">Силовой тренинг</div><p class="small mt-1">Опыт 12 лет</p></div></div>
+                <div class="col-6 col-md-3"><div class="trainer-card"><img src="https://i.pravatar.cc/120?img=45" class="trainer-img" alt=""><div class="trainer-name">АННА ПЕТРОВА</div><div class="trainer-role">Кардио & HIIT</div><p class="small mt-1">Опыт 8 лет</p></div></div>
+                <div class="col-6 col-md-3"><div class="trainer-card"><img src="https://i.pravatar.cc/120?img=68" class="trainer-img" alt=""><div class="trainer-name">СЕРГЕЙ ОРЛОВ</div><div class="trainer-role">CrossFit</div><p class="small mt-1">Опыт 10 лет</p></div></div>
+                <div class="col-6 col-md-3"><div class="trainer-card"><img src="https://i.pravatar.cc/120?img=9" class="trainer-img" alt=""><div class="trainer-name">МАРИЯ ИВАНОВА</div><div class="trainer-role">Йога & Pilates</div><p class="small mt-1">Опыт 6 лет</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="pricing">
+        <div class="container">
+            <div class="section-head text-center"><h2>АБОНЕМЕНТЫ</h2><div class="line mx-auto"></div></div>
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4"><div class="pricing-card"><div class="pricing-name">СТАРТ</div><div class="pricing-amount">₽2 990</div><div class="pricing-period">/ месяц</div><ul class="pricing-features"><li><i class="bi bi-check-lg"></i>Тренажёрный зал</li><li><i class="bi bi-check-lg"></i>Раздевалки и душевые</li><li><i class="bi bi-check-lg"></i>1 групповое занятие</li><li><i class="bi bi-x-lg" style="color:#666"></i>Персональный тренер</li></ul><button class="btn-join w-100" data-bs-toggle="modal" data-bs-target="#consultModal">Выбрать</button></div></div>
+                <div class="col-md-4"><div class="pricing-card featured"><span class="badge-pop">Популярный</span><div class="pricing-name">ПРОФИ</div><div class="pricing-amount">₽5 990</div><div class="pricing-period">/ месяц</div><ul class="pricing-features"><li><i class="bi bi-check-lg"></i>Все зоны клуба</li><li><i class="bi bi-check-lg"></i>Безлимит групповых</li><li><i class="bi bi-check-lg"></i>4 персон. тренировки</li><li><i class="bi bi-check-lg"></i>Программа питания</li></ul><button class="btn-join w-100" data-bs-toggle="modal" data-bs-target="#consultModal">Выбрать</button></div></div>
+                <div class="col-md-4"><div class="pricing-card"><div class="pricing-name">ЭЛИТА</div><div class="pricing-amount">₽9 990</div><div class="pricing-period">/ месяц</div><ul class="pricing-features"><li><i class="bi bi-check-lg"></i>Всё из «Профи»</li><li><i class="bi bi-check-lg"></i>Безлимит персональных</li><li><i class="bi bi-check-lg"></i>Спа и массаж</li><li><i class="bi bi-check-lg"></i>Бассейн и сауна</li></ul><button class="btn-join w-100" data-bs-toggle="modal" data-bs-target="#consultModal">Выбрать</button></div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <span style="font-family:'Bebas Neue';font-size:1.3rem;color:#fff;letter-spacing:3px">IRON<span style="color:var(--lime)">PULSE</span></span>
+                <div class="d-flex gap-3"><a href="#" class="f-link">О клубе</a><a href="#" class="f-link">Расписание</a><a href="#" class="f-link">Контакты</a><a href="#" class="f-link">Блог</a></div>
+                <div class="d-flex gap-3"><a href="#" class="f-link"><i class="bi bi-instagram fs-5"></i></a><a href="#" class="f-link"><i class="bi bi-telegram fs-5"></i></a><a href="#" class="f-link"><i class="bi bi-youtube fs-5"></i></a></div>
+            </div>
+            <hr style="border-color:var(--border)">
+            <p class="small text-center mb-0" style="color:#444">&copy; 2024 IronPulse Fitness Club</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn-join w-100 py-3">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Таймер обратного отсчёта
+    (function(){
+        const end=new Date();end.setDate(end.getDate()+14);end.setHours(23,59,59,0);
+        function tick(){
+            const now=new Date(),d=Math.max(0,end-now);
+            const dd=Math.floor(d/864e5),hh=Math.floor(d%864e5/36e5),mm=Math.floor(d%36e5/6e4),ss=Math.floor(d%6e4/1e3);
+            document.getElementById('days').textContent=String(dd).padStart(2,'0');
+            document.getElementById('hours').textContent=String(hh).padStart(2,'0');
+            document.getElementById('mins').textContent=String(mm).padStart(2,'0');
+            document.getElementById('secs').textContent=String(ss).padStart(2,'0');
+        }
+        tick();setInterval(tick,1000);
+    })();
+    // Форма
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});
+    </script>
+</body>
+</html>

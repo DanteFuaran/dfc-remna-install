@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayVault — Financial Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--emerald:#10b981;--gold:#f59e0b;--navy:#0c1222;--navy2:#111a2e;--border:#1a2744}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'DM Sans',sans-serif;background:var(--navy);color:#94a3b8;overflow-x:hidden}
+        .navbar{background:rgba(12,18,34,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:.9rem 0}
+        .navbar-brand{font-weight:700;color:#fff!important;font-size:1.4rem}
+        .navbar-brand span{color:var(--emerald)}
+        .nav-link{color:#64748b!important;font-weight:500;transition:.3s}.nav-link:hover{color:var(--emerald)!important}
+        .hero{padding:100px 0 80px;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(16,185,129,.06),transparent 70%);border-radius:50%}
+        .hero h1{font-size:3.2rem;font-weight:700;color:#f1f5f9;line-height:1.15}
+        .balance-card{background:linear-gradient(135deg,var(--navy2),#0f1b30);border:1px solid var(--border);border-radius:20px;padding:32px;position:relative;overflow:hidden}
+        .balance-card::after{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:var(--emerald);opacity:.05;border-radius:50%}
+        .balance-amount{font-size:2.8rem;font-weight:700;color:#fff}
+        .balance-change{display:inline-flex;align-items:center;gap:4px;background:rgba(16,185,129,.12);color:var(--emerald);padding:4px 12px;border-radius:50px;font-size:.85rem;font-weight:600}
+        .metric-card{background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:24px;transition:.3s}
+        .metric-card:hover{border-color:rgba(16,185,129,.3);transform:translateY(-4px)}
+        .metric-value{font-size:1.8rem;font-weight:700;color:#f1f5f9}
+        .metric-label{font-size:.85rem;color:#64748b}
+        .btn-emerald{background:var(--emerald);border:none;color:#fff;padding:12px 32px;border-radius:10px;font-weight:600;transition:.3s;box-shadow:0 4px 15px rgba(16,185,129,.3)}
+        .btn-emerald:hover{background:#059669;color:#fff;transform:translateY(-2px);box-shadow:0 6px 25px rgba(16,185,129,.4)}
+        .btn-gold{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--gold);padding:12px 32px;border-radius:10px;font-weight:600;transition:.3s}
+        .btn-gold:hover{background:rgba(245,158,11,.2);color:var(--gold)}
+        .feature-row{display:flex;align-items:center;gap:20px;background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;transition:.3s}
+        .feature-row:hover{border-color:rgba(16,185,129,.3)}
+        .feature-row-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+        .tx-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+        .tx-table th{color:#64748b;font-weight:500;font-size:.8rem;text-transform:uppercase;letter-spacing:1px;padding:8px 16px}
+        .tx-table td{background:var(--navy2);padding:16px;color:#e2e8f0;font-size:.9rem}
+        .tx-table tr td:first-child{border-radius:12px 0 0 12px}.tx-table tr td:last-child{border-radius:0 12px 12px 0}
+        .tx-status{padding:4px 12px;border-radius:50px;font-size:.8rem;font-weight:600}
+        .tx-success{background:rgba(16,185,129,.12);color:var(--emerald)}
+        .tx-pending{background:rgba(245,158,11,.12);color:var(--gold)}
+        .security-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:50px;padding:8px 20px;font-size:.85rem;color:var(--emerald);font-weight:500;margin:4px}
+        .section-tag{color:var(--emerald);font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+        .section-title{font-size:2.2rem;font-weight:700;color:#f1f5f9}
+        footer{background:var(--navy2);border-top:1px solid var(--border);padding:40px 0}
+        .anim{opacity:0;transform:translateY(25px);transition:.6s}.anim.vis{opacity:1;transform:translateY(0)}
+        @media(max-width:768px){.hero h1{font-size:2rem}.balance-amount{font-size:2rem}.feature-row{flex-direction:column;text-align:center}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="bi bi-safe me-2" style="color:var(--emerald)"></i>Pay<span>Vault</span></a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav4"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav4">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#features">Возможности</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#transactions">Транзакции</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#security">Безопасность</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-2 mt-lg-0 d-flex gap-2">
+                    <a href="#" class="btn btn-gold btn-sm">Войти</a>
+                    <a href="#" class="btn btn-emerald btn-sm">Открыть счёт</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <p class="section-tag"><i class="bi bi-lightning-fill me-1"></i>Финансы нового поколения</p>
+                    <h1>Управляйте деньгами <span style="color:var(--emerald)">умнее</span></h1>
+                    <p class="my-4" style="max-width:480px">Мгновенные переводы, инвестиции, аналитика расходов — всё в одном приложении с банковским уровнем защиты.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#" class="btn btn-emerald"><i class="bi bi-wallet2 me-2"></i>Открыть счёт</a>
+                        <a href="#" class="btn btn-gold"><i class="bi bi-play-circle me-2"></i>Как это работает</a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="balance-card anim">
+                        <p class="small text-secondary mb-1">Общий баланс</p>
+                        <div class="balance-amount">₽ 2,847,650<span style="font-size:1.4rem;color:var(--emerald)">.42</span></div>
+                        <span class="balance-change mt-2"><i class="bi bi-arrow-up-short"></i>+12.4% за месяц</span>
+                        <div class="row g-3 mt-3">
+                            <div class="col-4"><div class="metric-card text-center"><div class="metric-value" style="font-size:1.2rem;color:var(--emerald)">+₽285K</div><div class="metric-label">Доход</div></div></div>
+                            <div class="col-4"><div class="metric-card text-center"><div class="metric-value" style="font-size:1.2rem;color:#f87171">-₽142K</div><div class="metric-label">Расход</div></div></div>
+                            <div class="col-4"><div class="metric-card text-center"><div class="metric-value" style="font-size:1.2rem;color:var(--gold)">₽430K</div><div class="metric-label">Инвестиции</div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-6 col-lg-3 anim"><div class="metric-card text-center"><div class="metric-value">250K+</div><div class="metric-label">Пользователей</div></div></div>
+                <div class="col-6 col-lg-3 anim"><div class="metric-card text-center"><div class="metric-value">₽15B</div><div class="metric-label">Оборот/мес</div></div></div>
+                <div class="col-6 col-lg-3 anim"><div class="metric-card text-center"><div class="metric-value">0.1%</div><div class="metric-label">Комиссия</div></div></div>
+                <div class="col-6 col-lg-3 anim"><div class="metric-card text-center"><div class="metric-value">24/7</div><div class="metric-label">Поддержка</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-5">
+        <div class="container">
+            <p class="section-tag">Возможности</p>
+            <h2 class="section-title mb-4">Всё для управления финансами</h2>
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="feature-row anim"><div class="feature-row-icon" style="background:rgba(16,185,129,.1);color:var(--emerald)"><i class="bi bi-send"></i></div><div><h6 class="text-white fw-semibold mb-1">Мгновенные переводы</h6><p class="mb-0 small">Переводы по номеру телефона, карте или реквизитам — моментально и без комиссий</p></div></div>
+                    <div class="feature-row anim"><div class="feature-row-icon" style="background:rgba(245,158,11,.1);color:var(--gold)"><i class="bi bi-graph-up"></i></div><div><h6 class="text-white fw-semibold mb-1">Инвестиции</h6><p class="mb-0 small">Акции, облигации, ETF — инвестируйте от 1000 ₽. Автоматический портфель.</p></div></div>
+                    <div class="feature-row anim"><div class="feature-row-icon" style="background:rgba(99,102,241,.1);color:#818cf8"><i class="bi bi-pie-chart"></i></div><div><h6 class="text-white fw-semibold mb-1">Аналитика расходов</h6><p class="mb-0 small">Автоматическая категоризация покупок, бюджеты, прогнозы и рекомендации</p></div></div>
+                    <div class="feature-row anim"><div class="feature-row-icon" style="background:rgba(236,72,153,.1);color:#f472b6"><i class="bi bi-credit-card-2-front"></i></div><div><h6 class="text-white fw-semibold mb-1">Виртуальные карты</h6><p class="mb-0 small">Создавайте карты для разных целей. Установите лимиты и контролируйте траты.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="transactions" class="py-5">
+        <div class="container">
+            <p class="section-tag">Последние транзакции</p>
+            <h2 class="section-title mb-4">История операций</h2>
+            <div class="table-responsive anim">
+                <table class="tx-table">
+                    <thead><tr><th>Операция</th><th>Дата</th><th>Сумма</th><th>Статус</th></tr></thead>
+                    <tbody>
+                        <tr><td><i class="bi bi-arrow-up-right text-success me-2"></i>Перевод Иванову А.</td><td>07.02.2026</td><td class="text-danger">- 25,000 ₽</td><td><span class="tx-status tx-success">Выполнено</span></td></tr>
+                        <tr><td><i class="bi bi-arrow-down-left text-info me-2"></i>Зачисление зарплаты</td><td>05.02.2026</td><td class="text-success">+ 185,000 ₽</td><td><span class="tx-status tx-success">Выполнено</span></td></tr>
+                        <tr><td><i class="bi bi-cart me-2" style="color:var(--gold)"></i>Ozon — покупка</td><td>04.02.2026</td><td class="text-danger">- 4,290 ₽</td><td><span class="tx-status tx-success">Выполнено</span></td></tr>
+                        <tr><td><i class="bi bi-graph-up me-2" style="color:#818cf8"></i>Покупка акций AAPL</td><td>03.02.2026</td><td class="text-danger">- 50,000 ₽</td><td><span class="tx-status tx-pending">Обработка</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="security" class="py-5">
+        <div class="container text-center">
+            <p class="section-tag">Безопасность</p>
+            <h2 class="section-title mb-4">Банковский уровень защиты</h2>
+            <div class="d-flex flex-wrap justify-content-center gap-2 anim">
+                <span class="security-badge"><i class="bi bi-shield-check"></i>Лицензия ЦБ</span>
+                <span class="security-badge"><i class="bi bi-lock"></i>256-bit шифрование</span>
+                <span class="security-badge"><i class="bi bi-fingerprint"></i>Биометрия</span>
+                <span class="security-badge"><i class="bi bi-phone"></i>2FA авторизация</span>
+                <span class="security-badge"><i class="bi bi-eye-slash"></i>Безопасные данные</span>
+                <span class="security-badge"><i class="bi bi-patch-check"></i>PCI DSS</span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-3"><h5 class="text-white fw-bold"><i class="bi bi-safe me-2" style="color:var(--emerald)"></i>PayVault</h5><p class="small mt-2">Финансовая платформа нового поколения. Лицензия ЦБ РФ №1234.</p></div>
+                <div class="col-6 col-lg-2 mb-3"><h6 class="text-white small fw-semibold mb-3">Продукт</h6><a href="#" style="color:#64748b;text-decoration:none;display:block;font-size:.85rem;margin-bottom:6px">Переводы</a><a href="#" style="color:#64748b;text-decoration:none;display:block;font-size:.85rem;margin-bottom:6px">Инвестиции</a><a href="#" style="color:#64748b;text-decoration:none;display:block;font-size:.85rem">Карты</a></div>
+                <div class="col-6 col-lg-2 mb-3"><h6 class="text-white small fw-semibold mb-3">Компания</h6><a href="#" style="color:#64748b;text-decoration:none;display:block;font-size:.85rem;margin-bottom:6px">О нас</a><a href="#" style="color:#64748b;text-decoration:none;display:block;font-size:.85rem;margin-bottom:6px">Карьера</a><a href="#" style="color:#64748b;text-decoration:none;display:block;font-size:.85rem">Контакты</a></div>
+                <div class="col-lg-4 mb-3"><h6 class="text-white small fw-semibold mb-3">Поддержка</h6><p class="small mb-1"><i class="bi bi-telephone me-2"></i>8 800 100-20-30</p><p class="small"><i class="bi bi-envelope me-2"></i>support@payvault.ru</p></div>
+            </div>
+            <hr style="border-color:var(--border)"><p class="text-center small mb-0">&copy; 2024 PayVault. Все права защищены.</p>
+        </div>
+    </footer>
+
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>const o=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('vis');o.unobserve(el.target)}})},{threshold:.15});document.querySelectorAll('.anim').forEach(el=>o.observe(el));document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

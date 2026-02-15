@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonArena — Игровой портал</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--neon:#a855f7;--pink:#ec4899;--cyan:#22d3ee;--bg:#0f0f23;--card:#161632;--border:#251f4a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#a5a5c0;overflow-x:hidden}
+        body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 50%,rgba(168,85,247,.06),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(236,72,153,.06),transparent 60%);pointer-events:none;z-index:0}
+        .navbar{background:rgba(15,15,35,.8);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:1000}
+        .navbar-brand{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.5rem;background:linear-gradient(135deg,var(--neon),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .nav-link{color:#8888aa!important;font-weight:600;font-size:.9rem;letter-spacing:1px;text-transform:uppercase;transition:.3s}.nav-link:hover{color:var(--neon)!important}
+        .glitch{position:relative;font-family:'Orbitron',sans-serif;font-weight:900;font-size:3.5rem;color:#fff;text-transform:uppercase;letter-spacing:3px;line-height:1.1}
+        .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}
+        .glitch::before{color:var(--cyan);animation:glitch1 2s infinite;clip-path:polygon(0 0,100% 0,100% 35%,0 35%)}
+        .glitch::after{color:var(--pink);animation:glitch2 2s infinite;clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%)}
+        @keyframes glitch1{0%,100%{transform:translate(0)}20%{transform:translate(-3px,2px)}40%{transform:translate(3px,-2px)}60%{transform:translate(-2px,0)}}
+        @keyframes glitch2{0%,100%{transform:translate(0)}20%{transform:translate(3px,-2px)}40%{transform:translate(-3px,2px)}60%{transform:translate(2px,0)}}
+        .hero{min-height:80vh;display:flex;align-items:center;position:relative;z-index:1}
+        .hero-bg{position:absolute;top:0;left:0;right:0;bottom:0;background:url('https://loremflickr.com/1400/800/gaming,cyberpunk?lock=74') center/cover no-repeat;opacity:.15}
+        .neon-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border:2px solid var(--neon);color:var(--neon);background:transparent;border-radius:4px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:.3s;position:relative;overflow:hidden}
+        .neon-btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(168,85,247,.2),transparent);transition:.5s}
+        .neon-btn:hover::before{left:100%}
+        .neon-btn:hover{background:var(--neon);color:#fff;box-shadow:0 0 30px rgba(168,85,247,.4)}
+        .neon-btn-pink{border-color:var(--pink);color:var(--pink)}
+        .neon-btn-pink:hover{background:var(--pink);box-shadow:0 0 30px rgba(236,72,153,.4)}
+        .game-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:.4s;position:relative}
+        .game-card:hover{transform:translateY(-8px);border-color:var(--neon);box-shadow:0 8px 40px rgba(168,85,247,.2)}
+        .game-card img{width:100%;height:200px;object-fit:cover;transition:.4s}
+        .game-card:hover img{transform:scale(1.05)}
+        .game-card-body{padding:16px}
+        .game-title{font-family:'Orbitron',sans-serif;font-weight:700;color:#fff;font-size:.85rem}
+        .game-genre{font-size:.75rem;color:var(--neon)}
+        .platform-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;background:rgba(168,85,247,.15);border-radius:4px;font-size:.7rem;color:var(--neon);font-weight:600}
+        .stat-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center}
+        .stat-num{font-family:'Orbitron',sans-serif;font-size:2.5rem;font-weight:900;color:#fff}
+        .stat-label{color:var(--neon);font-weight:600;font-size:.85rem;text-transform:uppercase;letter-spacing:1px}
+        .tournament{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        .tournament-header{background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(236,72,153,.2));padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .tournament table{width:100%;margin:0}
+        .tournament th{background:rgba(255,255,255,.03);padding:10px 16px;font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:#8888aa;font-weight:600;border-bottom:1px solid var(--border)}
+        .tournament td{padding:12px 16px;font-size:.85rem;border-bottom:1px solid rgba(37,31,74,.5)}
+        .rank-1{color:#fbbf24;font-family:'Orbitron',sans-serif;font-weight:700}
+        .rank-2{color:#94a3b8;font-family:'Orbitron',sans-serif;font-weight:700}
+        .rank-3{color:#c2703e;font-family:'Orbitron',sans-serif;font-weight:700}
+        .player-name{color:#fff;font-weight:600}
+        .win-rate{color:var(--cyan)}
+        .section-title{font-family:'Orbitron',sans-serif;font-weight:800;font-size:1.8rem;color:#fff;text-transform:uppercase;letter-spacing:2px;margin-bottom:40px}
+        .section-title span{color:var(--neon)}
+        .news-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:.3s}
+        .news-card:hover{border-color:var(--pink)}
+        .news-date{font-size:.75rem;color:var(--pink);font-weight:600}
+        .news-title{color:#fff;font-weight:700;font-size:1rem;margin-top:4px}
+        footer{background:#0a0a1a;border-top:1px solid var(--border);padding:30px 0;position:relative;z-index:1}
+        footer a{color:#6666aa;text-decoration:none;font-size:.85rem;transition:.3s}footer a:hover{color:var(--neon)}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .floating{animation:float 3s ease-in-out infinite}
+        @media(max-width:768px){.glitch{font-size:2.2rem}.stat-num{font-size:1.8rem}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">NEONARENA</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav8" style="color:var(--neon)"><i class="bi bi-controller fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav8">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#">Игры</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#lb">Рейтинг</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#news">Новости</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tournament">Турниры</a></li>
+                </ul>
+                <a href="#" class="neon-btn ms-lg-4" style="padding:8px 20px;font-size:.7rem">🎮 Войти</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container position-relative" style="z-index:2">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="game-genre mb-3" style="font-size:.9rem;letter-spacing:3px;text-transform:uppercase">Сезон 7 /// Начало</div>
+                    <h1 class="glitch mb-4" data-text="Кибер Война 2087">Кибер Война 2087</h1>
+                    <p style="font-size:1.1rem;max-width:500px;line-height:1.7;color:#8888bb">Погрузись в мир будущего. Сражайся с тысячами игроков в режиме реального времени. Новые карты, оружие и персонажи ждут.</p>
+                    <div class="d-flex gap-3 mt-4 flex-wrap">
+                        <a href="#" class="neon-btn">Играть сейчас</a>
+                        <a href="#" class="neon-btn neon-btn-pink"><i class="bi bi-play-circle"></i>Трейлер</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center mt-5 mt-lg-0">
+                    <img src="https://loremflickr.com/400/400/gaming,esports?lock=75" alt="" class="floating" style="border-radius:20px;max-width:340px;border:2px solid var(--border);box-shadow:0 20px 60px rgba(168,85,247,.15)">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-6 col-md-3"><div class="stat-panel"><div class="stat-num">12M+</div><div class="stat-label">Игроков</div></div></div>
+                <div class="col-6 col-md-3"><div class="stat-panel"><div class="stat-num">850+</div><div class="stat-label">Турниров</div></div></div>
+                <div class="col-6 col-md-3"><div class="stat-panel"><div class="stat-num">$2.4M</div><div class="stat-label">Призовые</div></div></div>
+                <div class="col-6 col-md-3"><div class="stat-panel"><div class="stat-num">24/7</div><div class="stat-label">Серверы</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="section-title">Популярные <span>игры</span></h2>
+            <div class="row g-4">
+                <div class="col-6 col-md-4 col-lg-3"><div class="game-card"><div style="overflow:hidden"><img src="https://loremflickr.com/300/200/rpg,fantasy?lock=76" alt=""></div><div class="game-card-body"><div class="game-genre">RPG • Онлайн</div><div class="game-title">Тени Авалона</div><div class="d-flex gap-2 mt-2"><span class="platform-badge"><i class="bi bi-pc-display"></i>PC</span><span class="platform-badge"><i class="bi bi-controller"></i>PS5</span></div></div></div></div>
+                <div class="col-6 col-md-4 col-lg-3"><div class="game-card"><div style="overflow:hidden"><img src="https://loremflickr.com/300/200/shooter,battleground?lock=77" alt=""></div><div class="game-card-body"><div class="game-genre">Шутер • Battle Royale</div><div class="game-title">Зона Отчуждения</div><div class="d-flex gap-2 mt-2"><span class="platform-badge"><i class="bi bi-pc-display"></i>PC</span><span class="platform-badge"><i class="bi bi-phone"></i>Mobile</span></div></div></div></div>
+                <div class="col-6 col-md-4 col-lg-3"><div class="game-card"><div style="overflow:hidden"><img src="https://loremflickr.com/300/200/strategy,medieval?lock=78" alt=""></div><div class="game-card-body"><div class="game-genre">Стратегия • RTS</div><div class="game-title">Империя Хаоса</div><div class="d-flex gap-2 mt-2"><span class="platform-badge"><i class="bi bi-pc-display"></i>PC</span></div></div></div></div>
+                <div class="col-6 col-md-4 col-lg-3"><div class="game-card"><div style="overflow:hidden"><img src="https://loremflickr.com/300/200/racing,neon?lock=79" alt=""></div><div class="game-card-body"><div class="game-genre">Гонки • Аркада</div><div class="game-title">Неоновый Дрифт</div><div class="d-flex gap-2 mt-2"><span class="platform-badge"><i class="bi bi-controller"></i>PS5</span><span class="platform-badge"><i class="bi bi-xbox"></i>Xbox</span></div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="tournament">
+        <div class="container">
+            <h2 class="section-title">Таблица <span>лидеров</span></h2>
+            <div class="tournament" id="lb">
+                <div class="tournament-header">
+                    <span style="color:#fff;font-family:'Orbitron';font-weight:700;font-size:.85rem">ГЛОБАЛЬНЫЙ РЕЙТИНГ</span>
+                    <span class="game-genre" style="font-size:.75rem">Обновлено: 5 мин назад</span>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>#</th><th>Игрок</th><th>Команда</th><th>Win Rate</th><th>ELO</th></tr></thead>
+                        <tbody>
+                            <tr><td class="rank-1">🥇 1</td><td class="player-name">xDarkStar</td><td>Nova Esports</td><td class="win-rate">94.2%</td><td style="color:#fff">3,847</td></tr>
+                            <tr><td class="rank-2">🥈 2</td><td class="player-name">CyberPhantom</td><td>Team Liquid</td><td class="win-rate">91.8%</td><td style="color:#fff">3,721</td></tr>
+                            <tr><td class="rank-3">🥉 3</td><td class="player-name">BladeRunner99</td><td>Fnatic</td><td class="win-rate">89.5%</td><td style="color:#fff">3,654</td></tr>
+                            <tr><td>4</td><td class="player-name">NightOwlX</td><td>Cloud9</td><td class="win-rate">87.1%</td><td style="color:#fff">3,590</td></tr>
+                            <tr><td>5</td><td class="player-name">PixelSniper</td><td>TSM</td><td class="win-rate">86.3%</td><td style="color:#fff">3,512</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="news">
+        <div class="container">
+            <h2 class="section-title">Последние <span>новости</span></h2>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="news-card"><div class="news-date">17 Янв 2025</div><div class="news-title">Анонсирован турнир NeonArena Championship с призовым фондом $500K</div><p class="small mt-2 mb-0">Крупнейший киберспортивный турнир года стартует в марте...</p></div></div>
+                <div class="col-md-4"><div class="news-card"><div class="news-date">14 Янв 2025</div><div class="news-title">Обновление 7.2: Новая карта «Пустошь» и балансировка оружия</div><p class="small mt-2 mb-0">Разработчики представили масштабное обновление игрового контента...</p></div></div>
+                <div class="col-md-4"><div class="news-card"><div class="news-date">10 Янв 2025</div><div class="news-title">Team Liquid подписала контракт с xDarkStar — новая эра киберспорта</div><p class="small mt-2 mb-0">Легендарный игрок переходит в одну из сильнейших команд мира...</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <span style="font-family:'Orbitron';font-weight:900;background:linear-gradient(135deg,var(--neon),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent">NEONARENA</span>
+                <div class="d-flex gap-4 my-2"><a href="#">Discord</a><a href="#">Twitch</a><a href="#">Twitter</a><a href="#">YouTube</a></div>
+                <span class="small" style="color:#444">&copy; 2024 NeonArena</span>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

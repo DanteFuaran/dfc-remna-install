@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nimbus — Cloud Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--sky:#0ea5e9;--sky-light:#38bdf8;--sky-dark:#0284c7;--bg:#f8fafc;--card:#ffffff}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Poppins',sans-serif;background:var(--bg);color:#475569;overflow-x:hidden}
+        .navbar{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:1rem 0}
+        .navbar-brand{font-weight:700;color:#0f172a!important;font-size:1.4rem}
+        .navbar-brand i{color:var(--sky)}
+        .nav-link{color:#64748b!important;font-weight:500;font-size:.95rem;transition:.3s}
+        .nav-link:hover{color:var(--sky)!important}
+        .hero{padding:100px 0;background:linear-gradient(180deg,#f0f9ff 0%,#f8fafc 100%);position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(14,165,233,.08),transparent 70%);border-radius:50%}
+        .hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(56,189,248,.06),transparent 70%);border-radius:50%}
+        .hero h1{font-size:3.5rem;font-weight:700;color:#0f172a;line-height:1.15}
+        .hero h1 span{color:var(--sky)}
+        .hero p{font-size:1.15rem;color:#64748b;max-width:540px}
+        .btn-sky{background:var(--sky);border:none;color:#fff;padding:14px 36px;border-radius:50px;font-weight:600;transition:.3s;box-shadow:0 4px 14px rgba(14,165,233,.3)}
+        .btn-sky:hover{background:var(--sky-dark);color:#fff;transform:translateY(-2px);box-shadow:0 6px 20px rgba(14,165,233,.4)}
+        .btn-sky-outline{background:transparent;border:2px solid #e2e8f0;color:#0f172a;padding:12px 36px;border-radius:50px;font-weight:600;transition:.3s}
+        .btn-sky-outline:hover{border-color:var(--sky);color:var(--sky)}
+        .cloud-icon{animation:float 6s ease-in-out infinite}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+        .feature-box{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:36px;transition:.4s;text-align:center}
+        .feature-box:hover{border-color:var(--sky);box-shadow:0 20px 40px rgba(14,165,233,.08);transform:translateY(-6px)}
+        .feature-box-icon{width:64px;height:64px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.6rem;color:var(--sky)}
+        .section-pill{display:inline-block;padding:6px 20px;background:#f0f9ff;color:var(--sky);font-size:.85rem;font-weight:600;border-radius:50px;margin-bottom:16px}
+        .section-title{font-size:2.5rem;font-weight:700;color:#0f172a}
+        .plan-card{background:#fff;border:2px solid #e2e8f0;border-radius:20px;padding:36px;text-align:center;transition:.3s}
+        .plan-card:hover{border-color:var(--sky)}.plan-card.popular{border-color:var(--sky);box-shadow:0 10px 40px rgba(14,165,233,.12)}
+        .plan-price{font-size:3rem;font-weight:700;color:#0f172a}.plan-price span{font-size:1rem;color:#94a3b8;font-weight:400}
+        .client-logo{height:32px;opacity:.4;filter:grayscale(100%);transition:.3s}
+        .client-logo:hover{opacity:.7;filter:none}
+        .faq-item{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px}
+        .faq-item .accordion-button{background:transparent;color:#0f172a;font-weight:600;box-shadow:none}
+        .faq-item .accordion-button:not(.collapsed){color:var(--sky)}
+        .faq-item .accordion-body{color:#64748b;font-size:.95rem}
+        .cta-box{background:linear-gradient(135deg,var(--sky),var(--sky-dark));border-radius:24px;padding:60px;text-align:center;color:#fff}
+        footer{background:#0f172a;color:#94a3b8;padding:50px 0 30px}
+        .f-link{color:#94a3b8;text-decoration:none;display:block;margin-bottom:8px;font-size:.9rem;transition:.3s}
+        .f-link:hover{color:var(--sky-light)}
+        .anim{opacity:0;transform:translateY(30px);transition:.6s ease}.anim.show{opacity:1;transform:translateY(0)}
+        @media(max-width:768px){.hero h1{font-size:2.2rem}.section-title{font-size:1.7rem}.cta-box{padding:30px}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="bi bi-cloud-fill me-2"></i>Nimbus</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav3"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav3">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#features">Возможности</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing">Тарифы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                </ul>
+                <a href="#pricing" class="btn btn-sky btn-sm ms-lg-3 mt-2 mt-lg-0">Попробовать</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <span class="section-pill"><i class="bi bi-stars me-1"></i>Новое поколение</span>
+                    <h1>Облако которое <span>просто работает</span></h1>
+                    <p class="my-4">Разверните любое приложение за секунды. Безопасно, быстро и с гарантией SLA 99.99%.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#pricing" class="btn btn-sky">Начать бесплатно</a>
+                        <a href="#features" class="btn btn-sky-outline"><i class="bi bi-play-circle me-2"></i>Обзор</a>
+                    </div>
+                    <div class="d-flex gap-4 mt-4">
+                        <div><strong class="text-dark fs-4">99.99%</strong><br><small>Uptime SLA</small></div>
+                        <div><strong class="text-dark fs-4">30+</strong><br><small>Регионов</small></div>
+                        <div><strong class="text-dark fs-4">10K+</strong><br><small>Клиентов</small></div>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-cloud-haze2-fill cloud-icon" style="font-size:16rem;color:var(--sky);opacity:.15"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-5 mt-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-pill">Возможности</span>
+                <h2 class="section-title">Всё для вашего проекта</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-box h-100"><div class="feature-box-icon"><i class="bi bi-rocket-takeoff"></i></div><h5 style="color:#0f172a;font-weight:600">Мгновенный деплой</h5><p class="mb-0 small">Развёртывание из Git за 30 секунд. Push и ваше приложение онлайн.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-box h-100"><div class="feature-box-icon"><i class="bi bi-globe2"></i></div><h5 style="color:#0f172a;font-weight:600">Глобальный CDN</h5><p class="mb-0 small">300+ точек присутствия по всему миру. Контент доставляется мгновенно.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-box h-100"><div class="feature-box-icon"><i class="bi bi-database-check"></i></div><h5 style="color:#0f172a;font-weight:600">Managed Databases</h5><p class="mb-0 small">PostgreSQL, MySQL, Redis с автобэкапами и масштабированием.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-box h-100"><div class="feature-box-icon"><i class="bi bi-shield-lock"></i></div><h5 style="color:#0f172a;font-weight:600">Безопасность</h5><p class="mb-0 small">Автоматические SSL, WAF, DDoS protection включены бесплатно.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-box h-100"><div class="feature-box-icon"><i class="bi bi-bar-chart-line"></i></div><h5 style="color:#0f172a;font-weight:600">Мониторинг</h5><p class="mb-0 small">Метрики в реальном времени, алерты, логи — всё в одной панели.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-box h-100"><div class="feature-box-icon"><i class="bi bi-arrows-angle-expand"></i></div><h5 style="color:#0f172a;font-weight:600">Автоскейлинг</h5><p class="mb-0 small">Автоматическое масштабирование по нагрузке. Платите только за использование.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="py-5 mt-4" style="background:#fff">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-pill">Тарифы</span>
+                <h2 class="section-title">Простые и прозрачные цены</h2>
+            </div>
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4 anim"><div class="plan-card h-100"><h6 class="text-muted mb-3">Hobby</h6><div class="plan-price">$0<span>/мес</span></div><p class="small text-muted my-3">Для экспериментов</p><hr><ul class="list-unstyled text-start small"><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>512 MB RAM</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>1 vCPU</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Free SSL</li></ul><a href="#" class="btn btn-sky-outline w-100 mt-3">Выбрать</a></div></div>
+                <div class="col-md-4 anim"><div class="plan-card popular h-100"><span class="badge bg-primary mb-2">Рекомендуем</span><h6 class="text-muted mb-3">Pro</h6><div class="plan-price">$25<span>/мес</span></div><p class="small text-muted my-3">Для проектов</p><hr><ul class="list-unstyled text-start small"><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>4 GB RAM</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>2 vCPU</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Custom domains</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Auto backups</li></ul><a href="#" class="btn btn-sky w-100 mt-3">Выбрать</a></div></div>
+                <div class="col-md-4 anim"><div class="plan-card h-100"><h6 class="text-muted mb-3">Business</h6><div class="plan-price">$99<span>/мес</span></div><p class="small text-muted my-3">Для бизнеса</p><hr><ul class="list-unstyled text-start small"><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>16 GB RAM</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>8 vCPU</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>SLA 99.99%</li><li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>Priority support</li></ul><a href="#" class="btn btn-sky-outline w-100 mt-3">Выбрать</a></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-5 mt-4">
+        <div class="container" style="max-width:800px">
+            <div class="text-center mb-5">
+                <span class="section-pill">FAQ</span>
+                <h2 class="section-title">Частые вопросы</h2>
+            </div>
+            <div class="accordion" id="faqAcc">
+                <div class="faq-item"><h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1">Как начать работу с Nimbus?</button></h2><div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc"><div class="accordion-body">Зарегистрируйтесь, подключите GitHub репозиторий и нажмите Deploy. Ваше приложение будет онлайн через 30 секунд.</div></div></div>
+                <div class="faq-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">Какие языки поддерживаются?</button></h2><div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body">Node.js, Python, Ruby, Go, PHP, Java, .NET, Rust и любой Docker-контейнер.</div></div></div>
+                <div class="faq-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3">Есть ли бесплатный тариф?</button></h2><div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc"><div class="accordion-body">Да! Тариф Hobby полностью бесплатный и включает 512 MB RAM, SSL и один проект.</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="cta-box anim">
+                <h2 class="fw-bold mb-3" style="font-size:2rem">Готовы к облаку?</h2>
+                <p class="mb-4 mx-auto" style="max-width:400px;opacity:.9">Начните бесплатно прямо сейчас. Кредитная карта не нужна.</p>
+                <a href="#" class="btn btn-light btn-lg fw-semibold" style="border-radius:50px;padding:14px 40px">Начать бесплатно <i class="bi bi-arrow-right ms-2"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4"><h5 class="text-white fw-bold mb-3"><i class="bi bi-cloud-fill me-2" style="color:var(--sky)"></i>Nimbus</h5><p class="small">Облачная платформа нового поколения. Простой деплой, надёжная инфраструктура.</p></div>
+                <div class="col-6 col-lg-2 mb-4"><h6 class="text-white small fw-semibold mb-3">Продукт</h6><a href="#" class="f-link">Возможности</a><a href="#" class="f-link">Тарифы</a><a href="#" class="f-link">Статус</a></div>
+                <div class="col-6 col-lg-2 mb-4"><h6 class="text-white small fw-semibold mb-3">Ресурсы</h6><a href="#" class="f-link">Документация</a><a href="#" class="f-link">API</a><a href="#" class="f-link">Блог</a></div>
+                <div class="col-lg-4 mb-4"><h6 class="text-white small fw-semibold mb-3">Связаться</h6><p class="small mb-1"><i class="bi bi-envelope me-2"></i>hello@nimbus.cloud</p><p class="small mb-0"><i class="bi bi-telephone me-2"></i>+7 (800) 123-45-67</p></div>
+            </div>
+            <hr style="border-color:rgba(148,163,184,.15)"><p class="text-center small mb-0">&copy; 2024 Nimbus Cloud. All rights reserved.</p>
+        </div>
+    </footer>
+
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('show');obs.unobserve(el.target)}})},{threshold:.15});
+        document.querySelectorAll('.anim').forEach(el=>obs.observe(el));
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

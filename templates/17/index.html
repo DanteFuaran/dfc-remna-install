@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastBite — Доставка еды</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root{--red:#ef4444;--orange:#f97316;--yellow:#fbbf24;--dark:#1f2937;--bg:#fff;--light:#fef7f0;--text:#6b7280;--border:#f3f4f6}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text)}
+        .navbar{background:#fff;padding:10px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+        .navbar-brand{font-weight:900;font-size:1.5rem;color:var(--dark)!important}
+        .navbar-brand span{color:var(--red)}
+        .nav-link{color:var(--text)!important;font-weight:700;font-size:.85rem;transition:.3s}.nav-link:hover{color:var(--red)!important}
+        .btn-order{background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;border:none;border-radius:50px;padding:10px 24px;font-weight:800;font-size:.85rem;transition:.3s}
+        .btn-order:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(239,68,68,.3)}
+        .hero{background:var(--light);padding:60px 0;overflow:hidden;position:relative}
+        .hero::after{content:'🍕';position:absolute;right:5%;top:20%;font-size:4rem;animation:float 4s ease-in-out infinite;opacity:.3}
+        @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-20px) rotate(10deg)}}
+        .hero h1{font-size:3rem;font-weight:900;color:var(--dark);line-height:1.1}
+        .hero h1 span{background:linear-gradient(135deg,var(--red),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .delivery-info{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:50px;padding:8px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-top:20px}
+        .delivery-info .dot{width:10px;height:10px;background:#22c55e;border-radius:50%;animation:pulse 2s ease infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        .delivery-info span{font-weight:700;color:var(--dark);font-size:.85rem}
+        .search-bar{margin-top:24px;display:flex;gap:8px;max-width:480px}
+        .search-bar input{flex:1;border:2px solid var(--border);border-radius:14px;padding:14px 20px;font-size:.9rem;font-weight:600}
+        .search-bar input:focus{outline:none;border-color:var(--red)}
+        .search-bar button{background:var(--red);color:#fff;border:none;border-radius:14px;padding:14px 20px;font-weight:800;font-size:.9rem;white-space:nowrap}
+        .cat-scroll{display:flex;gap:12px;padding:0 0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .cat-scroll::-webkit-scrollbar{display:none}
+        .cat-item{flex-shrink:0;text-align:center;cursor:pointer;padding:12px 16px;border-radius:16px;border:2px solid var(--border);transition:.2s;min-width:90px}
+        .cat-item:hover,.cat-item.active{border-color:var(--red);background:rgba(239,68,68,.05)}
+        .cat-emoji{font-size:2rem;display:block;margin-bottom:4px}
+        .cat-name{font-weight:700;font-size:.75rem;color:var(--dark)}
+        .restaurant-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.04);border:1px solid var(--border);transition:.3s;height:100%}
+        .restaurant-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+        .restaurant-img{position:relative;height:160px;overflow:hidden}
+        .restaurant-img img{width:100%;height:100%;object-fit:cover}
+        .promo-badge{position:absolute;top:10px;left:10px;background:var(--red);color:#fff;padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:800}
+        .delivery-time{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.95);padding:4px 10px;border-radius:8px;font-size:.75rem;font-weight:700;color:var(--dark)}
+        .restaurant-body{padding:14px}
+        .restaurant-name{font-weight:800;color:var(--dark);font-size:1rem}
+        .restaurant-meta{display:flex;gap:10px;font-size:.8rem;margin-top:4px;align-items:center}
+        .rating-star{color:var(--yellow);font-weight:800}
+        .restaurant-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+        .food-tag{background:var(--light);padding:3px 10px;border-radius:50px;font-size:.7rem;font-weight:700;color:var(--text)}
+        .how-section{background:var(--light);padding:60px 0}
+        .how-step{text-align:center;padding:20px}
+        .step-num{width:48px;height:48px;background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;margin:0 auto 14px}
+        .how-step h5{font-weight:800;color:var(--dark)}
+        .menu-card{display:flex;gap:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid var(--border);transition:.3s;align-items:center}
+        .menu-card:hover{border-color:var(--red);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+        .menu-card img{width:80px;height:80px;border-radius:12px;object-fit:cover;flex-shrink:0}
+        .menu-card-body{flex:1;min-width:0}
+        .menu-name{font-weight:800;color:var(--dark);font-size:.9rem}
+        .menu-desc{font-size:.75rem;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .menu-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+        .menu-price{font-weight:900;color:var(--dark);font-size:1rem}
+        .btn-add-sm{background:var(--red);color:#fff;border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:.2s;cursor:pointer}
+        .btn-add-sm:hover{transform:scale(1.1)}
+        .app-section{background:var(--dark);border-radius:24px;padding:50px;color:#fff;overflow:hidden;position:relative}
+        .app-section h3{font-weight:900;font-size:2rem}
+        .app-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 18px;color:#fff;text-decoration:none;font-size:.8rem;font-weight:700;transition:.3s}
+        .app-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+        footer{background:var(--light);padding:40px 0}
+        .f-link{color:var(--text);text-decoration:none;font-size:.8rem;display:block;margin-bottom:5px;transition:.2s}.f-link:hover{color:var(--red)}
+        @media(max-width:768px){.hero h1{font-size:2rem}.restaurant-img{height:130px}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">🍔 Fast<span>Bite</span></a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav17"><i class="bi bi-list fs-4" style="color:var(--dark)"></i></button>
+            <div class="collapse navbar-collapse" id="nav17">
+                <ul class="navbar-nav mx-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#restaurants">Рестораны</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#menu">Меню</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Акции</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Контакты</a></li>
+                </ul>
+                <button class="btn-order"><i class="bi bi-cart3 me-1"></i>Корзина (2)</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1>Доставим<br><span>вкусную еду</span><br>за 30 минут</h1>
+                    <p class="mt-3" style="font-size:1rem;max-width:440px;line-height:1.6">Лучшие рестораны города в одном приложении. Бесплатная доставка от 500 ₽.</p>
+                    <div class="delivery-info"><span class="dot"></span><span>Доставка работает: 10:00 — 23:00</span></div>
+                    <div class="search-bar">
+                        <input type="text" placeholder="Введите ваш адрес">
+                        <button>Найти <i class="bi bi-arrow-right"></i></button>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block text-center">
+                    <img src="https://loremflickr.com/450/350/food,delivery?lock=129" alt="" style="border-radius:24px;max-width:400px;box-shadow:0 20px 50px rgba(0,0,0,.1);transform:rotate(2deg)">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-4">
+        <div class="container">
+            <div class="cat-scroll">
+                <div class="cat-item active"><span class="cat-emoji">🍕</span><span class="cat-name">Пицца</span></div>
+                <div class="cat-item"><span class="cat-emoji">🍔</span><span class="cat-name">Бургеры</span></div>
+                <div class="cat-item"><span class="cat-emoji">🍣</span><span class="cat-name">Суши</span></div>
+                <div class="cat-item"><span class="cat-emoji">🥗</span><span class="cat-name">Салаты</span></div>
+                <div class="cat-item"><span class="cat-emoji">🍝</span><span class="cat-name">Паста</span></div>
+                <div class="cat-item"><span class="cat-emoji">🥩</span><span class="cat-name">Мясо</span></div>
+                <div class="cat-item"><span class="cat-emoji">🍰</span><span class="cat-name">Десерты</span></div>
+                <div class="cat-item"><span class="cat-emoji">☕</span><span class="cat-name">Напитки</span></div>
+                <div class="cat-item"><span class="cat-emoji">🌮</span><span class="cat-name">Мексиканская</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-4" id="restaurants">
+        <div class="container">
+            <h3 style="color:var(--dark);font-weight:900;font-size:1.5rem;margin-bottom:20px">🔥 Популярные рестораны</h3>
+            <div class="row g-4">
+                <div class="col-6 col-lg-3"><div class="restaurant-card"><div class="restaurant-img"><img src="https://loremflickr.com/300/160/pizza,restaurant?lock=130" alt=""><span class="promo-badge">-20%</span><span class="delivery-time"><i class="bi bi-clock me-1"></i>25 мин</span></div><div class="restaurant-body"><div class="restaurant-name">Pizza Mama</div><div class="restaurant-meta"><span class="rating-star">★ 4.8</span><span>200+ заказов</span></div><div class="restaurant-tags"><span class="food-tag">Пицца</span><span class="food-tag">Итальянская</span></div></div></div></div>
+                <div class="col-6 col-lg-3"><div class="restaurant-card"><div class="restaurant-img"><img src="https://loremflickr.com/300/160/burger,fastfood?lock=131" alt=""><span class="delivery-time"><i class="bi bi-clock me-1"></i>30 мин</span></div><div class="restaurant-body"><div class="restaurant-name">Burger House</div><div class="restaurant-meta"><span class="rating-star">★ 4.6</span><span>150+ заказов</span></div><div class="restaurant-tags"><span class="food-tag">Бургеры</span><span class="food-tag">Фаст-фуд</span></div></div></div></div>
+                <div class="col-6 col-lg-3"><div class="restaurant-card"><div class="restaurant-img"><img src="https://loremflickr.com/300/160/sushi,japanese?lock=132" alt=""><span class="promo-badge">Новое</span><span class="delivery-time"><i class="bi bi-clock me-1"></i>40 мин</span></div><div class="restaurant-body"><div class="restaurant-name">Sushi Master</div><div class="restaurant-meta"><span class="rating-star">★ 4.9</span><span>300+ заказов</span></div><div class="restaurant-tags"><span class="food-tag">Суши</span><span class="food-tag">Роллы</span></div></div></div></div>
+                <div class="col-6 col-lg-3"><div class="restaurant-card"><div class="restaurant-img"><img src="https://loremflickr.com/300/160/salad,healthy?lock=133" alt=""><span class="delivery-time"><i class="bi bi-clock me-1"></i>20 мин</span></div><div class="restaurant-body"><div class="restaurant-name">Green Bowl</div><div class="restaurant-meta"><span class="rating-star">★ 4.7</span><span>80+ заказов</span></div><div class="restaurant-tags"><span class="food-tag">Здоровая</span><span class="food-tag">Салаты</span></div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-4" id="menu">
+        <div class="container">
+            <h3 style="color:var(--dark);font-weight:900;font-size:1.5rem;margin-bottom:20px">🍽️ Рекомендуем попробовать</h3>
+            <div class="row g-3">
+                <div class="col-md-6"><div class="menu-card"><img src="https://loremflickr.com/80/80/pizza,margherita?lock=134" alt=""><div class="menu-card-body"><div class="menu-name">Маргарита XXL</div><div class="menu-desc">Томатный соус, моцарелла, базилик, оливковое масло</div><div class="menu-bottom"><span class="menu-price">590 ₽</span><button class="btn-add-sm">+</button></div></div></div></div>
+                <div class="col-md-6"><div class="menu-card"><img src="https://loremflickr.com/80/80/cheeseburger,burger?lock=135" alt=""><div class="menu-card-body"><div class="menu-name">Двойной Чизбургер</div><div class="menu-desc">Две котлеты, чеддер, бекон, соус BBQ, айсберг</div><div class="menu-bottom"><span class="menu-price">450 ₽</span><button class="btn-add-sm" onclick="this.textContent='✓';setTimeout(()=>this.textContent='+',1000)">+</button></div></div></div></div>
+                <div class="col-md-6"><div class="menu-card"><img src="https://loremflickr.com/80/80/sushi,roll?lock=136" alt=""><div class="menu-card-body"><div class="menu-name">Филадельфия Классик</div><div class="menu-desc">Лосось, сливочный сыр, огурец, нори, рис</div><div class="menu-bottom"><span class="menu-price">720 ₽</span><button class="btn-add-sm">+</button></div></div></div></div>
+                <div class="col-md-6"><div class="menu-card"><img src="https://loremflickr.com/80/80/caesar,salad?lock=137" alt=""><div class="menu-card-body"><div class="menu-name">Caesar Салат</div><div class="menu-desc">Куриная грудка, пармезан, гренки, соус цезарь</div><div class="menu-bottom"><span class="menu-price">380 ₽</span><button class="btn-add-sm">+</button></div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-section">
+        <div class="container">
+            <h3 class="text-center mb-5" style="color:var(--dark);font-weight:900;font-size:1.8rem">Как это работает?</h3>
+            <div class="row">
+                <div class="col-md-4"><div class="how-step"><div class="step-num">1</div><h5>Выберите ресторан</h5><p class="small">Изучите меню любимых заведений</p></div></div>
+                <div class="col-md-4"><div class="how-step"><div class="step-num">2</div><h5>Оформите заказ</h5><p class="small">Оплатите онлайн или при получении</p></div></div>
+                <div class="col-md-4"><div class="how-step"><div class="step-num">3</div><h5>Получите доставку</h5><p class="small">Курьер привезёт заказ за 30 минут</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="app-section">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <h3>Скачайте приложение</h3>
+                        <p style="opacity:.7;max-width:380px;margin:8px 0 20px">Заказывайте на ходу. Эксклюзивные скидки и промокоды только в приложении!</p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="#" class="app-btn"><i class="bi bi-apple fs-4"></i><div><div style="font-size:.55rem;opacity:.6">Скачать в</div>App Store</div></a>
+                            <a href="#" class="app-btn"><i class="bi bi-google-play fs-4"></i><div><div style="font-size:.55rem;opacity:.6">Доступно в</div>Google Play</div></a>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-center d-none d-md-block">
+                        <img src="https://loremflickr.com/200/360/smartphone,app?lock=138" alt="" style="border-radius:20px;max-width:180px;box-shadow:0 20px 40px rgba(0,0,0,.3)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3"><h5 style="color:var(--dark);font-weight:900">🍔 Fast<span style="color:var(--red)">Bite</span></h5><p class="small">Быстрая доставка вкусной еды в вашем городе.</p><div class="d-flex gap-2"><a href="#" class="f-link"><i class="bi bi-instagram fs-5"></i></a><a href="#" class="f-link"><i class="bi bi-telegram fs-5"></i></a><a href="#" class="f-link"><i class="bi bi-tiktok fs-5"></i></a></div></div>
+                <div class="col-6 col-md-2"><h6 style="color:var(--dark);font-weight:800">Меню</h6><a href="#" class="f-link">Рестораны</a><a href="#" class="f-link">Акции</a><a href="#" class="f-link">Доставка</a></div>
+                <div class="col-6 col-md-2"><h6 style="color:var(--dark);font-weight:800">Помощь</h6><a href="#" class="f-link">FAQ</a><a href="#" class="f-link">Контакты</a><a href="#" class="f-link">Условия</a></div>
+                <div class="col-md-4"><h6 style="color:var(--dark);font-weight:800">Промокод</h6><p class="small">Получите скидку 15% на первый заказ</p><div class="d-flex gap-2"><input class="form-control form-control-sm" style="border:2px solid var(--border);border-radius:10px" placeholder="Email"><button class="btn btn-sm px-3" style="background:var(--red);color:#fff;border-radius:10px;font-weight:800">→</button></div></div>
+            </div>
+            <hr style="border-color:var(--border)">
+            <p class="small text-center mb-0">&copy; 2024 FastBite. Все права защищены.</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

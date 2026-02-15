@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prismа Studio — Дизайн и креатив</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#faf9f6;--dark:#1a1a2e;--text:#555;--muted:#999;--coral:#ff6b6b;--violet:#7c3aed;--teal:#14b8a6;--amber:#f59e0b;--sky:#0ea5e9;--pink:#ec4899}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+        ::selection{background:var(--violet);color:#fff}
+        .topbar{display:flex;justify-content:space-between;align-items:center;padding:20px 40px;position:fixed;top:0;left:0;right:0;z-index:1000;mix-blend-mode:difference}
+        .topbar *{color:#fff}
+        .logo{font-weight:800;font-size:1.3rem;letter-spacing:2px;text-decoration:none}
+        .topbar nav a{color:#fff;text-decoration:none;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:2px;margin-left:28px;opacity:.7;transition:.3s}
+        .topbar nav a:hover{opacity:1}
+        .hero-design{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+        .hero-bg{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:4px}
+        .hero-bg div{transition:.6s}.hero-bg div:nth-child(1){background:var(--coral)}.hero-bg div:nth-child(2){background:var(--violet)}.hero-bg div:nth-child(3){background:var(--teal)}.hero-bg div:nth-child(4){background:var(--amber)}.hero-bg div:nth-child(5){background:var(--sky)}.hero-bg div:nth-child(6){background:var(--pink)}.hero-bg div:nth-child(7){background:var(--dark)}.hero-bg div:nth-child(8){background:#e2e8f0}
+        .hero-center{position:relative;z-index:2;text-align:center;padding:60px 80px;background:rgba(255,255,255,.88);backdrop-filter:blur(20px);border-radius:24px}
+        .hero-center h1{font-size:4rem;font-weight:800;color:var(--dark);line-height:1;margin-bottom:8px;letter-spacing:-1px}
+        .hero-center h1 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--coral);margin-left:2px;animation:pulse-dot 2s infinite}
+        .hero-center p{color:var(--muted);font-size:1rem;max-width:380px;margin:0 auto 20px;line-height:1.6}
+        .hero-center .btn-studio{background:var(--dark);color:#fff;border:none;padding:14px 36px;border-radius:50px;font-weight:700;font-size:.85rem;letter-spacing:1px;transition:.3s;cursor:pointer}
+        .hero-center .btn-studio:hover{transform:scale(1.05);box-shadow:0 8px 30px rgba(26,26,46,.3)}
+        @keyframes pulse-dot{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+        .section-title{font-size:2.2rem;font-weight:800;color:var(--dark);margin-bottom:8px;letter-spacing:-0.5px}
+        .section-sub{color:var(--muted);font-size:.9rem;margin-bottom:40px}
+        .work-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        .work-item{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;cursor:pointer;background:var(--dark)}
+        .work-item:nth-child(1){grid-column:span 2;aspect-ratio:auto}
+        .work-item img{width:100%;height:100%;object-fit:cover;transition:.5s;opacity:.85}
+        .work-item:hover img{transform:scale(1.08);opacity:1}
+        .work-overlay{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(transparent,rgba(0,0,0,.7));opacity:0;transition:.3s;transform:translateY(8px)}
+        .work-item:hover .work-overlay{opacity:1;transform:translateY(0)}
+        .work-overlay h6{color:#fff;font-weight:700;margin-bottom:2px}.work-overlay span{color:rgba(255,255,255,.6);font-size:.75rem}
+        .color-strip{display:flex;height:80px;border-radius:16px;overflow:hidden;margin-bottom:40px}
+        .color-strip div{flex:1;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase;opacity:.7;transition:.3s;cursor:pointer}
+        .color-strip div:hover{flex:2;opacity:1}
+        .process-num{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:#fff;flex-shrink:0}
+        .process-card{display:flex;align-items:flex-start;gap:16px;padding:20px;background:#fff;border-radius:16px;border:1px solid #e5e7eb;transition:.3s}
+        .process-card:hover{transform:translateX(8px);box-shadow:0 4px 20px rgba(0,0,0,.06)}
+        .process-card h6{color:var(--dark);font-weight:700;margin-bottom:4px}
+        .service-pill{display:inline-block;padding:10px 22px;border-radius:50px;font-size:.8rem;font-weight:600;margin:4px;transition:.3s;cursor:default;border:1px solid #e5e7eb;color:var(--dark)}
+        .service-pill:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
+        .testimonial-card{background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:24px;transition:.3s}
+        .testimonial-card:hover{box-shadow:0 8px 30px rgba(0,0,0,.06)}
+        .testimonial-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover}
+        .cta-end{background:var(--dark);border-radius:24px;padding:60px;text-align:center;color:#fff;position:relative;overflow:hidden}
+        .cta-end::before{content:'✦';position:absolute;font-size:300px;opacity:.04;right:-40px;top:-80px}
+        .cta-end h2{font-size:2.4rem;font-weight:800;margin-bottom:8px}
+        .cta-end .btn-outline-light{border-radius:50px;padding:14px 36px;font-weight:700;letter-spacing:1px}
+        footer{padding:30px 40px;color:var(--muted);font-size:.75rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+        footer a{color:var(--muted);text-decoration:none;transition:.2s;margin-right:20px}footer a:hover{color:var(--dark)}
+        @media(max-width:768px){.hero-center{padding:30px;margin:0 16px}.hero-center h1{font-size:2.4rem}.work-grid{grid-template-columns:1fr}.work-item:nth-child(1){grid-column:span 1}.topbar{padding:14px 16px}.topbar nav a{margin-left:14px;font-size:.65rem}.color-strip{height:50px}}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="#" class="logo">PRISMA</a>
+        <nav>
+            <a href="#work">Портфолио</a>
+            <a href="#process">Процесс</a>
+            <a href="#contact">Контакт</a>
+        </nav>
+    </div>
+
+    <section class="hero-design">
+        <div class="hero-bg"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        <div class="hero-center">
+            <h1>Prisma Studio<span class="dot"></span></h1>
+            <p>Мы создаём визуальные решения, которые вдохновляют и запоминаются. Дизайн с характером.</p>
+            <button class="btn-studio">Смотреть работы</button>
+        </div>
+    </section>
+
+    <section class="py-5 px-3 px-lg-5" id="work">
+        <div class="container-fluid" style="max-width:1200px">
+            <div class="section-title">Избранные проекты</div>
+            <div class="section-sub">Брендинг, веб-дизайн и визуальные коммуникации</div>
+            <div class="work-grid">
+                <div class="work-item"><img src="https://loremflickr.com/800/400/branding,design?lock=144" alt=""><div class="work-overlay"><h6>Meridian Brand Identity</h6><span>Брендинг</span></div></div>
+                <div class="work-item"><img src="https://loremflickr.com/400/400/dashboard,interface?lock=145" alt=""><div class="work-overlay"><h6>Flux Dashboard</h6><span>UI/UX</span></div></div>
+                <div class="work-item"><img src="https://loremflickr.com/400/400/cosmetics,packaging?lock=146" alt=""><div class="work-overlay"><h6>Nova Cosmetics</h6><span>Упаковка</span></div></div>
+                <div class="work-item"><img src="https://loremflickr.com/400/400/mobile,app?lock=147" alt=""><div class="work-overlay"><h6>Apex Mobile</h6><span>Приложение</span></div></div>
+                <div class="work-item"><img src="https://loremflickr.com/400/400/webdesign,creative?lock=148" alt=""><div class="work-overlay"><h6>Wavelength Media</h6><span>Веб-дизайн</span></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 px-3 px-lg-5">
+        <div class="container-fluid" style="max-width:1200px">
+            <div class="section-title">Наша палитра</div>
+            <div class="section-sub">Цвета, которые определяют наш стиль</div>
+            <div class="color-strip">
+                <div style="background:var(--coral)">Coral</div>
+                <div style="background:var(--violet)">Violet</div>
+                <div style="background:var(--teal)">Teal</div>
+                <div style="background:var(--amber)">Amber</div>
+                <div style="background:var(--sky)">Sky</div>
+                <div style="background:var(--pink)">Pink</div>
+                <div style="background:var(--dark)">Dark</div>
+            </div>
+            <div class="text-center">
+                <span class="service-pill" style="border-color:var(--coral);color:var(--coral)">Брендинг</span>
+                <span class="service-pill" style="border-color:var(--violet);color:var(--violet)">UI/UX дизайн</span>
+                <span class="service-pill" style="border-color:var(--teal);color:var(--teal)">Веб-разработка</span>
+                <span class="service-pill" style="border-color:var(--amber);color:var(--amber)">Иллюстрация</span>
+                <span class="service-pill" style="border-color:var(--sky);color:var(--sky)">Motion Design</span>
+                <span class="service-pill" style="border-color:var(--pink);color:var(--pink)">Упаковка</span>
+                <span class="service-pill">Типографика</span>
+                <span class="service-pill">3D визуализация</span>
+                <span class="service-pill">Фотосъёмка</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 px-3 px-lg-5" id="process">
+        <div class="container-fluid" style="max-width:1200px">
+            <div class="section-title">Как мы работаем</div>
+            <div class="section-sub">Четыре шага к результату</div>
+            <div class="row g-3">
+                <div class="col-md-6"><div class="process-card"><div class="process-num" style="background:var(--coral)">01</div><div><h6>Исследование</h6><p class="small mb-0">Изучаем бизнес, аудиторию и конкурентов. Формулируем стратегию и ключевые сообщения.</p></div></div></div>
+                <div class="col-md-6"><div class="process-card"><div class="process-num" style="background:var(--violet)">02</div><div><h6>Концепция</h6><p class="small mb-0">Создаём мудборды, скетчи и прототипы. Ищем визуальный язык проекта.</p></div></div></div>
+                <div class="col-md-6"><div class="process-card"><div class="process-num" style="background:var(--teal)">03</div><div><h6>Дизайн</h6><p class="small mb-0">Детальная проработка всех элементов. Pixel-perfect макеты и гайдлайны.</p></div></div></div>
+                <div class="col-md-6"><div class="process-card"><div class="process-num" style="background:var(--amber)">04</div><div><h6>Реализация</h6><p class="small mb-0">Передача финальных файлов, верстка и поддержка на этапе внедрения.</p></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 px-3 px-lg-5">
+        <div class="container-fluid" style="max-width:1200px">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center gap-2 mb-3"><img src="https://i.pravatar.cc/40?img=26" class="testimonial-avatar"><div><div style="font-weight:700;color:var(--dark);font-size:.85rem">Анна Мирова</div><div style="font-size:.7rem;color:var(--muted)">CEO, TechFlow</div></div></div>
+                        <p class="small mb-0">«Prisma полностью переосмыслила наш бренд. Результат превзошёл все ожидания — конверсия выросла на 40%.»</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center gap-2 mb-3"><img src="https://i.pravatar.cc/40?img=27" class="testimonial-avatar"><div><div style="font-weight:700;color:var(--dark);font-size:.85rem">Денис Козлов</div><div style="font-size:.7rem;color:var(--muted)">Founder, GreenMart</div></div></div>
+                        <p class="small mb-0">«Работа с командой — одно удовольствие. Быстро, качественно, с вниманием к деталям, которые мы не замечали.»</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-card">
+                        <div class="d-flex align-items-center gap-2 mb-3"><img src="https://i.pravatar.cc/40?img=28" class="testimonial-avatar"><div><div style="font-weight:700;color:var(--dark);font-size:.85rem">Ксения Левит</div><div style="font-size:.7rem;color:var(--muted)">Art Director, MediaLab</div></div></div>
+                        <p class="small mb-0">«Фирменный стиль, который нам разработали, получил награду на международном конкурсе. Спасибо!»</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 px-3 px-lg-5" id="contact">
+        <div class="container-fluid" style="max-width:1200px">
+            <div class="cta-end">
+                <h2>Обсудим проект?</h2>
+                <p style="color:rgba(255,255,255,.5);margin-bottom:24px">Расскажите о вашей задаче — мы предложим решение</p>
+                <a href="#" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#consultModal">Написать нам →</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div><a href="#">Instagram</a><a href="#">Behance</a><a href="#">Dribbble</a><a href="#">Telegram</a></div>
+        <span>&copy; 2024 Prisma Studio. Все права защищены.</span>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelectorAll('.work-item, .process-card, .testimonial-card').forEach(el=>{
+            const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting){el.style.opacity='1';el.style.transform='translateY(0)';obs.unobserve(el)}},{threshold:.15});
+            el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='all .6s ease';obs.observe(el)
+        });
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

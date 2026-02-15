@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertex Advisory — Стратегический консалтинг</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0b1120;--surface:#111827;--surface2:#1e293b;--border:#1e293b;--gold:#d97706;--goldbright:#fbbf24;--white:#f8fafc;--text:#94a3b8;--navy:#0f172a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+        h1,h2,h3,h4,h5{font-family:'Lora',serif}
+        .gold-line{width:50px;height:2px;background:linear-gradient(90deg,var(--gold),var(--goldbright));display:inline-block}
+        .navbar{background:transparent;padding:18px 0;position:absolute;width:100%;top:0;z-index:1000;transition:.3s}
+        .navbar.scrolled{background:rgba(11,17,32,.95);backdrop-filter:blur(10px);position:fixed;border-bottom:1px solid var(--border)}
+        .navbar-brand{font-family:'Lora',serif;font-weight:700;font-size:1.3rem;color:var(--goldbright)!important;letter-spacing:1px}
+        .nav-link{color:var(--text)!important;font-size:.8rem;font-weight:500;letter-spacing:.5px;transition:.3s}.nav-link:hover{color:var(--goldbright)!important}
+        .btn-gold{background:linear-gradient(135deg,var(--gold),var(--goldbright));color:#000;border:none;padding:12px 30px;border-radius:4px;font-weight:700;font-size:.8rem;letter-spacing:1px;text-transform:uppercase;transition:.3s}
+        .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(217,119,6,.3)}
+        .btn-outline-gold{border:1px solid var(--gold);color:var(--gold);background:transparent;padding:12px 30px;border-radius:4px;font-weight:700;font-size:.8rem;letter-spacing:1px;text-transform:uppercase;transition:.3s}
+        .btn-outline-gold:hover{background:var(--gold);color:#000}
+        .hero-cons{min-height:100vh;display:flex;align-items:center;position:relative;background:linear-gradient(160deg,var(--bg) 50%,#1a1207 100%)}
+        .hero-cons::after{content:'';position:absolute;right:0;top:0;width:40%;height:100%;background:url('https://loremflickr.com/700/900/business,consulting?lock=149') center/cover;opacity:.18;mask-image:linear-gradient(to left,rgba(0,0,0,.4),transparent)}
+        .hero-cons .accent-box{position:absolute;right:10%;top:50%;transform:translateY(-50%);width:260px;padding:28px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.15);border-radius:8px;z-index:2}
+        .hero-cons .accent-box .stat{font-family:'Lora',serif;font-size:2.8rem;font-weight:700;color:var(--goldbright);line-height:1}
+        .hero-cons .accent-box .stat-label{font-size:.75rem;color:var(--text);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+        .hero-text{position:relative;z-index:2;max-width:560px}
+        .hero-text .tagline{font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:3px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+        .hero-text h1{font-size:3.4rem;color:var(--white);line-height:1.15;font-weight:700;margin-bottom:16px}
+        .hero-text h1 em{font-style:italic;color:var(--goldbright)}
+        .hero-text p{font-size:1rem;line-height:1.7;max-width:440px;margin-bottom:28px}
+        .stat-row{display:flex;gap:32px}
+        .stat-row .sbox .snum{font-family:'Lora',serif;font-size:2rem;font-weight:700;color:var(--white)}
+        .stat-row .sbox .slab{font-size:.7rem;color:var(--text);text-transform:uppercase;letter-spacing:1px}
+        .service-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;transition:.4s;position:relative;overflow:hidden;height:100%}
+        .service-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--gold),transparent);opacity:0;transition:.4s}
+        .service-card:hover{border-color:var(--gold);transform:translateY(-4px)}.service-card:hover::before{opacity:1}
+        .service-icon{width:44px;height:44px;border-radius:6px;background:rgba(217,119,6,.1);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.2rem;margin-bottom:14px}
+        .service-card h5{color:var(--white);font-size:1rem;font-weight:600;margin-bottom:8px}
+        .process-step{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--border)}
+        .process-step:last-child{border-bottom:none}
+        .step-num{font-family:'Lora',serif;font-size:2.5rem;font-weight:700;color:rgba(217,119,6,.2);line-height:1;min-width:60px}
+        .step-content h5{color:var(--white);font-weight:600;margin-bottom:4px}
+        .testimonial-cons{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;position:relative}
+        .testimonial-cons::before{content:'"';font-family:'Lora',serif;font-size:4rem;color:var(--gold);opacity:.3;position:absolute;top:8px;left:16px;line-height:1}
+        .testimonial-cons p{font-family:'Lora',serif;font-style:italic;font-size:.95rem;color:var(--white);line-height:1.7;margin-bottom:14px;padding-top:10px}
+        .testimonial-author{display:flex;align-items:center;gap:10px}
+        .testimonial-author img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+        .testimonial-author .name{color:var(--white);font-weight:600;font-size:.85rem}
+        .testimonial-author .role{font-size:.7rem}
+        .cta-section{background:linear-gradient(135deg,rgba(217,119,6,.08),rgba(251,191,36,.03));border:1px solid rgba(217,119,6,.15);border-radius:12px;padding:50px;text-align:center}
+        .cta-section h2{color:var(--white);font-size:2rem;margin-bottom:8px}
+        footer{border-top:1px solid var(--border);padding:28px 0;margin-top:60px}
+        .f-link{color:var(--text);text-decoration:none;font-size:.8rem;transition:.2s}.f-link:hover{color:var(--gold)}
+        @media(max-width:992px){.hero-cons .accent-box{display:none}.hero-text h1{font-size:2.5rem}}
+        @media(max-width:768px){.stat-row{flex-wrap:wrap;gap:16px}.hero-text h1{font-size:2rem}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">VERTEX</a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav20"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav20">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#services">Услуги</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#process">Подход</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#reviews">Отзывы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Контакт</a></li>
+                </ul>
+                <button class="btn-gold ms-lg-3" data-bs-toggle="modal" data-bs-target="#consultModal">Консультация</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-cons">
+        <div class="container hero-text">
+            <div class="tagline"><span class="gold-line"></span>Стратегический консалтинг</div>
+            <h1>Решения,<br>которые <em>преобразуют</em> бизнес</h1>
+            <p>Vertex Advisory помогает компаниям выйти на новый уровень через стратегическое планирование, оптимизацию процессов и управление изменениями.</p>
+            <div class="d-flex gap-3 mb-4"><button class="btn-gold" data-bs-toggle="modal" data-bs-target="#consultModal">Начать проект</button><button class="btn-outline-gold" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">О компании</button></div>
+            <div class="stat-row">
+                <div class="sbox"><div class="snum" data-count="150">0</div><div class="slab">Клиентов</div></div>
+                <div class="sbox"><div class="snum" data-count="12">0</div><div class="slab">Лет опыта</div></div>
+                <div class="sbox"><div class="snum" data-count="98">0</div><div class="slab">% рекомендаций</div></div>
+            </div>
+        </div>
+        <div class="accent-box d-none d-lg-block">
+            <div class="stat">+47%</div>
+            <div class="stat-label">Средний рост прибыли клиентов</div>
+            <hr style="border-color:rgba(217,119,6,.15)">
+            <div class="stat">₽2.8B</div>
+            <div class="stat-label">Сэкономлено для клиентов</div>
+        </div>
+    </section>
+
+    <section class="py-5 mt-4" id="services">
+        <div class="container">
+            <div class="text-center mb-4">
+                <div class="tagline justify-content-center" style="font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:3px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:10px"><span class="gold-line"></span>Услуги<span class="gold-line"></span></div>
+                <h2 style="color:var(--white);font-size:2rem;margin-bottom:4px">Направления экспертизы</h2>
+                <p class="small" style="max-width:500px;margin:0 auto">Комплексный подход к развитию бизнеса</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4"><div class="service-card"><div class="service-icon"><i class="bi bi-graph-up-arrow"></i></div><h5>Стратегическое планирование</h5><p class="small mb-0">Разработка дорожных карт развития, определение конкурентных преимуществ и точек роста.</p></div></div>
+                <div class="col-md-6 col-lg-4"><div class="service-card"><div class="service-icon"><i class="bi bi-gear-wide-connected"></i></div><h5>Оптимизация процессов</h5><p class="small mb-0">Аудит бизнес-процессов, устранение узких мест, внедрение лучших практик.</p></div></div>
+                <div class="col-md-6 col-lg-4"><div class="service-card"><div class="service-icon"><i class="bi bi-people"></i></div><h5>Управление изменениями</h5><p class="small mb-0">Трансформация корпоративной культуры и организационной структуры.</p></div></div>
+                <div class="col-md-6 col-lg-4"><div class="service-card"><div class="service-icon"><i class="bi bi-bar-chart-line"></i></div><h5>Финансовый консалтинг</h5><p class="small mb-0">Моделирование, бюджетирование и оптимизация финансовых потоков.</p></div></div>
+                <div class="col-md-6 col-lg-4"><div class="service-card"><div class="service-icon"><i class="bi bi-globe2"></i></div><h5>Выход на новые рынки</h5><p class="small mb-0">Маркетинговые исследования, локализация и стратегии масштабирования.</p></div></div>
+                <div class="col-md-6 col-lg-4"><div class="service-card"><div class="service-icon"><i class="bi bi-shield-lock"></i></div><h5>Риск-менеджмент</h5><p class="small mb-0">Идентификация, оценка и минимизация бизнес-рисков.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="process">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-5 mb-4">
+                    <div class="tagline" style="font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:3px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:10px"><span class="gold-line"></span>Подход</div>
+                    <h2 style="color:var(--white);font-size:1.8rem;margin-bottom:12px">Проверенная методология</h2>
+                    <p class="small">Каждый проект проходит через выверенную систему этапов, обеспечивающую прозрачность и результат.</p>
+                </div>
+                <div class="col-lg-7">
+                    <div class="process-step"><div class="step-num">01</div><div class="step-content"><h5>Диагностика</h5><p class="small mb-0">Глубокий анализ текущего состояния: интервью, метрики, процессы. Формируем объективную картину.</p></div></div>
+                    <div class="process-step"><div class="step-num">02</div><div class="step-content"><h5>Стратегия</h5><p class="small mb-0">Разрабатываем конкретный план действий с приоритетами, KPI и ресурсной раскладкой.</p></div></div>
+                    <div class="process-step"><div class="step-num">03</div><div class="step-content"><h5>Внедрение</h5><p class="small mb-0">Поддерживаем команду на каждом шаге реализации. Корректируем курс при необходимости.</p></div></div>
+                    <div class="process-step"><div class="step-num">04</div><div class="step-content"><h5>Результат</h5><p class="small mb-0">Оцениваем эффект, закрепляем достижения и передаём инструменты для самостоятельного развития.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="reviews">
+        <div class="container">
+            <div class="text-center mb-4">
+                <h2 style="color:var(--white);font-size:1.8rem">Что говорят клиенты</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="testimonial-cons"><p>«Vertex помогли нам увидеть слепые зоны. За 6 месяцев мы увеличили операционную эффективность на 35%.»</p><div class="testimonial-author"><img src="https://i.pravatar.cc/40?img=37"><div><div class="name">Максим Волков</div><div class="role">CEO, IndusTech</div></div></div></div></div>
+                <div class="col-md-4"><div class="testimonial-cons"><p>«Стратегия выхода на азиатский рынок была проработана до мелочей. Мы окупили инвестиции за 8 месяцев.»</p><div class="testimonial-author"><img src="https://i.pravatar.cc/40?img=38"><div><div class="name">Елена Кравцова</div><div class="role">Директор, ExportPro</div></div></div></div></div>
+                <div class="col-md-4"><div class="testimonial-cons"><p>«Профессионализм и глубина экспертизы. Рекомендуем всем, кто хочет расти системно, а не хаотично.»</p><div class="testimonial-author"><img src="https://i.pravatar.cc/40?img=39"><div><div class="name">Игорь Петренко</div><div class="role">CFO, Meridian Group</div></div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="contact">
+        <div class="container">
+            <div class="cta-section">
+                <h2>Готовы к трансформации?</h2>
+                <p style="max-width:500px;margin:0 auto 24px;font-size:.9rem">Оставьте заявку — мы свяжемся в течение 24 часов для бесплатной первичной консультации</p>
+                <button class="btn-gold">Отправить заявку</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <span style="font-family:'Lora',serif;font-weight:700;color:var(--goldbright);font-size:1rem;letter-spacing:1px">VERTEX</span>
+            <div class="d-flex gap-4 flex-wrap"><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Услуги</a><a href="#" class="f-link">Кейсы</a><a href="#" class="f-link">Блог</a><a href="#" class="f-link">Контакты</a></div>
+            <span class="small">&copy; 2024 Vertex Advisory</span>
+        </div>
+    </footer>
+
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:var(--surface);border:1px solid var(--border)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:var(--white);font-family:'Lora',serif">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:var(--bg);border:1px solid var(--border);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:var(--bg);border:1px solid var(--border);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:var(--bg);border:1px solid var(--border);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий" style="background:var(--bg);border:1px solid var(--border);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn-gold w-100">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:var(--text)">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('scroll',()=>{document.querySelector('.navbar').classList.toggle('scrolled',window.scrollY>50)});
+        document.querySelectorAll('[data-count]').forEach(el=>{
+            const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting){const target=+el.dataset.count;let c=0;const step=Math.ceil(target/40);const timer=setInterval(()=>{c+=step;if(c>=target){c=target;clearInterval(timer)}el.textContent=c},30);obs.unobserve(el)}},{threshold:.5});
+            obs.observe(el)
+        });
+        document.querySelectorAll('.service-card,.process-step,.testimonial-cons').forEach(el=>{
+            const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting){el.style.opacity='1';el.style.transform='translateY(0)';obs.unobserve(el)}},{threshold:.1});
+            el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition='all .5s ease';obs.observe(el)
+        });
+        document.getElementById('consultForm')?.addEventListener('submit',function(e){
+            e.preventDefault();
+            this.classList.add('d-none');
+            document.getElementById('successMessage').classList.remove('d-none');
+            setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000);
+        });
+    </script>
+</body>
+</html>

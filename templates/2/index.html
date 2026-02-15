@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevForge — Developer Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--green:#22c55e;--green2:#16a34a;--dark:#0a0a0a;--term:#0d1117;--border:#1e3a2e}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--dark);color:#8b949e;overflow-x:hidden}
+        code,.mono{font-family:'JetBrains Mono',monospace}
+        .navbar{background:var(--term);border-bottom:1px solid var(--border);padding:.8rem 0}
+        .navbar-brand{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green)!important;font-size:1.3rem}
+        .nav-link{color:#8b949e!important;font-size:.9rem;font-weight:500;transition:.3s}
+        .nav-link:hover{color:var(--green)!important}
+        .hero{padding:100px 0 80px;background:var(--term);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 24px,rgba(34,197,94,.03) 24px,rgba(34,197,94,.03) 25px);pointer-events:none}
+        .terminal{background:#010409;border:1px solid #30363d;border-radius:12px;overflow:hidden;max-width:700px}
+        .terminal-header{background:#161b22;padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #30363d}
+        .terminal-dot{width:12px;height:12px;border-radius:50%}
+        .terminal-body{padding:20px;font-family:'JetBrains Mono',monospace;font-size:.85rem;line-height:1.8}
+        .t-green{color:var(--green)}.t-blue{color:#58a6ff}.t-yellow{color:#e3b341}.t-gray{color:#484f58}.t-white{color:#e6edf3}
+        .typing{display:inline-block;border-right:2px solid var(--green);animation:blink .8s infinite;padding-right:4px}
+        @keyframes blink{0%,100%{border-color:var(--green)}50%{border-color:transparent}}
+        .feature-card{background:var(--term);border:1px solid #21262d;border-radius:12px;padding:28px;transition:.3s;position:relative}
+        .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:0;transition:.3s}
+        .feature-card:hover{border-color:var(--border);transform:translateY(-4px)}.feature-card:hover::before{opacity:1}
+        .feature-icon{width:48px;height:48px;background:rgba(34,197,94,.1);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:1.3rem;margin-bottom:16px}
+        .code-block{background:#010409;border:1px solid #30363d;border-radius:8px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.7;overflow-x:auto}
+        .section-tag{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:.85rem;font-weight:500;margin-bottom:12px}
+        .section-title{font-size:2.2rem;font-weight:700;color:#e6edf3;margin-bottom:12px}
+        .pricing-card{background:var(--term);border:1px solid #21262d;border-radius:16px;padding:32px;text-align:center;transition:.3s}
+        .pricing-card:hover{border-color:var(--green)}
+        .pricing-card.featured{border-color:var(--green);box-shadow:0 0 30px rgba(34,197,94,.1)}
+        .price{font-size:2.5rem;font-weight:700;color:#e6edf3}.price span{font-size:1rem;color:#8b949e}
+        .btn-green{background:var(--green);border:none;color:#0a0a0a;font-weight:600;padding:12px 32px;border-radius:8px;transition:.3s}
+        .btn-green:hover{background:var(--green2);color:#0a0a0a;transform:translateY(-2px);box-shadow:0 4px 20px rgba(34,197,94,.3)}
+        .btn-outline-green{border:1px solid var(--border);color:var(--green);background:transparent;font-weight:600;padding:12px 32px;border-radius:8px;transition:.3s}
+        .btn-outline-green:hover{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+        .tech-badge{display:inline-block;padding:6px 14px;background:rgba(34,197,94,.08);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--green);font-family:'JetBrains Mono',monospace;margin:4px}
+        footer{background:var(--term);border-top:1px solid #21262d;padding:40px 0}
+        .anim{opacity:0;transform:translateY(25px);transition:.5s ease}.anim.visible{opacity:1;transform:translateY(0)}
+        @media(max-width:768px){.hero{padding:60px 0 40px}.section-title{font-size:1.6rem}.terminal-body{font-size:.75rem}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&gt;_ DevForge</a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav2"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav2">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#api">API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#docs">Docs</a></li>
+                </ul>
+                <a href="#pricing" class="btn btn-green btn-sm ms-lg-3 mt-2 mt-lg-0">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <p class="section-tag">// developer-first platform</p>
+                    <h1 class="section-title" style="font-size:3rem">Build. Deploy.<br><span style="color:var(--green)">Scale.</span></h1>
+                    <p class="mb-4" style="max-width:440px">Мощная инфраструктура для разработчиков. CI/CD, контейнеры, автоматическое масштабирование — всё в одном месте.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#pricing" class="btn btn-green"><i class="bi bi-terminal me-2"></i>Начать бесплатно</a>
+                        <a href="#docs" class="btn btn-outline-green"><i class="bi bi-book me-2"></i>Документация</a>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-dot" style="background:#ff5f57"></div>
+                            <div class="terminal-dot" style="background:#febc2e"></div>
+                            <div class="terminal-dot" style="background:#28c840"></div>
+                            <span class="mono ms-2" style="color:#484f58;font-size:.8rem">~/project</span>
+                        </div>
+                        <div class="terminal-body">
+                            <span class="t-green">$</span> <span class="t-white">devforge deploy --prod</span><br>
+                            <span class="t-gray">⠿</span> <span class="t-blue">Building container...</span> <span class="t-green">✓</span><br>
+                            <span class="t-gray">⠿</span> <span class="t-blue">Running tests...</span> <span class="t-green">✓ 42 passed</span><br>
+                            <span class="t-gray">⠿</span> <span class="t-blue">Deploying to production...</span> <span class="t-green">✓</span><br>
+                            <span class="t-gray">⠿</span> <span class="t-blue">SSL certificate...</span> <span class="t-green">✓ active</span><br><br>
+                            <span class="t-green">✓</span> <span class="t-white">Deployed to</span> <span class="t-yellow">https://app.devforge.io</span><br>
+                            <span class="t-green">$</span> <span class="typing"> </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 mt-3">
+        <div class="container text-center">
+            <p class="text-secondary small mb-3">ТЕХНОЛОГИИ</p>
+            <div class="d-flex flex-wrap justify-content-center">
+                <span class="tech-badge">Docker</span><span class="tech-badge">Kubernetes</span><span class="tech-badge">Node.js</span>
+                <span class="tech-badge">Python</span><span class="tech-badge">Go</span><span class="tech-badge">Rust</span>
+                <span class="tech-badge">PostgreSQL</span><span class="tech-badge">Redis</span><span class="tech-badge">gRPC</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-5">
+        <div class="container">
+            <p class="section-tag">// features</p>
+            <h2 class="section-title">Всё для продуктивной разработки</h2>
+            <div class="row g-4 mt-2">
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-card h-100"><div class="feature-icon"><i class="bi bi-git"></i></div><h6 class="text-white fw-semibold">Git-интеграция</h6><p class="small mb-0">Push — и готово. Автоматический build и deploy при каждом коммите в main.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-card h-100"><div class="feature-icon"><i class="bi bi-box-seam"></i></div><h6 class="text-white fw-semibold">Контейнеры</h6><p class="small mb-0">Docker-native платформа. Деплой любых контейнеров без ограничений.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-card h-100"><div class="feature-icon"><i class="bi bi-speedometer2"></i></div><h6 class="text-white fw-semibold">Auto-Scaling</h6><p class="small mb-0">Автоматическое масштабирование по нагрузке. От 0 до миллионов запросов.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-card h-100"><div class="feature-icon"><i class="bi bi-shield-check"></i></div><h6 class="text-white fw-semibold">Security</h6><p class="small mb-0">SSL сертификаты, DDoS-защита, сканирование уязвимостей автоматически.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-card h-100"><div class="feature-icon"><i class="bi bi-activity"></i></div><h6 class="text-white fw-semibold">Мониторинг</h6><p class="small mb-0">Real-time метрики, логи, алерты. Полная видимость вашей инфраструктуры.</p></div></div>
+                <div class="col-md-6 col-lg-4 anim"><div class="feature-card h-100"><div class="feature-icon"><i class="bi bi-database"></i></div><h6 class="text-white fw-semibold">Managed DB</h6><p class="small mb-0">PostgreSQL, MongoDB, Redis — managed базы данных с бэкапами.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="api" class="py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0 anim">
+                    <p class="section-tag">// api reference</p>
+                    <h2 class="section-title">Простой и мощный API</h2>
+                    <p class="mb-4">RESTful API для управления всей инфраструктурой. SDK для Python, Node.js, Go.</p>
+                    <a href="#" class="btn btn-outline-green"><i class="bi bi-book me-2"></i>API Docs</a>
+                </div>
+                <div class="col-lg-7 anim">
+                    <div class="code-block">
+                        <span class="t-gray">// Deploy with one API call</span><br>
+                        <span class="t-blue">const</span> <span class="t-white">response</span> <span class="t-blue">=</span> <span class="t-blue">await</span> <span class="t-white">devforge.</span><span class="t-yellow">deploy</span><span class="t-white">({</span><br>
+                        &nbsp;&nbsp;<span class="t-white">name:</span> <span class="t-green">'my-app'</span><span class="t-white">,</span><br>
+                        &nbsp;&nbsp;<span class="t-white">image:</span> <span class="t-green">'registry/app:latest'</span><span class="t-white">,</span><br>
+                        &nbsp;&nbsp;<span class="t-white">replicas:</span> <span class="t-yellow">3</span><span class="t-white">,</span><br>
+                        &nbsp;&nbsp;<span class="t-white">env:</span> <span class="t-white">{</span> <span class="t-white">NODE_ENV:</span> <span class="t-green">'production'</span> <span class="t-white">}</span><br>
+                        <span class="t-white">});</span><br><br>
+                        <span class="t-white">console.</span><span class="t-yellow">log</span><span class="t-white">(response.url);</span><br>
+                        <span class="t-gray">// → https://my-app.devforge.io</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="py-5">
+        <div class="container">
+            <p class="section-tag text-center">// pricing</p>
+            <h2 class="section-title text-center">Тарифы</h2>
+            <div class="row g-4 mt-2 justify-content-center">
+                <div class="col-md-4 anim"><div class="pricing-card"><h6 class="text-secondary mb-3">Starter</h6><div class="price">$0<span>/мес</span></div><hr style="border-color:#21262d"><ul class="list-unstyled text-start small"><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>3 проекта</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>1 GB RAM</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>SSL бесплатно</li><li class="mb-2"><i class="bi bi-x-circle text-secondary me-2"></i>Custom domains</li></ul><a href="#" class="btn btn-outline-green w-100">Начать</a></div></div>
+                <div class="col-md-4 anim"><div class="pricing-card featured"><span class="badge bg-success mb-2">Популярный</span><h6 class="text-secondary mb-3">Pro</h6><div class="price">$29<span>/мес</span></div><hr style="border-color:#21262d"><ul class="list-unstyled text-start small"><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Unlimited проектов</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>8 GB RAM</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Auto-scaling</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Custom domains</li></ul><a href="#" class="btn btn-green w-100">Выбрать Pro</a></div></div>
+                <div class="col-md-4 anim"><div class="pricing-card"><h6 class="text-secondary mb-3">Enterprise</h6><div class="price">Custom</div><hr style="border-color:#21262d"><ul class="list-unstyled text-start small"><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Всё из Pro</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Dedicated ресурсы</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>SLA 99.99%</li><li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Priority support</li></ul><a href="#" class="btn btn-outline-green w-100" data-bs-toggle="modal" data-bs-target="#consultModal">Связаться</a></div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3"><span class="mono" style="color:var(--green);font-size:1.2rem">&gt;_ DevForge</span><p class="small mt-2">Developer-first infrastructure platform. Built by developers, for developers.</p></div>
+                <div class="col-6 col-md-2 mb-3"><h6 class="text-white small fw-semibold mb-3">Product</h6><a href="#" class="footer-link" style="color:#8b949e;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem">Features</a><a href="#" class="footer-link" style="color:#8b949e;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem">Pricing</a><a href="#" class="footer-link" style="color:#8b949e;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem">Changelog</a></div>
+                <div class="col-6 col-md-2 mb-3"><h6 class="text-white small fw-semibold mb-3">Resources</h6><a href="#" class="footer-link" style="color:#8b949e;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem">Docs</a><a href="#" class="footer-link" style="color:#8b949e;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem">API</a><a href="#" class="footer-link" style="color:#8b949e;text-decoration:none;display:block;margin-bottom:6px;font-size:.85rem">Status</a></div>
+                <div class="col-md-4 mb-3"><h6 class="text-white small fw-semibold mb-3">Stay Updated</h6><div class="input-group"><input type="email" class="form-control bg-dark border-secondary text-light" placeholder="Email"><button class="btn btn-green">→</button></div></div>
+            </div>
+            <hr style="border-color:#21262d"><p class="text-center small mb-0" style="color:#484f58">&copy; 2024 DevForge Inc.</p>
+        </div>
+    </footer>
+
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('visible');obs.unobserve(el.target)}})},{threshold:.15});
+        document.querySelectorAll('.anim').forEach(el=>obs.observe(el));
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

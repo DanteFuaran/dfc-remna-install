@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderWorld — Откройте мир</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--teal:#0d9488;--coral:#f43f5e;--sand:#fdf4e3;--dark:#1a1a2e;--text:#4a4a5a}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Lato',sans-serif;color:var(--text);overflow-x:hidden}
+        h1,h2,h3,h4{font-family:'Playfair Display',serif}
+        .navbar{background:transparent;position:absolute;width:100%;z-index:100;padding:20px 0;transition:.3s}
+        .navbar.scrolled{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);box-shadow:0 2px 20px rgba(0,0,0,.08);position:fixed}
+        .navbar.scrolled .nav-link,.navbar.scrolled .navbar-brand{color:var(--dark)!important}
+        .navbar-brand{font-family:'Playfair Display';font-weight:800;font-size:1.6rem;color:#fff!important}
+        .nav-link{color:rgba(255,255,255,.9)!important;font-weight:700;font-size:.85rem;letter-spacing:.5px;transition:.3s}
+        .nav-link:hover{color:#fff!important}
+        .hero{height:100vh;min-height:600px;background:linear-gradient(135deg,rgba(26,26,46,.6),rgba(13,148,136,.3)),url('https://loremflickr.com/1400/900/travel,landscape?lock=82') center/cover no-repeat;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff}
+        .hero h1{font-size:4rem;font-weight:800;line-height:1.1;margin-bottom:16px;text-shadow:0 4px 30px rgba(0,0,0,.3)}
+        .hero p{font-size:1.15rem;max-width:500px;margin:0 auto 30px;opacity:.9;font-weight:300}
+        .search-panel{background:rgba(255,255,255,.15);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:20px;display:flex;gap:12px;flex-wrap:wrap;max-width:700px;margin:0 auto}
+        .search-field{flex:1;min-width:140px}
+        .search-field label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;opacity:.8}
+        .search-field input,.search-field select{background:rgba(255,255,255,.2);border:none;border-radius:8px;padding:10px 14px;color:#fff;font-size:.9rem;width:100%}
+        .search-field input::placeholder{color:rgba(255,255,255,.5)}
+        .search-field select option{color:#333}
+        .btn-search{background:var(--coral);color:#fff;border:none;border-radius:10px;padding:10px 28px;font-weight:700;font-size:.9rem;transition:.3s;align-self:end}
+        .btn-search:hover{background:#e11d48;transform:translateY(-2px);box-shadow:0 8px 24px rgba(244,63,94,.3)}
+        .section-head{text-align:center;margin-bottom:48px}
+        .section-head h2{font-size:2.2rem;font-weight:700;color:var(--dark)}
+        .section-head p{color:#888;max-width:500px;margin:8px auto 0}
+        .dest-card{border-radius:20px;overflow:hidden;position:relative;height:380px;cursor:pointer;transition:.4s}
+        .dest-card:hover{transform:translateY(-8px);box-shadow:0 20px 50px rgba(0,0,0,.15)}
+        .dest-card img{width:100%;height:100%;object-fit:cover;transition:.6s}
+        .dest-card:hover img{transform:scale(1.08)}
+        .dest-overlay{position:absolute;bottom:0;left:0;right:0;padding:24px;background:linear-gradient(transparent,rgba(0,0,0,.8));color:#fff}
+        .dest-tag{display:inline-block;background:var(--coral);padding:4px 12px;border-radius:4px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+        .dest-name{font-family:'Playfair Display';font-size:1.5rem;font-weight:700}
+        .dest-info{font-size:.85rem;opacity:.8;display:flex;gap:12px;margin-top:4px}
+        .exp-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.06);transition:.3s}
+        .exp-card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,.1)}
+        .exp-card img{width:100%;height:180px;object-fit:cover}
+        .exp-body{padding:20px}
+        .exp-tag{font-size:.7rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px}
+        .exp-body h5{font-family:'Playfair Display';font-weight:700;color:var(--dark);margin:6px 0}
+        .exp-meta{display:flex;align-items:center;gap:12px;font-size:.8rem;color:#888;margin-top:8px}
+        .exp-price{font-size:1.1rem;font-weight:700;color:var(--coral);margin-top:10px}
+        .stats-section{background:var(--dark);color:#fff;padding:80px 0}
+        .stat-item{text-align:center}
+        .stat-item h3{font-family:'Playfair Display';font-size:2.5rem;font-weight:700}
+        .stat-item p{opacity:.6;font-size:.9rem}
+        .review-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+        .review-stars{color:#facc15;font-size:.9rem;margin-bottom:8px}
+        .review-text{font-style:italic;line-height:1.6;color:#555;margin-bottom:16px}
+        .review-author{display:flex;align-items:center;gap:12px}
+        .review-author img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+        .review-author-name{font-weight:700;color:var(--dark);font-size:.9rem}
+        .review-author-loc{font-size:.8rem;color:#999}
+        .cta-section{background:linear-gradient(135deg,var(--teal),#0f766e);color:#fff;padding:80px 0;text-align:center}
+        .cta-section h2{font-size:2.5rem;font-weight:700}
+        .btn-cta{background:var(--coral);color:#fff;border:none;border-radius:50px;padding:14px 40px;font-weight:700;font-size:1rem;transition:.3s}
+        .btn-cta:hover{transform:scale(1.05);box-shadow:0 8px 30px rgba(244,63,94,.4)}
+        footer{background:var(--dark);color:rgba(255,255,255,.5);padding:50px 0 30px}
+        footer h6{color:#fff;font-weight:700;margin-bottom:12px}
+        .f-link{color:rgba(255,255,255,.5);text-decoration:none;display:block;font-size:.85rem;margin-bottom:6px;transition:.2s}.f-link:hover{color:var(--teal)}
+        @media(max-width:768px){.hero h1{font-size:2.5rem}.dest-card{height:280px}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="#">WanderWorld</a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#nav12"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav12">
+                <ul class="navbar-nav ms-auto gap-2">
+                    <li class="nav-item"><a class="nav-link" href="#dest">Направления</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#exp">Экскурсии</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#reviews">Отзывы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Контакты</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Путешествуйте<br>с вдохновением</h1>
+            <p>Откройте для себя самые красивые места планеты. Более 10 000 направлений и уникальных туров ждут вас.</p>
+            <div class="search-panel">
+                <div class="search-field"><label>Куда?</label><input type="text" placeholder="Город или страна"></div>
+                <div class="search-field"><label>Дата</label><input type="text" placeholder="15 – 22 марта"></div>
+                <div class="search-field"><label>Гости</label><select><option>2 взрослых</option><option>1 взрослый</option><option>3+ гостей</option></select></div>
+                <button class="btn-search"><i class="bi bi-search me-1"></i>Найти</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 mt-4" id="dest">
+        <div class="container">
+            <div class="section-head"><h2>Топ направления</h2><p>Самые популярные направления этого сезона</p></div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="dest-card"><img src="https://loremflickr.com/600/400/bali,tropical?lock=83" alt=""><div class="dest-overlay"><span class="dest-tag">Хит сезона</span><div class="dest-name">Бали, Индонезия</div><div class="dest-info"><span><i class="bi bi-geo-alt"></i> 12 туров</span><span><i class="bi bi-star-fill"></i> 4.9</span></div></div></div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="dest-card"><img src="https://loremflickr.com/600/400/santorini,greece?lock=84" alt=""><div class="dest-overlay"><div class="dest-name">Санторини, Греция</div><div class="dest-info"><span><i class="bi bi-geo-alt"></i> 8 туров</span><span><i class="bi bi-star-fill"></i> 4.8</span></div></div></div>
+                </div>
+                <div class="col-md-12 col-lg-4">
+                    <div class="dest-card"><img src="https://loremflickr.com/600/400/tokyo,japan?lock=85" alt=""><div class="dest-overlay"><span class="dest-tag">Новинка</span><div class="dest-name">Токио, Япония</div><div class="dest-info"><span><i class="bi bi-geo-alt"></i> 15 туров</span><span><i class="bi bi-star-fill"></i> 4.7</span></div></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" style="background:#f8f9fa" id="exp">
+        <div class="container">
+            <div class="section-head"><h2>Популярные экскурсии</h2><p>Уникальные впечатления от местных гидов</p></div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3"><div class="exp-card"><img src="https://loremflickr.com/300/180/volcano,hiking?lock=86" alt=""><div class="exp-body"><div class="exp-tag">Приключение</div><h5>Восхождение на вулкан Батур</h5><div class="exp-meta"><span><i class="bi bi-clock"></i> 8 часов</span><span><i class="bi bi-people"></i> до 10</span></div><div class="exp-price">от ₽8 900</div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="exp-card"><img src="https://loremflickr.com/300/180/kyoto,temple?lock=87" alt=""><div class="exp-body"><div class="exp-tag">Культура</div><h5>Храмы Киото<br>с гидом</h5><div class="exp-meta"><span><i class="bi bi-clock"></i> 5 часов</span><span><i class="bi bi-people"></i> до 8</span></div><div class="exp-price">от ₽6 500</div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="exp-card"><img src="https://loremflickr.com/300/180/wine,vineyard?lock=88" alt=""><div class="exp-body"><div class="exp-tag">Гастрономия</div><h5>Винный тур по Санторини</h5><div class="exp-meta"><span><i class="bi bi-clock"></i> 6 часов</span><span><i class="bi bi-people"></i> до 12</span></div><div class="exp-price">от ₽12 300</div></div></div></div>
+                <div class="col-md-6 col-lg-3"><div class="exp-card"><img src="https://loremflickr.com/300/180/diving,coral?lock=89" alt=""><div class="exp-body"><div class="exp-tag">Водные</div><h5>Дайвинг у рифов Красного моря</h5><div class="exp-meta"><span><i class="bi bi-clock"></i> 4 часа</span><span><i class="bi bi-people"></i> до 6</span></div><div class="exp-price">от ₽14 700</div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-6 col-md-3"><div class="stat-item"><h3>10K+</h3><p>Направлений</p></div></div>
+                <div class="col-6 col-md-3"><div class="stat-item"><h3>2M+</h3><p>Путешественников</p></div></div>
+                <div class="col-6 col-md-3"><div class="stat-item"><h3>4.8</h3><p>Средний рейтинг</p></div></div>
+                <div class="col-6 col-md-3"><div class="stat-item"><h3>120+</h3><p>Стран</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="reviews">
+        <div class="container">
+            <div class="section-head"><h2>Отзывы путешественников</h2></div>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Невероятное путешествие на Бали! Гид был потрясающий, каждый день был наполнен новыми открытиями."</div><div class="review-author"><img src="https://i.pravatar.cc/44?img=57" alt=""><div><div class="review-author-name">Елена Новикова</div><div class="review-author-loc">Москва</div></div></div></div></div>
+                <div class="col-md-4"><div class="review-card"><div class="review-stars">★★★★★</div><div class="review-text">"Санторини превзошёл все ожидания. Закаты, еда, архитектура — всё было идеально организовано."</div><div class="review-author"><img src="https://i.pravatar.cc/44?img=58" alt=""><div><div class="review-author-name">Артём Соколов</div><div class="review-author-loc">Казань</div></div></div></div></div>
+                <div class="col-md-4"><div class="review-card"><div class="review-stars">★★★★☆</div><div class="review-text">"Токио — город будущего. WanderWorld помогли составить идеальный маршрут для первого визита."</div><div class="review-author"><img src="https://i.pravatar.cc/44?img=59" alt=""><div><div class="review-author-name">Ольга Белова</div><div class="review-author-loc">Санкт-Петербург</div></div></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2 class="mb-3">Готовы к приключению?</h2>
+            <p class="mb-4" style="opacity:.8;max-width:400px;margin-left:auto;margin-right:auto">Подберём идеальный тур специально для вас. Скидка 10% на первое бронирование.</p>
+            <button class="btn-cta">Начать планирование <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4"><h5 style="font-family:'Playfair Display';color:#fff;font-weight:700">WanderWorld</h5><p class="small" style="max-width:280px">Помогаем людям открывать мир с 2016 года. Каждое путешествие — это история.</p></div>
+                <div class="col-6 col-md-2"><h6>Компания</h6><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Карьера</a><a href="#" class="f-link">Блог</a></div>
+                <div class="col-6 col-md-2"><h6>Помощь</h6><a href="#" class="f-link">FAQ</a><a href="#" class="f-link">Контакты</a><a href="#" class="f-link">Условия</a></div>
+                <div class="col-md-4"><h6>Подписка</h6><p class="small">Лучшие предложения каждую неделю</p><div class="d-flex gap-2"><input class="form-control form-control-sm" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:8px" placeholder="Email"><button class="btn btn-sm px-3" style="background:var(--teal);color:#fff;border-radius:8px;font-weight:700">→</button></div></div>
+            </div>
+            <hr style="border-color:rgba(255,255,255,.08)">
+            <p class="small text-center mb-0">&copy; 2024 WanderWorld Travel.</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>window.addEventListener('scroll',()=>{document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>80)});document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

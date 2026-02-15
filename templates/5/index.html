@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnHub — Online Education</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--purple:#7c3aed;--orange:#f97316;--cream:#fefbf3;--warm:#fdf6e3}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Nunito',sans-serif;background:var(--cream);color:#4a4a4a;overflow-x:hidden}
+        .navbar{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:.8rem 0}
+        .navbar-brand{font-weight:800;color:var(--purple)!important;font-size:1.5rem}
+        .nav-link{color:#666!important;font-weight:600;transition:.3s}.nav-link:hover{color:var(--purple)!important}
+        .hero{padding:80px 0;background:linear-gradient(135deg,var(--warm) 0%,#fff 100%);position:relative}
+        .hero h1{font-size:3rem;font-weight:800;color:#1a1a2e;line-height:1.2}
+        .hero h1 span{color:var(--purple)}
+        .search-box{max-width:500px;position:relative}
+        .search-box input{width:100%;padding:16px 24px;padding-right:60px;border:2px solid #e5e5e5;border-radius:50px;font-size:1rem;background:#fff;transition:.3s;font-family:inherit}
+        .search-box input:focus{outline:none;border-color:var(--purple);box-shadow:0 4px 20px rgba(124,58,237,.12)}
+        .search-box button{position:absolute;right:6px;top:6px;bottom:6px;width:48px;border:none;background:var(--purple);color:#fff;border-radius:50%;cursor:pointer;transition:.3s}
+        .search-box button:hover{background:#6d28d9}
+        .category-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#fff;border:2px solid #eee;border-radius:50px;font-weight:600;color:#555;transition:.3s;text-decoration:none;font-size:.9rem}
+        .category-chip:hover{border-color:var(--purple);color:var(--purple);transform:translateY(-2px);box-shadow:0 4px 15px rgba(124,58,237,.1)}
+        .course-card{background:#fff;border:none;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:.3s}
+        .course-card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,.1)}
+        .course-img{height:200px;object-fit:cover;width:100%}
+        .course-badge{position:absolute;top:12px;left:12px;padding:4px 12px;border-radius:50px;font-size:.75rem;font-weight:700;color:#fff}
+        .course-rating{color:var(--orange);font-weight:700;font-size:.85rem}
+        .course-price{font-size:1.3rem;font-weight:800;color:var(--purple)}
+        .course-old-price{text-decoration:line-through;color:#aaa;font-size:.9rem;font-weight:400}
+        .progress-bar-custom{height:6px;background:#eee;border-radius:3px;overflow:hidden}.progress-fill{height:100%;border-radius:3px;transition:width 1s ease}
+        .instructor{background:#fff;border-radius:16px;padding:24px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.05);transition:.3s}
+        .instructor:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,.08)}
+        .instructor-avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--warm)}
+        .stat-pill{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#fff;border-radius:50px;box-shadow:0 2px 8px rgba(0,0,0,.05);font-weight:700;color:#1a1a2e}
+        .btn-purple{background:var(--purple);border:none;color:#fff;padding:12px 32px;border-radius:50px;font-weight:700;transition:.3s;box-shadow:0 4px 15px rgba(124,58,237,.3)}
+        .btn-purple:hover{background:#6d28d9;color:#fff;transform:translateY(-2px)}
+        .btn-orange{background:var(--orange);border:none;color:#fff;padding:12px 32px;border-radius:50px;font-weight:700;transition:.3s}
+        .btn-orange:hover{background:#ea580c;color:#fff;transform:translateY(-2px)}
+        .section-title{font-size:2rem;font-weight:800;color:#1a1a2e}
+        .cta-banner{background:linear-gradient(135deg,var(--purple),#9333ea);border-radius:24px;padding:50px;color:#fff;text-align:center;position:relative;overflow:hidden}
+        .cta-banner::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(255,255,255,.05);border-radius:50%}
+        footer{background:#1a1a2e;color:#94a3b8;padding:50px 0 30px}
+        .f-link{color:#94a3b8;text-decoration:none;display:block;margin-bottom:8px;font-size:.9rem;transition:.3s}.f-link:hover{color:var(--purple)}
+        .anim{opacity:0;transform:translateY(25px);transition:.6s}.anim.show{opacity:1;transform:translateY(0)}
+        @media(max-width:768px){.hero h1{font-size:2rem}.section-title{font-size:1.5rem}.cta-banner{padding:30px}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">🎓 LearnHub</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav5"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav5">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#courses">Курсы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#categories">Категории</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#instructors">Преподаватели</a></li>
+                </ul>
+                <div class="ms-lg-3 mt-2 mt-lg-0 d-flex gap-2">
+                    <a href="#" class="btn btn-outline-secondary btn-sm" style="border-radius:50px;font-weight:600">Войти</a>
+                    <a href="#" class="btn btn-purple btn-sm">Регистрация</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1>Учитесь <span>чему угодно</span>,<br>когда угодно</h1>
+                    <p class="my-4 text-muted" style="max-width:480px;font-size:1.1rem">10 000+ онлайн-курсов от лучших экспертов. Получите новые навыки и сертификаты.</p>
+                    <div class="search-box mb-4">
+                        <input type="text" placeholder="Что хотите изучить? Python, дизайн, маркетинг...">
+                        <button><i class="bi bi-search"></i></button>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="stat-pill">📚 10,000+ курсов</span>
+                        <span class="stat-pill">👨‍🏫 500+ экспертов</span>
+                        <span class="stat-pill">⭐ 4.8 рейтинг</span>
+                    </div>
+                </div>
+                <div class="col-lg-5 d-none d-lg-block text-center">
+                    <img src="https://loremflickr.com/400/350/education,learning?lock=50" alt="Education" style="border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.1);max-width:100%">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="categories" class="py-5 mt-3">
+        <div class="container">
+            <h2 class="section-title text-center mb-4">Популярные категории</h2>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a href="#" class="category-chip">💻 Программирование</a>
+                <a href="#" class="category-chip">🎨 Дизайн</a>
+                <a href="#" class="category-chip">📈 Маркетинг</a>
+                <a href="#" class="category-chip">📊 Аналитика</a>
+                <a href="#" class="category-chip">🗣️ Языки</a>
+                <a href="#" class="category-chip">📷 Фотография</a>
+                <a href="#" class="category-chip">🎵 Музыка</a>
+                <a href="#" class="category-chip">💼 Бизнес</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="courses" class="py-5" style="background:#fff">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">Лучшие курсы</h2>
+                <a href="#" class="btn btn-outline-secondary btn-sm" style="border-radius:50px">Все курсы →</a>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 anim">
+                    <div class="course-card h-100 position-relative">
+                        <img src="https://loremflickr.com/400/250/programming,python?lock=51" class="course-img" alt="Course">
+                        <span class="course-badge" style="background:var(--purple)">Bestseller</span>
+                        <div class="p-3">
+                            <span class="course-rating"><i class="bi bi-star-fill me-1"></i>4.9 <span class="text-muted fw-normal">(2.1K)</span></span>
+                            <h6 class="mt-2 mb-1 fw-bold" style="color:#1a1a2e">Python с нуля до Pro</h6>
+                            <small class="text-muted">Алексей Петров</small>
+                            <div class="progress-bar-custom mt-2 mb-2"><div class="progress-fill" style="width:75%;background:var(--purple)"></div></div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price">₽3,990</span>
+                                <span class="course-old-price">₽9,990</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 anim">
+                    <div class="course-card h-100 position-relative">
+                        <img src="https://loremflickr.com/400/250/design,uxui?lock=52" class="course-img" alt="Course">
+                        <span class="course-badge" style="background:var(--orange)">Новинка</span>
+                        <div class="p-3">
+                            <span class="course-rating"><i class="bi bi-star-fill me-1"></i>4.8 <span class="text-muted fw-normal">(890)</span></span>
+                            <h6 class="mt-2 mb-1 fw-bold" style="color:#1a1a2e">UX/UI Design Mastery</h6>
+                            <small class="text-muted">Мария Дизайнер</small>
+                            <div class="progress-bar-custom mt-2 mb-2"><div class="progress-fill" style="width:45%;background:var(--orange)"></div></div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price">₽4,490</span>
+                                <span class="course-old-price">₽12,000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 anim">
+                    <div class="course-card h-100 position-relative">
+                        <img src="https://loremflickr.com/400/250/marketing,digital?lock=53" class="course-img" alt="Course">
+                        <div class="p-3">
+                            <span class="course-rating"><i class="bi bi-star-fill me-1"></i>4.7 <span class="text-muted fw-normal">(1.5K)</span></span>
+                            <h6 class="mt-2 mb-1 fw-bold" style="color:#1a1a2e">Digital Marketing A-Z</h6>
+                            <small class="text-muted">Игорь Маркетолог</small>
+                            <div class="progress-bar-custom mt-2 mb-2"><div class="progress-fill" style="width:90%;background:#10b981"></div></div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price">₽2,990</span>
+                                <span class="course-old-price">₽7,500</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 anim">
+                    <div class="course-card h-100 position-relative">
+                        <img src="https://loremflickr.com/400/250/english,language?lock=54" class="course-img" alt="Course">
+                        <span class="course-badge" style="background:#10b981">Бесплатно</span>
+                        <div class="p-3">
+                            <span class="course-rating"><i class="bi bi-star-fill me-1"></i>4.6 <span class="text-muted fw-normal">(3.2K)</span></span>
+                            <h6 class="mt-2 mb-1 fw-bold" style="color:#1a1a2e">Английский для IT</h6>
+                            <small class="text-muted">Елена Лингвист</small>
+                            <div class="progress-bar-custom mt-2 mb-2"><div class="progress-fill" style="width:30%;background:#3b82f6"></div></div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="course-price" style="color:#10b981">Бесплатно</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="instructors" class="py-5">
+        <div class="container">
+            <h2 class="section-title text-center mb-4">Наши преподаватели</h2>
+            <div class="row g-4 justify-content-center">
+                <div class="col-6 col-md-3 anim"><div class="instructor"><img src="https://i.pravatar.cc/100?img=31" class="instructor-avatar mb-3" alt="Instructor"><h6 class="fw-bold" style="color:#1a1a2e">Алексей П.</h6><small class="text-muted">Python, ML</small><div class="mt-2"><span class="badge bg-warning text-dark">⭐ 4.9</span></div></div></div>
+                <div class="col-6 col-md-3 anim"><div class="instructor"><img src="https://i.pravatar.cc/100?img=32" class="instructor-avatar mb-3" alt="Instructor"><h6 class="fw-bold" style="color:#1a1a2e">Мария Д.</h6><small class="text-muted">UX/UI Design</small><div class="mt-2"><span class="badge bg-warning text-dark">⭐ 4.8</span></div></div></div>
+                <div class="col-6 col-md-3 anim"><div class="instructor"><img src="https://i.pravatar.cc/100?img=33" class="instructor-avatar mb-3" alt="Instructor"><h6 class="fw-bold" style="color:#1a1a2e">Игорь М.</h6><small class="text-muted">Marketing</small><div class="mt-2"><span class="badge bg-warning text-dark">⭐ 4.7</span></div></div></div>
+                <div class="col-6 col-md-3 anim"><div class="instructor"><img src="https://i.pravatar.cc/100?img=34" class="instructor-avatar mb-3" alt="Instructor"><h6 class="fw-bold" style="color:#1a1a2e">Елена Л.</h6><small class="text-muted">Languages</small><div class="mt-2"><span class="badge bg-warning text-dark">⭐ 4.9</span></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="cta-banner anim">
+                <h2 class="fw-bold mb-3" style="font-size:2rem">Начните учиться сегодня!</h2>
+                <p class="mb-4 mx-auto" style="max-width:450px;opacity:.9">Зарегистрируйтесь и получите доступ к 100+ бесплатным курсам прямо сейчас.</p>
+                <a href="#" class="btn btn-light btn-lg fw-bold" style="border-radius:50px;padding:14px 40px;color:var(--purple)" >Начать бесплатно 🚀</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4"><h5 class="text-white fw-bold">🎓 LearnHub</h5><p class="small mt-2">Образовательная платформа нового поколения. 10,000+ курсов от лучших экспертов.</p></div>
+                <div class="col-6 col-lg-2 mb-4"><h6 class="text-white small fw-semibold mb-3">Курсы</h6><a href="#" class="f-link">Программирование</a><a href="#" class="f-link">Дизайн</a><a href="#" class="f-link">Маркетинг</a></div>
+                <div class="col-6 col-lg-2 mb-4"><h6 class="text-white small fw-semibold mb-3">Компания</h6><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Блог</a><a href="#" class="f-link">Карьера</a></div>
+                <div class="col-lg-4 mb-4"><h6 class="text-white small fw-semibold mb-3">Контакты</h6><p class="small"><i class="bi bi-envelope me-2"></i>hello@learnhub.ru</p></div>
+            </div>
+            <hr style="border-color:rgba(148,163,184,.15)"><p class="text-center small mb-0">&copy; 2024 LearnHub.</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>const o=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('show');o.unobserve(el.target)}})},{threshold:.15});document.querySelectorAll('.anim').forEach(el=>o.observe(el));document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

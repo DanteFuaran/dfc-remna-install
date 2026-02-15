@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataPulse — Аналитическая платформа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0f1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;--blue:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#d29922;--purple:#bc8cff;--text:#c9d1d9;--text2:#8b949e}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+        .sidebar-nav{position:fixed;left:0;top:0;width:60px;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;z-index:100}
+        .sidebar-nav .logo{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;margin-bottom:24px}
+        .sidebar-nav a{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:1.1rem;transition:.2s;margin-bottom:4px;text-decoration:none}
+        .sidebar-nav a:hover,.sidebar-nav a.active{background:var(--surface2);color:var(--blue)}
+        .main-content{margin-left:60px;padding:20px 24px}
+        .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+        .top-bar h1{font-size:1.4rem;font-weight:700;color:#fff}
+        .top-bar .date-range{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.8rem;color:var(--text2);display:flex;align-items:center;gap:6px}
+        .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+        .kpi-label{font-size:.75rem;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+        .kpi-value{font-size:1.8rem;font-weight:700;color:#fff;margin:4px 0;font-family:'IBM Plex Mono',monospace}
+        .kpi-change{font-size:.8rem;font-weight:500;display:inline-flex;align-items:center;gap:3px}
+        .kpi-change.up{color:var(--green)}.kpi-change.down{color:var(--red)}
+        .kpi-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+        .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+        .chart-title{font-size:.9rem;font-weight:600;color:#fff;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+        .chart-pills{display:flex;gap:4px}
+        .chart-pill{padding:4px 12px;border-radius:20px;font-size:.7rem;font-weight:500;color:var(--text2);cursor:pointer;transition:.2s;background:transparent;border:none}
+        .chart-pill.active{background:var(--blue);color:#fff}
+        .bar-chart{display:flex;align-items:end;gap:6px;height:160px;padding-top:10px}
+        .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .bar{width:100%;border-radius:4px 4px 0 0;transition:height 1s ease;min-height:4px}
+        .bar-label{font-size:.6rem;color:var(--text2);font-family:'IBM Plex Mono',monospace}
+        .donut-chart{width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--blue) 0% 42%,var(--green) 42% 68%,var(--yellow) 68% 85%,var(--purple) 85% 100%);position:relative;margin:0 auto}
+        .donut-hole{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70px;height:70px;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:700;color:#fff;font-size:1rem}
+        .legend-item{display:flex;align-items:center;gap:8px;font-size:.8rem;margin-bottom:6px}
+        .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+        .data-table{width:100%}
+        .data-table th{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface2)}
+        .data-table td{padding:10px 12px;font-size:.85rem;border-bottom:1px solid var(--border)}
+        .data-table tr:hover{background:var(--surface2)}
+        .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+        .status-dot.active{background:var(--green)}.status-dot.warning{background:var(--yellow)}.status-dot.error{background:var(--red)}
+        .activity-feed{max-height:320px;overflow-y:auto}
+        .activity-feed::-webkit-scrollbar{width:4px}.activity-feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+        .activity-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+        .activity-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0}
+        .activity-text{font-size:.8rem;line-height:1.4}.activity-text strong{color:#fff}
+        .activity-time{font-size:.7rem;color:var(--text2)}
+        .progress-bar-custom{height:6px;border-radius:3px;background:var(--surface2)}
+        .progress-fill{height:100%;border-radius:3px;transition:width 1.5s ease}
+        @media(max-width:768px){.sidebar-nav{width:0;display:none}.main-content{margin-left:0}.kpi-value{font-size:1.3rem}}
+    </style>
+</head>
+<body>
+    <nav class="sidebar-nav d-none d-md-flex">
+        <div class="logo">D</div>
+        <a href="#" class="active" title="Дашборд"><i class="bi bi-grid-1x2-fill"></i></a>
+        <a href="#" title="Аналитика"><i class="bi bi-graph-up"></i></a>
+        <a href="#" title="Пользователи"><i class="bi bi-people"></i></a>
+        <a href="#" title="Отчёты"><i class="bi bi-file-earmark-bar-graph"></i></a>
+        <a href="#" title="Настройки" style="margin-top:auto"><i class="bi bi-gear"></i></a>
+    </nav>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h1>Дашборд</h1>
+                <span style="font-size:.8rem;color:var(--text2)">Обновлено: 2 мин назад</span>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="date-range"><i class="bi bi-calendar3"></i>1 Янв — 31 Янв 2025</div>
+                <button class="btn btn-sm" style="background:var(--blue);color:#fff;border-radius:8px;font-weight:600;font-size:.8rem"><i class="bi bi-download me-1"></i>Экспорт</button>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="kpi-label">Выручка</div><div class="kpi-value">₽4.2M</div><span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>12.5%</span></div>
+                        <div class="kpi-icon" style="background:rgba(88,166,255,.15);color:var(--blue)"><i class="bi bi-currency-dollar"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="kpi-label">Пользователи</div><div class="kpi-value">28.4K</div><span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>8.2%</span></div>
+                        <div class="kpi-icon" style="background:rgba(63,185,80,.15);color:var(--green)"><i class="bi bi-people"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="kpi-label">Конверсия</div><div class="kpi-value">3.42%</div><span class="kpi-change down"><i class="bi bi-arrow-down-short"></i>0.3%</span></div>
+                        <div class="kpi-icon" style="background:rgba(210,153,34,.15);color:var(--yellow)"><i class="bi bi-funnel"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div><div class="kpi-label">Сессии</div><div class="kpi-value">142K</div><span class="kpi-change up"><i class="bi bi-arrow-up-short"></i>18.7%</span></div>
+                        <div class="kpi-icon" style="background:rgba(188,140,255,.15);color:var(--purple)"><i class="bi bi-cursor"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-8">
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>Выручка по месяцам</span>
+                        <div class="chart-pills"><button class="chart-pill active">Неделя</button><button class="chart-pill">Месяц</button><button class="chart-pill">Год</button></div>
+                    </div>
+                    <div class="bar-chart" id="barChart">
+                        <div class="bar-col"><div class="bar" style="height:45%;background:var(--blue)"></div><div class="bar-label">Пн</div></div>
+                        <div class="bar-col"><div class="bar" style="height:72%;background:var(--blue)"></div><div class="bar-label">Вт</div></div>
+                        <div class="bar-col"><div class="bar" style="height:58%;background:var(--blue)"></div><div class="bar-label">Ср</div></div>
+                        <div class="bar-col"><div class="bar" style="height:85%;background:var(--blue)"></div><div class="bar-label">Чт</div></div>
+                        <div class="bar-col"><div class="bar" style="height:65%;background:var(--blue)"></div><div class="bar-label">Пт</div></div>
+                        <div class="bar-col"><div class="bar" style="height:92%;background:linear-gradient(180deg,var(--green),var(--blue))"></div><div class="bar-label">Сб</div></div>
+                        <div class="bar-col"><div class="bar" style="height:38%;background:var(--blue)"></div><div class="bar-label">Вс</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-card h-100">
+                    <div class="chart-title">Источники трафика</div>
+                    <div class="donut-chart mb-3"><div class="donut-hole">28.4K</div></div>
+                    <div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Прямой <span class="ms-auto" style="color:#fff;font-weight:600">42%</span></div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Органический <span class="ms-auto" style="color:#fff;font-weight:600">26%</span></div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Реклама <span class="ms-auto" style="color:#fff;font-weight:600">17%</span></div>
+                        <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Соцсети <span class="ms-auto" style="color:#fff;font-weight:600">15%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-8">
+                <div class="chart-card">
+                    <div class="chart-title">Последние операции</div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead><tr><th>ID</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+                            <tbody>
+                                <tr><td style="font-family:'IBM Plex Mono';font-size:.75rem">#8842</td><td style="color:#fff">Иванов А.С.</td><td style="color:var(--green);font-family:'IBM Plex Mono'">+₽45,200</td><td><span class="status-dot active"></span>Выполнен</td><td style="color:var(--text2)">31.01.25</td></tr>
+                                <tr><td style="font-family:'IBM Plex Mono';font-size:.75rem">#8841</td><td style="color:#fff">ООО ТехноМир</td><td style="color:var(--green);font-family:'IBM Plex Mono'">+₽128,000</td><td><span class="status-dot active"></span>Выполнен</td><td style="color:var(--text2)">31.01.25</td></tr>
+                                <tr><td style="font-family:'IBM Plex Mono';font-size:.75rem">#8840</td><td style="color:#fff">Петрова М.Д.</td><td style="color:var(--yellow);font-family:'IBM Plex Mono'">₽12,500</td><td><span class="status-dot warning"></span>Обработка</td><td style="color:var(--text2)">30.01.25</td></tr>
+                                <tr><td style="font-family:'IBM Plex Mono';font-size:.75rem">#8839</td><td style="color:#fff">ИП Смирнов</td><td style="color:var(--red);font-family:'IBM Plex Mono'">-₽8,300</td><td><span class="status-dot error"></span>Возврат</td><td style="color:var(--text2)">30.01.25</td></tr>
+                                <tr><td style="font-family:'IBM Plex Mono';font-size:.75rem">#8838</td><td style="color:#fff">Козлов В.Н.</td><td style="color:var(--green);font-family:'IBM Plex Mono'">+₽67,800</td><td><span class="status-dot active"></span>Выполнен</td><td style="color:var(--text2)">29.01.25</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-card h-100">
+                    <div class="chart-title">Активность</div>
+                    <div class="activity-feed">
+                        <div class="activity-item"><img src="https://i.pravatar.cc/32?img=52" class="activity-avatar" alt=""><div><div class="activity-text"><strong>Алексей К.</strong> оформил подписку Premium</div><div class="activity-time">5 мин назад</div></div></div>
+                        <div class="activity-item"><img src="https://i.pravatar.cc/32?img=53" class="activity-avatar" alt=""><div><div class="activity-text"><strong>Система</strong> завершила резервное копирование</div><div class="activity-time">12 мин назад</div></div></div>
+                        <div class="activity-item"><img src="https://i.pravatar.cc/32?img=54" class="activity-avatar" alt=""><div><div class="activity-text"><strong>Мария С.</strong> обновила отчёт по продажам</div><div class="activity-time">28 мин назад</div></div></div>
+                        <div class="activity-item"><img src="https://i.pravatar.cc/32?img=55" class="activity-avatar" alt=""><div><div class="activity-text"><strong>API</strong> обнаружен повышенный трафик (+45%)</div><div class="activity-time">1 час назад</div></div></div>
+                        <div class="activity-item"><img src="https://i.pravatar.cc/32?img=56" class="activity-avatar" alt=""><div><div class="activity-text"><strong>Дмитрий Б.</strong> создал новую интеграцию</div><div class="activity-time">2 часа назад</div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-3">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between mb-2"><span style="font-size:.8rem;font-weight:600;color:#fff">CPU</span><span style="font-size:.8rem;font-family:'IBM Plex Mono';color:var(--green)">34%</span></div>
+                    <div class="progress-bar-custom"><div class="progress-fill" style="width:34%;background:var(--green)"></div></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between mb-2"><span style="font-size:.8rem;font-weight:600;color:#fff">RAM</span><span style="font-size:.8rem;font-family:'IBM Plex Mono';color:var(--yellow)">67%</span></div>
+                    <div class="progress-bar-custom"><div class="progress-fill" style="width:67%;background:var(--yellow)"></div></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between mb-2"><span style="font-size:.8rem;font-weight:600;color:#fff">Диск</span><span style="font-size:.8rem;font-family:'IBM Plex Mono';color:var(--blue)">52%</span></div>
+                    <div class="progress-bar-custom"><div class="progress-fill" style="width:52%;background:var(--blue)"></div></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="chart-card">
+                    <div class="d-flex justify-content-between mb-2"><span style="font-size:.8rem;font-weight:600;color:#fff">Сеть</span><span style="font-size:.8rem;font-family:'IBM Plex Mono';color:var(--purple)">28%</span></div>
+                    <div class="progress-bar-custom"><div class="progress-fill" style="width:28%;background:var(--purple)"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center py-4" style="color:var(--text2);font-size:.75rem">&copy; 2024 DataPulse Analytics Platform</div>
+    </div>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Animate bars on scroll
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => { if(e.isIntersecting){ e.target.querySelectorAll('.bar').forEach(b => { const h = b.style.height; b.style.height = '4px'; setTimeout(() => b.style.height = h, 100); }); observer.unobserve(e.target); }});
+        }, {threshold: 0.5});
+        document.querySelectorAll('.bar-chart').forEach(el => observer.observe(el));
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

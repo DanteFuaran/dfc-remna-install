@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectMe — Социальная платформа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--blue:#3b82f6;--blue-dark:#2563eb;--bg:#f0f2f5;--white:#fff;--dark:#1c1e21;--gray:#65676b;--border:#ced0d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Nunito Sans',sans-serif;background:var(--bg);color:var(--dark)}
+        .top-nav{background:var(--white);box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:0;z-index:1000;padding:6px 0}
+        .nav-brand{font-weight:800;font-size:1.8rem;color:var(--blue);text-decoration:none;letter-spacing:-1px}
+        .nav-search{max-width:260px;position:relative}
+        .nav-search input{background:var(--bg);border:none;border-radius:50px;padding:8px 16px 8px 36px;font-size:.85rem;width:100%}
+        .nav-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray)}
+        .nav-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:1.2rem;transition:.2s;text-decoration:none}
+        .nav-icon:hover,.nav-icon.active{background:rgba(59,130,246,.1);color:var(--blue)}
+        .nav-icon.notif{position:relative}
+        .notif-dot{position:absolute;top:4px;right:4px;width:10px;height:10px;background:#ef4444;border-radius:50%;border:2px solid #fff}
+        .stories-row{display:flex;gap:10px;padding:16px;background:var(--white);border-radius:12px;overflow-x:auto;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .story{flex:0 0 100px;text-align:center;cursor:pointer}
+        .story-avatar{width:68px;height:68px;border-radius:50%;border:3px solid var(--blue);padding:2px;margin:0 auto 6px}
+        .story-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+        .story-name{font-size:.72rem;font-weight:600;color:var(--gray)}
+        .story-add .story-avatar{border:3px solid var(--border);position:relative}
+        .story-add .story-avatar::after{content:'+';position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-size:.85rem;font-weight:700}
+        .create-post{background:var(--white);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+        .create-post .d-flex{align-items:center;gap:10px}
+        .user-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover}
+        .post-input{flex:1;background:var(--bg);border:none;border-radius:50px;padding:10px 18px;font-size:.9rem;color:var(--gray);cursor:pointer;transition:.2s}
+        .post-input:hover{background:#e4e6eb}
+        .post-actions{display:flex;gap:4px;margin-top:12px;padding-top:10px;border-top:1px solid var(--bg)}
+        .post-action{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:8px;font-size:.85rem;font-weight:600;color:var(--gray);transition:.2s;cursor:pointer}
+        .post-action:hover{background:var(--bg)}
+        .post-action i{font-size:1.1rem}
+        .post-card{background:var(--white);border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;overflow:hidden}
+        .post-header{padding:14px 16px;display:flex;align-items:center;gap:10px}
+        .post-author{font-weight:700;font-size:.9rem}
+        .post-time{font-size:.75rem;color:var(--gray)}
+        .post-text{padding:0 16px 12px;font-size:.9rem;line-height:1.5}
+        .post-img{width:100%}
+        .post-stats{padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--gray)}
+        .post-stats .likes{display:flex;align-items:center;gap:4px}
+        .like-icon{width:20px;height:20px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.6rem}
+        .post-buttons{display:flex;border-top:1px solid var(--bg);padding:4px 16px}
+        .post-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:8px;font-weight:600;font-size:.85rem;color:var(--gray);transition:.2s;cursor:pointer}
+        .post-btn:hover{background:var(--bg)}
+        .sidebar{position:sticky;top:70px}
+        .sidebar-link{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--dark);font-weight:600;font-size:.9rem;transition:.2s}
+        .sidebar-link:hover{background:var(--white)}
+        .sidebar-link i{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--blue)}
+        .sidebar-link img{width:28px;height:28px;border-radius:50%}
+        .friend-card{background:var(--white);border-radius:12px;padding:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .friend-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block}
+        .friend-name{font-weight:700;font-size:.85rem}
+        .friend-mutual{font-size:.75rem;color:var(--gray)}
+        .btn-add{background:rgba(59,130,246,.1);color:var(--blue);border:none;border-radius:8px;padding:6px 16px;font-weight:700;font-size:.8rem;width:100%;margin-top:8px;transition:.2s}
+        .btn-add:hover{background:rgba(59,130,246,.2)}
+        .right-panel h6{font-weight:700;color:var(--gray);font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+        .contact-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:.2s}
+        .contact-item:hover{background:var(--white)}
+        .contact-item img{width:32px;height:32px;border-radius:50%}
+        .contact-item .online{width:10px;height:10px;background:#22c55e;border-radius:50%;border:2px solid var(--bg);position:absolute;bottom:0;right:0}
+        .section-title{font-weight:800;font-size:1rem;color:var(--gray);margin-bottom:12px}
+        @media(max-width:992px){.left-sidebar,.right-sidebar{display:none!important}}
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="container d-flex align-items-center gap-3">
+            <a class="nav-brand" href="#">C</a>
+            <div class="nav-search d-none d-md-block">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Поиск в ConnectMe">
+            </div>
+            <div class="d-flex gap-1 mx-auto">
+                <a href="#" class="nav-icon active"><i class="bi bi-house-door-fill"></i></a>
+                <a href="#" class="nav-icon"><i class="bi bi-people-fill"></i></a>
+                <a href="#" class="nav-icon"><i class="bi bi-play-btn-fill"></i></a>
+                <a href="#" class="nav-icon"><i class="bi bi-shop"></i></a>
+                <a href="#" class="nav-icon"><i class="bi bi-controller"></i></a>
+            </div>
+            <div class="d-flex gap-1">
+                <a href="#" class="nav-icon"><i class="bi bi-grid-3x3-gap-fill"></i></a>
+                <a href="#" class="nav-icon notif"><i class="bi bi-chat-fill"></i><span class="notif-dot"></span></a>
+                <a href="#" class="nav-icon notif"><i class="bi bi-bell-fill"></i><span class="notif-dot"></span></a>
+                <img src="https://i.pravatar.cc/40?img=35" style="width:36px;height:36px;border-radius:50%;cursor:pointer">
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-3">
+        <div class="row">
+            <div class="col-lg-3 left-sidebar">
+                <div class="sidebar">
+                    <a href="#" class="sidebar-link"><img src="https://i.pravatar.cc/28?img=35" alt="">Алексей Петров</a>
+                    <a href="#" class="sidebar-link"><i class="bi bi-people-fill text-primary"></i>Друзья</a>
+                    <a href="#" class="sidebar-link"><i class="bi bi-clock-history text-info"></i>Воспоминания</a>
+                    <a href="#" class="sidebar-link"><i class="bi bi-bookmark-fill text-success"></i>Сохранённое</a>
+                    <a href="#" class="sidebar-link"><i class="bi bi-flag-fill text-warning"></i>Страницы</a>
+                    <a href="#" class="sidebar-link"><i class="bi bi-calendar-event-fill text-danger"></i>Мероприятия</a>
+                    <hr style="border-color:var(--border)">
+                    <h6 class="section-title px-2">Ваши группы</h6>
+                    <a href="#" class="sidebar-link"><img src="https://i.pravatar.cc/28?img=36" alt="">Технологии 2025</a>
+                    <a href="#" class="sidebar-link"><img src="https://i.pravatar.cc/28?img=37" alt="">Дизайн и UI/UX</a>
+                    <a href="#" class="sidebar-link"><img src="https://i.pravatar.cc/28?img=38" alt="">Путешественники</a>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="stories-row">
+                    <div class="story story-add"><div class="story-avatar"><img src="https://i.pravatar.cc/64?img=35" alt=""></div><div class="story-name">Создать</div></div>
+                    <div class="story"><div class="story-avatar"><img src="https://i.pravatar.cc/64?img=39" alt=""></div><div class="story-name">Мария К.</div></div>
+                    <div class="story"><div class="story-avatar"><img src="https://i.pravatar.cc/64?img=40" alt=""></div><div class="story-name">Дмитрий</div></div>
+                    <div class="story"><div class="story-avatar"><img src="https://i.pravatar.cc/64?img=41" alt=""></div><div class="story-name">Елена С.</div></div>
+                    <div class="story"><div class="story-avatar"><img src="https://i.pravatar.cc/64?img=42" alt=""></div><div class="story-name">Артём В.</div></div>
+                </div>
+
+                <div class="create-post">
+                    <div class="d-flex"><img src="https://i.pravatar.cc/42?img=35" class="user-avatar" alt=""><div class="post-input">Что у вас нового, Алексей?</div></div>
+                    <div class="post-actions">
+                        <div class="post-action"><i class="bi bi-camera-video-fill" style="color:#f44336"></i><span class="d-none d-sm-inline">Видео</span></div>
+                        <div class="post-action"><i class="bi bi-images" style="color:#4caf50"></i><span class="d-none d-sm-inline">Фото</span></div>
+                        <div class="post-action"><i class="bi bi-emoji-smile" style="color:#ffb100"></i><span class="d-none d-sm-inline">Чувства</span></div>
+                    </div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/42?img=43" class="user-avatar" alt="">
+                        <div><div class="post-author">Марина Козлова</div><div class="post-time">2 часа назад · <i class="bi bi-globe-americas"></i></div></div>
+                        <i class="bi bi-three-dots ms-auto" style="color:var(--gray);cursor:pointer"></i>
+                    </div>
+                    <div class="post-text">Только что вернулась из невероятного путешествия по Грузии! 🇬🇪 Горы, вино, хинкали и безумная гостеприимность. Если ещё не были — очень рекомендую! 🏔️✨</div>
+                    <img src="https://loremflickr.com/600/400/georgia,mountains?lock=80" class="post-img" alt="">
+                    <div class="post-stats">
+                        <div class="likes"><span class="like-icon"><i class="bi bi-hand-thumbs-up-fill"></i></span><span class="like-icon" style="background:#ef4444;margin-left:-4px"><i class="bi bi-heart-fill"></i></span>247</div>
+                        <span>38 комментариев · 12 репостов</span>
+                    </div>
+                    <div class="post-buttons">
+                        <div class="post-btn"><i class="bi bi-hand-thumbs-up"></i>Нравится</div>
+                        <div class="post-btn"><i class="bi bi-chat"></i>Коммент.</div>
+                        <div class="post-btn"><i class="bi bi-share"></i>Поделиться</div>
+                    </div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/42?img=44" class="user-avatar" alt="">
+                        <div><div class="post-author">Технологии 2025</div><div class="post-time">5 часов назад · <i class="bi bi-globe-americas"></i></div></div>
+                    </div>
+                    <div class="post-text">Apple представила новый MacBook с чипом M4 Ultra. Производительность выросла на 60% по сравнению с предыдущим поколением. Цены начинаются от $3499. Что думаете? 💻</div>
+                    <div class="post-stats">
+                        <div class="likes"><span class="like-icon"><i class="bi bi-hand-thumbs-up-fill"></i></span>1.2K</div>
+                        <span>892 комментария</span>
+                    </div>
+                    <div class="post-buttons">
+                        <div class="post-btn"><i class="bi bi-hand-thumbs-up"></i>Нравится</div>
+                        <div class="post-btn"><i class="bi bi-chat"></i>Коммент.</div>
+                        <div class="post-btn"><i class="bi bi-share"></i>Поделиться</div>
+                    </div>
+                </div>
+
+                <div class="post-card">
+                    <div class="post-header">
+                        <img src="https://i.pravatar.cc/42?img=45" class="user-avatar" alt="">
+                        <div><div class="post-author">Дмитрий Сергеев</div><div class="post-time">Вчера в 18:30</div></div>
+                    </div>
+                    <div class="post-text">Написал новую статью о React Server Components. Разобрал все плюсы и минусы, паттерны и типичные ошибки. Ссылка в комментариях 👇</div>
+                    <img src="https://loremflickr.com/600/300/programming,code?lock=81" class="post-img" alt="">
+                    <div class="post-stats">
+                        <div class="likes"><span class="like-icon"><i class="bi bi-hand-thumbs-up-fill"></i></span>89</div>
+                        <span>23 комментария · 45 репостов</span>
+                    </div>
+                    <div class="post-buttons">
+                        <div class="post-btn"><i class="bi bi-hand-thumbs-up"></i>Нравится</div>
+                        <div class="post-btn"><i class="bi bi-chat"></i>Коммент.</div>
+                        <div class="post-btn"><i class="bi bi-share"></i>Поделиться</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 right-sidebar">
+                <div class="sidebar right-panel">
+                    <h6>Возможные друзья</h6>
+                    <div class="row g-2 mb-4">
+                        <div class="col-6"><div class="friend-card"><img src="https://i.pravatar.cc/72?img=46" class="friend-avatar" alt=""><div class="friend-name">Кирилл М.</div><div class="friend-mutual">5 общих друзей</div><button class="btn-add">+ Добавить</button></div></div>
+                        <div class="col-6"><div class="friend-card"><img src="https://i.pravatar.cc/72?img=47" class="friend-avatar" alt=""><div class="friend-name">Анна Б.</div><div class="friend-mutual">3 общих друга</div><button class="btn-add">+ Добавить</button></div></div>
+                    </div>
+                    <h6>Контакты</h6>
+                    <div class="contact-item"><div class="position-relative"><img src="https://i.pravatar.cc/32?img=48" alt=""><span class="online"></span></div><span style="font-size:.85rem;font-weight:600">Елена Соколова</span></div>
+                    <div class="contact-item"><div class="position-relative"><img src="https://i.pravatar.cc/32?img=49" alt=""><span class="online"></span></div><span style="font-size:.85rem;font-weight:600">Максим Волков</span></div>
+                    <div class="contact-item"><div class="position-relative"><img src="https://i.pravatar.cc/32?img=50" alt=""></div><span style="font-size:.85rem;font-weight:600">Ольга Морозова</span></div>
+                    <div class="contact-item"><div class="position-relative"><img src="https://i.pravatar.cc/32?img=51" alt=""><span class="online"></span></div><span style="font-size:.85rem;font-weight:600">Игорь Лебедев</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoNex — Торговая платформа</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#08080f;--surface:#0e0e1a;--surface2:#141425;--border:#1e1e3a;--orange:#f59e0b;--gold:#fbbf24;--green:#22c55e;--red:#ef4444;--text:#a1a1c7;--text2:#6b6b8d}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+        .ticker-bar{background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;padding:8px 0;white-space:nowrap}
+        .ticker-track{display:flex;gap:40px;animation:tickerScroll 30s linear infinite}
+        @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+        .ticker-item{display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:.8rem}
+        .ticker-name{color:#fff;font-weight:600}
+        .ticker-price{font-family:'Space Mono',monospace;color:#fff}
+        .ticker-change{font-family:'Space Mono',monospace;font-size:.75rem}
+        .up{color:var(--green)}.down{color:var(--red)}
+        .navbar{background:rgba(8,8,15,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 0}
+        .navbar-brand{font-weight:700;font-size:1.4rem;color:#fff!important;letter-spacing:-1px}
+        .navbar-brand span{color:var(--orange)}
+        .nav-link{color:var(--text)!important;font-weight:500;font-size:.85rem;transition:.3s}.nav-link:hover{color:var(--orange)!important}
+        .btn-trade{background:linear-gradient(135deg,var(--orange),var(--gold));color:#000;border:none;border-radius:8px;padding:8px 24px;font-weight:700;font-size:.85rem;transition:.3s}
+        .btn-trade:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,158,11,.3)}
+        .hero{padding:80px 0;position:relative}
+        .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(245,158,11,.08),transparent 70%);pointer-events:none}
+        .hero h1{font-size:3.2rem;font-weight:700;color:#fff;line-height:1.1;letter-spacing:-1px}
+        .hero h1 span{background:linear-gradient(135deg,var(--orange),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .price-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
+        .btc-price{font-family:'Space Mono',monospace;font-size:2.5rem;font-weight:700;color:#fff}
+        .mini-chart{display:flex;align-items:end;gap:2px;height:60px}
+        .mini-bar{flex:1;background:var(--green);border-radius:2px;min-height:4px;opacity:.6;transition:.3s}
+        .mini-bar:hover{opacity:1}
+        .coin-table{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+        .coin-table table{width:100%;margin:0}
+        .coin-table th{padding:14px 16px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text2);border-bottom:1px solid var(--border);background:var(--surface2)}
+        .coin-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:.85rem}
+        .coin-table tr:last-child td{border:none}
+        .coin-table tr:hover{background:var(--surface2)}
+        .coin-icon{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.7rem;margin-right:8px}
+        .coin-name{color:#fff;font-weight:600}
+        .coin-sym{color:var(--text2);font-size:.75rem}
+        .coin-price{font-family:'Space Mono',monospace;color:#fff}
+        .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;transition:.3s}
+        .feature-card:hover{border-color:var(--orange);transform:translateY(-4px)}
+        .feature-icon{width:56px;height:56px;border-radius:14px;background:rgba(245,158,11,.1);display:flex;align-items:center;justify-content:center;color:var(--orange);font-size:1.5rem;margin:0 auto 16px}
+        .feature-card h5{color:#fff;font-weight:600;font-size:1rem}
+        .cta{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(251,191,36,.05));border:1px solid rgba(245,158,11,.2);border-radius:20px;padding:50px;text-align:center}
+        .app-btn{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;color:#fff;text-decoration:none;font-size:.85rem;font-weight:600;transition:.3s}
+        .app-btn:hover{border-color:var(--orange);color:var(--orange)}
+        footer{border-top:1px solid var(--border);padding:40px 0;color:var(--text2)}
+        .f-link{color:var(--text2);text-decoration:none;display:block;font-size:.8rem;margin-bottom:6px;transition:.2s}.f-link:hover{color:var(--orange)}
+        @media(max-width:768px){.hero h1{font-size:2.2rem}.btc-price{font-size:1.6rem}.ticker-bar{display:none}}
+    </style>
+</head>
+<body>
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <div class="ticker-item"><span class="ticker-name">BTC</span><span class="ticker-price">$96,432</span><span class="ticker-change up">+2.14%</span></div>
+            <div class="ticker-item"><span class="ticker-name">ETH</span><span class="ticker-price">$3,284</span><span class="ticker-change up">+1.87%</span></div>
+            <div class="ticker-item"><span class="ticker-name">SOL</span><span class="ticker-price">$178.50</span><span class="ticker-change down">-0.92%</span></div>
+            <div class="ticker-item"><span class="ticker-name">BNB</span><span class="ticker-price">$612</span><span class="ticker-change up">+3.41%</span></div>
+            <div class="ticker-item"><span class="ticker-name">XRP</span><span class="ticker-price">$2.18</span><span class="ticker-change up">+5.23%</span></div>
+            <div class="ticker-item"><span class="ticker-name">ADA</span><span class="ticker-price">$0.87</span><span class="ticker-change down">-1.15%</span></div>
+            <div class="ticker-item"><span class="ticker-name">DOGE</span><span class="ticker-price">$0.34</span><span class="ticker-change up">+8.67%</span></div>
+            <div class="ticker-item"><span class="ticker-name">DOT</span><span class="ticker-price">$7.42</span><span class="ticker-change up">+2.03%</span></div>
+            <div class="ticker-item"><span class="ticker-name">BTC</span><span class="ticker-price">$96,432</span><span class="ticker-change up">+2.14%</span></div>
+            <div class="ticker-item"><span class="ticker-name">ETH</span><span class="ticker-price">$3,284</span><span class="ticker-change up">+1.87%</span></div>
+            <div class="ticker-item"><span class="ticker-name">SOL</span><span class="ticker-price">$178.50</span><span class="ticker-change down">-0.92%</span></div>
+            <div class="ticker-item"><span class="ticker-name">BNB</span><span class="ticker-price">$612</span><span class="ticker-change up">+3.41%</span></div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Crypto<span>Nex</span></a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav11"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav11">
+                <ul class="navbar-nav mx-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#">Рынки</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#markets">Торговля</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Возможности</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Стейкинг</a></li>
+                </ul>
+                <div class="d-flex gap-2">
+                    <a href="#" class="nav-link" style="color:var(--orange)!important">Войти</a>
+                    <button class="btn-trade" onclick="alert('Регистрация временно недоступна')">Начать торговлю</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <div class="d-inline-flex align-items-center gap-2 mb-3" style="background:var(--surface);border:1px solid var(--border);border-radius:50px;padding:6px 16px;font-size:.8rem">
+                        <span style="background:var(--green);width:8px;height:8px;border-radius:50%"></span>
+                        <span>Рынки открыты</span>
+                    </div>
+                    <h1>Торгуйте <span>криптовалютой</span> без ограничений</h1>
+                    <p class="mt-3 mb-4" style="font-size:1.05rem;max-width:480px;line-height:1.6">Покупайте, продавайте и обменивайте более 200 криптовалют. Мгновенные транзакции, минимальные комиссии.</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <button class="btn-trade px-5 py-3" onclick="alert('Регистрация временно недоступна')" style="font-size:1rem">Создать аккаунт <i class="bi bi-arrow-right ms-1"></i></button>
+                        <button class="btn btn-outline-secondary rounded-pill px-4" style="border-color:var(--border);color:#fff" onclick="alert('Демо-режим скоро будет доступен')">Демо-аккаунт</button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="price-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="coin-icon" style="background:#f7931a;width:40px;height:40px;font-size:.9rem">₿</div>
+                            <div><div style="color:#fff;font-weight:600">Bitcoin</div><div style="font-size:.8rem;color:var(--text2)">BTC/USDT</div></div>
+                            <span class="ms-auto ticker-change up" style="font-size:.9rem">+2.14%</span>
+                        </div>
+                        <div class="btc-price">$96,432.18</div>
+                        <div style="font-size:.8rem;color:var(--text2);margin-bottom:16px">≈ ₽9,164,056</div>
+                        <div class="mini-chart">
+                            <div class="mini-bar" style="height:40%"></div><div class="mini-bar" style="height:55%"></div>
+                            <div class="mini-bar" style="height:35%"></div><div class="mini-bar" style="height:70%"></div>
+                            <div class="mini-bar" style="height:60%"></div><div class="mini-bar" style="height:45%"></div>
+                            <div class="mini-bar" style="height:80%"></div><div class="mini-bar" style="height:65%"></div>
+                            <div class="mini-bar" style="height:90%"></div><div class="mini-bar" style="height:75%"></div>
+                            <div class="mini-bar" style="height:85%"></div><div class="mini-bar" style="height:95%"></div>
+                            <div class="mini-bar" style="height:70%"></div><div class="mini-bar" style="height:88%"></div>
+                            <div class="mini-bar" style="height:92%"></div><div class="mini-bar" style="height:100%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2" style="font-size:.65rem;color:var(--text2);font-family:'Space Mono'">
+                            <span>24ч назад</span><span>Сейчас</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="markets">
+        <div class="container">
+            <h3 style="color:#fff;font-weight:700;font-size:1.5rem;margin-bottom:24px">Популярные активы</h3>
+            <div class="coin-table">
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>#</th><th>Актив</th><th>Цена</th><th>24ч</th><th>Капитализация</th><th></th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td><span class="coin-icon" style="background:#f7931a">₿</span><span class="coin-name">Bitcoin</span> <span class="coin-sym">BTC</span></td><td class="coin-price">$96,432</td><td class="up">+2.14%</td><td>$1.89T</td><td><button class="btn-trade" style="padding:5px 14px;font-size:.75rem" onclick="alert('Покупка временно недоступна')">Купить</button></td></tr>
+                            <tr><td>2</td><td><span class="coin-icon" style="background:#627eea">Ξ</span><span class="coin-name">Ethereum</span> <span class="coin-sym">ETH</span></td><td class="coin-price">$3,284</td><td class="up">+1.87%</td><td>$395B</td><td><button class="btn-trade" style="padding:5px 14px;font-size:.75rem" onclick="alert('Покупка временно недоступна')">Купить</button></td></tr>
+                            <tr><td>3</td><td><span class="coin-icon" style="background:linear-gradient(135deg,#9945ff,#14f195)">S</span><span class="coin-name">Solana</span> <span class="coin-sym">SOL</span></td><td class="coin-price">$178.50</td><td class="down">-0.92%</td><td>$82B</td><td><button class="btn-trade" style="padding:5px 14px;font-size:.75rem" onclick="alert('Покупка временно недоступна')">Купить</button></td></tr>
+                            <tr><td>4</td><td><span class="coin-icon" style="background:#f3ba2f">B</span><span class="coin-name">BNB</span> <span class="coin-sym">BNB</span></td><td class="coin-price">$612</td><td class="up">+3.41%</td><td>$91B</td><td><button class="btn-trade" style="padding:5px 14px;font-size:.75rem" onclick="alert('Покупка временно недоступна')">Купить</button></td></tr>
+                            <tr><td>5</td><td><span class="coin-icon" style="background:#0085c0">X</span><span class="coin-name">XRP</span> <span class="coin-sym">XRP</span></td><td class="coin-price">$2.18</td><td class="up">+5.23%</td><td>$124B</td><td><button class="btn-trade" style="padding:5px 14px;font-size:.75rem" onclick="alert('Покупка временно недоступна')">Купить</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="features">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h3 style="color:#fff;font-weight:700;font-size:1.8rem">Почему CryptoNex?</h3>
+                <p style="color:var(--text2);max-width:500px;margin:8px auto 0">Передовые инструменты для торговли криптовалютой</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-lightning-charge-fill"></i></div><h5>Мгновенные сделки</h5><p class="small mb-0">Исполнение ордеров менее чем за 10мс благодаря собственному движку</p></div></div>
+                <div class="col-md-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-lock-fill"></i></div><h5>Безопасность</h5><p class="small mb-0">98% активов хранятся в холодных кошельках с мультиподписью</p></div></div>
+                <div class="col-md-4"><div class="feature-card"><div class="feature-icon"><i class="bi bi-percent"></i></div><h5>Низкие комиссии</h5><p class="small mb-0">От 0.02% за сделку. Скидки для активных трейдеров до 60%</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="cta">
+                <h3 style="color:#fff;font-weight:700;font-size:2rem;margin-bottom:8px">Начните торговать сегодня</h3>
+                <p class="mb-4" style="color:var(--text)">Бонус $50 при регистрации и первом пополнении</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="#" class="app-btn"><i class="bi bi-apple fs-4"></i><div class="text-start"><div style="font-size:.6rem;opacity:.7">Скачать в</div>App Store</div></a>
+                    <a href="#" class="app-btn"><i class="bi bi-google-play fs-4"></i><div class="text-start"><div style="font-size:.6rem;opacity:.7">Доступно в</div>Google Play</div></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 mb-3"><h6 style="color:#fff;font-weight:700">Crypto<span style="color:var(--orange)">Nex</span></h6><p class="small" style="color:var(--text2)">Регулируемая криптовалютная платформа.<br>Лицензия №FIN-2024-0847</p></div>
+                <div class="col-6 col-md-2"><h6 style="color:#fff;font-size:.85rem">Продукты</h6><a href="#" class="f-link">Спот</a><a href="#" class="f-link">Фьючерсы</a><a href="#" class="f-link">Стейкинг</a><a href="#" class="f-link">NFT</a></div>
+                <div class="col-6 col-md-2"><h6 style="color:#fff;font-size:.85rem">Компания</h6><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Карьера</a><a href="#" class="f-link">Блог</a><a href="#" class="f-link">Партнёры</a></div>
+                <div class="col-6 col-md-2"><h6 style="color:#fff;font-size:.85rem">Поддержка</h6><a href="#" class="f-link">FAQ</a><a href="#" class="f-link">Тикеты</a><a href="#" class="f-link">API Docs</a></div>
+                <div class="col-6 col-md-3"><h6 style="color:#fff;font-size:.85rem">Сообщество</h6><div class="d-flex gap-3"><a href="#" class="f-link"><i class="bi bi-telegram fs-5"></i></a><a href="#" class="f-link"><i class="bi bi-twitter-x fs-5"></i></a><a href="#" class="f-link"><i class="bi bi-discord fs-5"></i></a></div></div>
+            </div>
+            <hr style="border-color:var(--border)">
+            <p class="small mb-0 text-center" style="color:var(--text2)">&copy; 2024 CryptoNex. Торговля криптовалютой связана с рисками.</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

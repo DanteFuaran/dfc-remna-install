@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamBox — Watch Everything</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--red:#e50914;--dark:#141414;--dark2:#1a1a1a;--dark3:#222}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:var(--dark);color:#999;overflow-x:hidden}
+        .navbar{background:linear-gradient(180deg,rgba(0,0,0,.85),transparent);position:fixed;width:100%;z-index:1000;padding:16px 0;transition:background .3s}
+        .navbar.scrolled{background:rgba(20,20,20,.98);backdrop-filter:blur(10px)}
+        .navbar-brand{color:var(--red)!important;font-weight:800;font-size:1.8rem;letter-spacing:-1px}
+        .nav-link{color:#e5e5e5!important;font-weight:500;font-size:.9rem;transition:.3s}.nav-link:hover{color:#fff!important}
+        .hero-banner{height:80vh;min-height:500px;position:relative;display:flex;align-items:end;background:linear-gradient(to right,rgba(0,0,0,.8) 30%,transparent),url('https://loremflickr.com/1400/800/cinema,movie?lock=55') center/cover no-repeat}
+        .hero-content{padding:60px;max-width:600px}
+        .hero-content h1{font-size:3rem;font-weight:800;color:#fff;line-height:1.1;margin-bottom:16px}
+        .hero-meta{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+        .meta-badge{background:var(--red);color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700}
+        .hero-buttons{display:flex;gap:12px}
+        .btn-play{background:#fff;color:#000;border:none;padding:12px 32px;border-radius:6px;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px;transition:.3s}
+        .btn-play:hover{background:#e5e5e5}
+        .btn-info{background:rgba(109,109,110,.7);color:#fff;border:none;padding:12px 32px;border-radius:6px;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px;transition:.3s}
+        .btn-info:hover{background:rgba(109,109,110,.5)}
+        .row-section{padding:30px 0 20px}
+        .row-title{font-size:1.4rem;font-weight:700;color:#e5e5e5;margin-bottom:16px;padding-left:20px}
+        .scroll-row{display:flex;overflow-x:auto;gap:10px;padding:0 20px 20px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+        .scroll-row::-webkit-scrollbar{display:none}
+        .movie-card{flex:0 0 200px;position:relative;border-radius:6px;overflow:hidden;transition:.3s;cursor:pointer}
+        .movie-card:hover{transform:scale(1.08);z-index:5;box-shadow:0 8px 30px rgba(0,0,0,.8)}
+        .movie-card img{width:100%;height:300px;object-fit:cover;display:block}
+        .movie-overlay{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.9));opacity:0;transition:.3s}
+        .movie-card:hover .movie-overlay{opacity:1}
+        .movie-title{color:#fff;font-weight:600;font-size:.85rem}
+        .movie-info{color:#999;font-size:.75rem}
+        .top10-card{flex:0 0 220px;position:relative;display:flex;align-items:end}
+        .top10-number{font-size:8rem;font-weight:900;color:transparent;-webkit-text-stroke:3px #555;line-height:1;margin-right:-30px;z-index:1;font-style:italic}
+        .top10-card img{width:140px;height:210px;object-fit:cover;border-radius:6px;position:relative;z-index:2;transition:.3s}
+        .top10-card:hover img{transform:scale(1.05)}
+        .genre-tag{display:inline-block;padding:8px 20px;background:var(--dark3);border:1px solid #333;border-radius:50px;color:#ccc;font-size:.85rem;font-weight:500;margin:4px;transition:.3s;text-decoration:none}
+        .genre-tag:hover{border-color:var(--red);color:var(--red)}
+        .feature-col{text-align:center;padding:30px}
+        .feature-col i{font-size:2.5rem;color:var(--red);margin-bottom:16px}
+        .feature-col h5{color:#fff;font-weight:700}
+        .cta-banner{background:linear-gradient(135deg,var(--red),#b20710);border-radius:16px;padding:50px;text-align:center;color:#fff}
+        footer{background:#000;padding:40px 0;color:#666}
+        .f-link{color:#666;text-decoration:none;display:block;margin-bottom:8px;font-size:.85rem;transition:.3s}.f-link:hover{color:#fff}
+        @media(max-width:768px){.hero-content{padding:30px}.hero-content h1{font-size:2rem}.movie-card{flex:0 0 140px}.movie-card img{height:210px}.top10-number{font-size:5rem}}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" id="mainNav">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="#">STREAMBOX</a>
+            <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse" data-bs-target="#nav6"><i class="bi bi-list fs-4"></i></button>
+            <div class="collapse navbar-collapse" id="nav6">
+                <ul class="navbar-nav ms-4 gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#series">Сериалы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#movies">Фильмы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#new">Новинки</a></li>
+                </ul>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <a href="#" class="text-light"><i class="bi bi-search fs-5"></i></a>
+                    <a href="#" class="text-light"><i class="bi bi-bell fs-5"></i></a>
+                    <div style="width:32px;height:32px;background:var(--red);border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem">U</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-banner">
+        <div class="hero-content">
+            <div class="hero-meta">
+                <span class="meta-badge">TOP 10</span>
+                <span style="color:#46d369;font-weight:600;font-size:.9rem">Сейчас популярно</span>
+            </div>
+            <h1>Тёмные горизонты</h1>
+            <p style="color:#ccc;font-size:.95rem;line-height:1.5">Захватывающий научно-фантастический сериал о группе учёных, которые обнаруживают аномалию на краю Солнечной системы. 2 сезон — уже на StreamBox.</p>
+            <div class="hero-buttons">
+                <button class="btn-play"><i class="bi bi-play-fill fs-4"></i>Смотреть</button>
+                <button class="btn-info"><i class="bi bi-info-circle"></i>Подробнее</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="row-section" id="series">
+        <div class="container-fluid">
+            <h3 class="row-title">🔥 Популярные сериалы</h3>
+            <div class="scroll-row">
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/thriller,movie?lock=56" alt=""><div class="movie-overlay"><div class="movie-title">Код Безопасности</div><div class="movie-info">2 сезона • Триллер</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/scifi,cyberpunk?lock=57" alt=""><div class="movie-overlay"><div class="movie-title">Нейросеть</div><div class="movie-info">1 сезон • Sci-Fi</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/drama,city?lock=58" alt=""><div class="movie-overlay"><div class="movie-title">Последний Город</div><div class="movie-info">3 сезона • Драма</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/detective,mystery?lock=59" alt=""><div class="movie-overlay"><div class="movie-title">Игра Теней</div><div class="movie-info">1 сезон • Детектив</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/space,cosmos?lock=60" alt=""><div class="movie-overlay"><div class="movie-title">Космос внутри</div><div class="movie-info">2 сезона • Sci-Fi</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/crime,noir?lock=61" alt=""><div class="movie-overlay"><div class="movie-title">Закон толпы</div><div class="movie-info">4 сезона • Криминал</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/bridge,thriller?lock=62" alt=""><div class="movie-overlay"><div class="movie-title">Мост</div><div class="movie-info">2 сезона • Триллер</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="row-section">
+        <div class="container-fluid">
+            <h3 class="row-title">🏆 Топ-10 в России</h3>
+            <div class="scroll-row" style="gap:0">
+                <div class="top10-card"><span class="top10-number">1</span><img src="https://loremflickr.com/140/210/film,poster?lock=63" alt=""></div>
+                <div class="top10-card"><span class="top10-number">2</span><img src="https://loremflickr.com/140/210/film,poster?lock=64" alt=""></div>
+                <div class="top10-card"><span class="top10-number">3</span><img src="https://loremflickr.com/140/210/film,poster?lock=65" alt=""></div>
+                <div class="top10-card"><span class="top10-number">4</span><img src="https://loremflickr.com/140/210/film,poster?lock=66" alt=""></div>
+                <div class="top10-card"><span class="top10-number">5</span><img src="https://loremflickr.com/140/210/film,poster?lock=67" alt=""></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="row-section" id="movies">
+        <div class="container-fluid">
+            <h3 class="row-title">🎬 Фильмы для вечера</h3>
+            <div class="scroll-row">
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/action,explosion?lock=68" alt=""><div class="movie-overlay"><div class="movie-title">Огненный путь</div><div class="movie-info">2024 • Боевик</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/horror,dark?lock=69" alt=""><div class="movie-overlay"><div class="movie-title">Тишина</div><div class="movie-info">2024 • Хоррор</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/drama,cinema?lock=70" alt=""><div class="movie-overlay"><div class="movie-title">Зелёная миля 2</div><div class="movie-info">2024 • Драма</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/quantum,scifi?lock=71" alt=""><div class="movie-overlay"><div class="movie-title">Квантовый сдвиг</div><div class="movie-info">2024 • Sci-Fi</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/spy,thriller?lock=72" alt=""><div class="movie-overlay"><div class="movie-title">Невидимый враг</div><div class="movie-info">2024 • Триллер</div></div></div>
+                <div class="movie-card"><img src="https://loremflickr.com/200/300/comedy,laugh?lock=73" alt=""><div class="movie-overlay"><div class="movie-title">Смех и слёзы</div><div class="movie-info">2024 • Комедия</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5" id="new">
+        <div class="container">
+            <h3 class="row-title px-0 mb-3">📑 Жанры</h3>
+            <div class="d-flex flex-wrap">
+                <a href="#" class="genre-tag">Боевик</a><a href="#" class="genre-tag">Комедия</a><a href="#" class="genre-tag">Драма</a>
+                <a href="#" class="genre-tag">Триллер</a><a href="#" class="genre-tag">Хоррор</a><a href="#" class="genre-tag">Sci-Fi</a>
+                <a href="#" class="genre-tag">Аниме</a><a href="#" class="genre-tag">Документальные</a><a href="#" class="genre-tag">Детективы</a>
+                <a href="#" class="genre-tag">Романтик</a><a href="#" class="genre-tag">Фэнтези</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 feature-col"><i class="bi bi-display"></i><h5>4K Ultra HD</h5><p class="small">Смотрите в лучшем качестве на любом устройстве</p></div>
+                <div class="col-md-4 feature-col"><i class="bi bi-download"></i><h5>Скачивание</h5><p class="small">Загрузите фильмы и смотрите офлайн в любом месте</p></div>
+                <div class="col-md-4 feature-col"><i class="bi bi-people"></i><h5>До 5 профилей</h5><p class="small">Создайте профили для всей семьи с персональными рекомендациями</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="cta-banner">
+                <h2 class="fw-bold mb-3" style="font-size:2.2rem">Готовы начать?</h2>
+                <p class="mb-4 mx-auto" style="max-width:400px;opacity:.9">Первые 30 дней бесплатно. Отмена подписки в любой момент.</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <input type="email" class="form-control" placeholder="Email" style="max-width:300px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:12px 20px">
+                    <button class="btn-play" style="border-radius:6px"><i class="bi bi-arrow-right"></i>Начать</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-6 col-md-3 mb-3"><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Медиацентр</a><a href="#" class="f-link">Способы просмотра</a></div>
+                <div class="col-6 col-md-3 mb-3"><a href="#" class="f-link">Условия</a><a href="#" class="f-link">Конфиденциальность</a><a href="#" class="f-link">Cookies</a></div>
+                <div class="col-6 col-md-3 mb-3"><a href="#" class="f-link">Центр помощи</a><a href="#" class="f-link">Аккаунт</a><a href="#" class="f-link">Контакты</a></div>
+                <div class="col-6 col-md-3 mb-3"><a href="#" class="f-link">Вакансии</a><a href="#" class="f-link">Для инвесторов</a><a href="#" class="f-link">Подарочные карты</a></div>
+            </div>
+            <p class="small mt-3 mb-0">&copy; 2024 StreamBox.</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('scroll',()=>{document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>50)});
+    document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>

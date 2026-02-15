@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВестникПРО — Новостной портал</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--red:#dc2626;--dark:#111827;--gray:#6b7280;--light:#f9fafb;--border:#e5e7eb}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Source Sans 3',sans-serif;color:#374151;background:#fff}
+        h1,h2,h3,h4,.article-title{font-family:'Merriweather',serif}
+        .breaking-bar{background:var(--red);color:#fff;padding:6px 0;font-size:.8rem;font-weight:600;overflow:hidden}
+        .breaking-bar .label{background:#000;padding:4px 10px;font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;margin-right:12px}
+        .breaking-text{display:inline-block;white-space:nowrap;animation:breakingScroll 20s linear infinite}
+        @keyframes breakingScroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+        .top-nav{border-bottom:1px solid var(--border);padding:10px 0}
+        .top-nav .brand{font-family:'Merriweather';font-weight:900;font-size:2rem;color:var(--dark);text-decoration:none;letter-spacing:-1px}
+        .top-nav .brand span{color:var(--red)}
+        .date-text{color:var(--gray);font-size:.85rem}
+        .cat-nav{border-bottom:2px solid var(--dark);padding:10px 0;overflow-x:auto;white-space:nowrap}
+        .cat-link{color:var(--dark);text-decoration:none;font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:1px;padding:8px 16px;transition:.2s}
+        .cat-link:hover,.cat-link.active{color:var(--red)}
+        .main-story{position:relative;border-radius:12px;overflow:hidden;height:460px;cursor:pointer}
+        .main-story img{width:100%;height:100%;object-fit:cover;transition:.4s}
+        .main-story:hover img{transform:scale(1.03)}
+        .main-story-overlay{position:absolute;bottom:0;left:0;right:0;padding:30px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+        .story-cat{display:inline-block;background:var(--red);color:#fff;padding:3px 10px;border-radius:4px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+        .main-story h2{color:#fff;font-size:1.8rem;font-weight:900;line-height:1.2;margin-bottom:6px}
+        .story-meta{color:rgba(255,255,255,.7);font-size:.8rem}
+        .side-story{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);transition:.2s;cursor:pointer}
+        .side-story:hover{background:var(--light);padding-left:8px}
+        .side-story img{width:100px;height:70px;border-radius:6px;object-fit:cover;flex-shrink:0}
+        .side-story .article-title{font-size:.85rem;font-weight:700;color:var(--dark);line-height:1.3}
+        .side-story .time{font-size:.7rem;color:var(--gray);margin-top:4px}
+        .section-title{font-family:'Merriweather';font-weight:900;font-size:1.2rem;color:var(--dark);padding-bottom:10px;border-bottom:3px solid var(--red);margin-bottom:20px;display:inline-block}
+        .article-card{border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:16px}
+        .article-card img{width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px}
+        .article-card .cat-tag{color:var(--red);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.5px}
+        .article-card .article-title{font-size:1rem;font-weight:700;color:var(--dark);line-height:1.3;margin:4px 0}
+        .article-card p{font-size:.85rem;color:var(--gray);line-height:1.5;margin:4px 0 0}
+        .sidebar-widget{background:var(--light);border-radius:12px;padding:20px;margin-bottom:20px}
+        .sidebar-widget h5{font-family:'Merriweather';font-weight:900;font-size:1rem;border-bottom:2px solid var(--red);padding-bottom:8px;margin-bottom:14px}
+        .trending-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+        .trending-num{font-family:'Merriweather';font-size:1.5rem;font-weight:900;color:rgba(220,38,38,.3);line-height:1}
+        .trending-title{font-size:.8rem;font-weight:700;color:var(--dark);line-height:1.3}
+        .trending-views{font-size:.7rem;color:var(--gray)}
+        .opinion-card{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+        .opinion-card img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+        .opinion-name{font-weight:700;font-size:.85rem;color:var(--dark)}
+        .opinion-topic{font-size:.75rem;color:var(--gray)}
+        .quote-box{background:var(--dark);color:#fff;border-radius:12px;padding:24px;text-align:center;margin-bottom:20px}
+        .quote-box blockquote{font-family:'Merriweather';font-style:italic;font-size:.95rem;line-height:1.5;margin-bottom:10px}
+        .quote-author{font-size:.8rem;color:rgba(255,255,255,.6)}
+        footer{background:var(--dark);color:#9ca3af;padding:40px 0}
+        footer h6{color:#fff;font-weight:700;margin-bottom:10px}
+        .f-link{color:#9ca3af;text-decoration:none;display:block;font-size:.8rem;margin-bottom:5px;transition:.2s}.f-link:hover{color:var(--red)}
+        @media(max-width:768px){.main-story{height:300px}.main-story h2{font-size:1.3rem}}
+    </style>
+</head>
+<body>
+    <div class="breaking-bar">
+        <div class="container d-flex align-items-center overflow-hidden">
+            <span class="label">Срочно</span>
+            <div style="overflow:hidden;flex:1"><span class="breaking-text">Мировые рынки показали рост на 3.2% после заседания ФРС • Учёные обнаружили новый вид глубоководных организмов в Марианской впадине • Саммит G20 завершился подписанием климатического соглашения</span></div>
+        </div>
+    </div>
+
+    <nav class="top-nav">
+        <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="date-text d-none d-md-block">Четверг, 30 января 2025</div>
+            <a class="brand" href="#">Вестник<span>ПРО</span></a>
+            <div class="d-flex gap-3">
+                <a href="#" style="color:var(--gray);text-decoration:none;font-size:.85rem"><i class="bi bi-search"></i></a>
+                <a href="#" style="color:var(--gray);text-decoration:none;font-size:.85rem"><i class="bi bi-person"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="cat-nav d-none d-md-block">
+        <div class="container d-flex gap-1">
+            <a href="#" class="cat-link active">Главное</a>
+            <a href="#" class="cat-link">Политика</a>
+            <a href="#" class="cat-link">Экономика</a>
+            <a href="#" class="cat-link">Технологии</a>
+            <a href="#" class="cat-link">Наука</a>
+            <a href="#" class="cat-link">Спорт</a>
+            <a href="#" class="cat-link">Культура</a>
+            <a href="#" class="cat-link">Мнения</a>
+        </div>
+    </div>
+
+    <main class="py-4">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="main-story">
+                        <img src="https://loremflickr.com/800/460/artificial,intelligence?lock=95" alt="">
+                        <div class="main-story-overlay">
+                            <span class="story-cat">Технологии</span>
+                            <h2>Искусственный интеллект впервые самостоятельно совершил научное открытие</h2>
+                            <div class="story-meta"><i class="bi bi-clock me-1"></i>2 часа назад • Автор: Д. Козлов • 8 мин чтения</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="side-story"><img src="https://loremflickr.com/100/70/bank,finance?lock=96" alt=""><div><div class="article-title">Центробанк снизил ключевую ставку до 16%</div><div class="time"><i class="bi bi-clock"></i> 3 часа назад</div></div></div>
+                    <div class="side-story"><img src="https://loremflickr.com/100/70/spacex,rocket?lock=97" alt=""><div><div class="article-title">SpaceX успешно запустила миссию на Марс</div><div class="time"><i class="bi bi-clock"></i> 5 часов назад</div></div></div>
+                    <div class="side-story"><img src="https://loremflickr.com/100/70/electric,car?lock=98" alt=""><div><div class="article-title">Новый рекорд: электромобиль проехал 1500 км на одном заряде</div><div class="time"><i class="bi bi-clock"></i> 6 часов назад</div></div></div>
+                    <div class="side-story"><img src="https://loremflickr.com/100/70/science,material?lock=99" alt=""><div><div class="article-title">Учёные создали материал прочнее алмаза</div><div class="time"><i class="bi bi-clock"></i> 8 часов назад</div></div></div>
+                    <div class="side-story"><img src="https://loremflickr.com/100/70/olympics,sport?lock=100" alt=""><div><div class="article-title">Олимпийский комитет утвердил новые виды спорта</div><div class="time"><i class="bi bi-clock"></i> 10 часов назад</div></div></div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <h4 class="section-title">Главные новости</h4>
+                    <div class="row g-4">
+                        <div class="col-md-6"><div class="article-card"><img src="https://loremflickr.com/400/180/economy,growth?lock=101" alt=""><div class="cat-tag">Экономика</div><div class="article-title">Российская экономика выросла на 4.1% в 2024 году — рекордный показатель за 10 лет</div><p>Министерство экономического развития опубликовало данные о росте ВВП...</p></div></div>
+                        <div class="col-md-6"><div class="article-card"><img src="https://loremflickr.com/400/180/telescope,space?lock=102" alt=""><div class="cat-tag">Наука</div><div class="article-title">Телескоп Джеймс Уэбб обнаружил признаки жизни на экзопланете</div><p>Учёные NASA зафиксировали наличие биомаркеров в атмосфере далёкой планеты...</p></div></div>
+                        <div class="col-md-6"><div class="article-card"><img src="https://loremflickr.com/400/180/summit,politics?lock=103" alt=""><div class="cat-tag">Политика</div><div class="article-title">Саммит БРИКС принял решение о создании единой платёжной системы</div><p>Страны-участницы объединения договорились о запуске цифровой валюты...</p></div></div>
+                        <div class="col-md-6"><div class="article-card"><img src="https://loremflickr.com/400/180/hockey,sport?lock=104" alt=""><div class="cat-tag">Спорт</div><div class="article-title">Сборная России по хоккею одержала блестящую победу на чемпионате мира</div><p>В финальном матче против Канады наша команда показала великолепную игру...</p></div></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="quote-box">
+                        <div style="font-size:2rem;opacity:.3;font-family:'Merriweather'">"</div>
+                        <blockquote>Будущее принадлежит тем, кто верит в красоту своей мечты.</blockquote>
+                        <div class="quote-author">— Элеонора Рузвельт</div>
+                    </div>
+
+                    <div class="sidebar-widget">
+                        <h5><i class="bi bi-graph-up-arrow me-1"></i> Популярное</h5>
+                        <div class="trending-item"><span class="trending-num">01</span><div><div class="trending-title">ИИ совершил научное открытие</div><div class="trending-views">245K просмотров</div></div></div>
+                        <div class="trending-item"><span class="trending-num">02</span><div><div class="trending-title">Центробанк снизил ставку</div><div class="trending-views">189K просмотров</div></div></div>
+                        <div class="trending-item"><span class="trending-num">03</span><div><div class="trending-title">SpaceX летит на Марс</div><div class="trending-views">156K просмотров</div></div></div>
+                        <div class="trending-item"><span class="trending-num">04</span><div><div class="trending-title">Электромобиль-рекордсмен</div><div class="trending-views">134K просмотров</div></div></div>
+                    </div>
+
+                    <div class="sidebar-widget">
+                        <h5><i class="bi bi-chat-quote me-1"></i> Авторы</h5>
+                        <div class="opinion-card"><img src="https://i.pravatar.cc/40?img=64" alt=""><div><div class="opinion-name">Д. Козлов</div><div class="opinion-topic">Технологии и ИИ</div></div></div>
+                        <div class="opinion-card"><img src="https://i.pravatar.cc/40?img=65" alt=""><div><div class="opinion-name">А. Смирнова</div><div class="opinion-topic">Экономика</div></div></div>
+                        <div class="opinion-card"><img src="https://i.pravatar.cc/40?img=66" alt=""><div><div class="opinion-name">М. Петров</div><div class="opinion-topic">Международные отношения</div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3"><h5 style="font-family:'Merriweather';color:#fff;font-weight:900">Вестник<span style="color:var(--red)">ПРО</span></h5><p class="small">Независимое информационное агентство. Объективные новости 24/7 с 2009 года.</p></div>
+                <div class="col-6 col-md-2"><h6>Разделы</h6><a href="#" class="f-link">Политика</a><a href="#" class="f-link">Экономика</a><a href="#" class="f-link">Наука</a><a href="#" class="f-link">Спорт</a></div>
+                <div class="col-6 col-md-2"><h6>Редакция</h6><a href="#" class="f-link">О нас</a><a href="#" class="f-link">Авторы</a><a href="#" class="f-link">Контакты</a><a href="#" class="f-link">Реклама</a></div>
+                <div class="col-md-4"><h6>Подпишитесь</h6><p class="small">Ежедневная рассылка с главными новостями</p><div class="d-flex gap-2"><input class="form-control form-control-sm" style="background:#1f2937;border:1px solid #374151;color:#fff;border-radius:6px" placeholder="Email"><button class="btn btn-sm" style="background:var(--red);color:#fff;border-radius:6px;font-weight:700">OK</button></div></div>
+            </div>
+            <hr style="border-color:#1f2937">
+            <p class="small text-center mb-0">&copy; 2024 ВестникПРО. Все права защищены. 18+</p>
+        </div>
+    </footer>
+    
+    <!-- Модальное окно консультации -->
+    <div class="modal fade" id="consultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:rgba(17,24,39,0.98);border:1px solid rgba(107,114,128,0.3);backdrop-filter:blur(20px)">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title" style="color:#fff;font-weight:700">Заявка на консультацию</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <form id="consultForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Ваше имя" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Телефон" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="3" placeholder="Комментарий или вопрос" style="background:rgba(0,0,0,0.3);border:1px solid rgba(107,114,128,0.3);color:#fff"></textarea>
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold" style="background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:8px">Отправить заявку</button>
+                        <p class="small text-center mt-3 mb-0" style="color:#9ca3af">Мы свяжемся с вами в течение 24 часов</p>
+                    </form>
+                    <div id="successMessage" class="alert alert-success mt-3 d-none">
+                        <i class="bi bi-check-circle-fill me-2"></i>Спасибо! Мы получили вашу заявку и скоро свяжемся с вами.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>document.getElementById('consultForm')?.addEventListener('submit',function(e){e.preventDefault();this.classList.add('d-none');document.getElementById('successMessage').classList.remove('d-none');setTimeout(()=>{bootstrap.Modal.getInstance(document.getElementById('consultModal')).hide();this.reset();this.classList.remove('d-none');document.getElementById('successMessage').classList.add('d-none')},3000)});</script>
+</body>
+</html>
