@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.3.4"
+SCRIPT_VERSION="0.3.5"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -4823,6 +4823,9 @@ manage_panel_access() {
 # УДАЛЕНИЕ НОДЫ С СЕРВЕРА ПАНЕЛИ
 # ═══════════════════════════════════════════════════
 remove_node_from_panel() {
+    # Гарантируем, что мы в корне или в /opt/remnawave
+    cd /opt/remnawave 2>/dev/null || cd / 2>/dev/null
+    
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${RED}   🗑️  УДАЛЕНИЕ НОДЫ С СЕРВЕРА ПАНЕЛИ${NC}"
@@ -4877,15 +4880,21 @@ remove_node_from_panel() {
 
     print_action "Удаление ноды из конфигурации..."
     
+    # Создаём бэкап для восстановления API токена
+    cp /opt/remnawave/docker-compose.yml /opt/remnawave/docker-compose.yml.bak 2>/dev/null || true
+    
     # Генерируем новый docker-compose без remnanode
     generate_docker_compose_panel "$panel_cert" "$sub_cert"
     
-    # Восстанавливаем API токен
+    # Восстанавливаем API токен из бэкапа
     local existing_api_token
     existing_api_token=$(grep -oP 'REMNAWAVE_API_TOKEN=\S+' /opt/remnawave/docker-compose.yml.bak 2>/dev/null | head -1)
     if [ -n "$existing_api_token" ] && [ "$existing_api_token" != "\$api_token" ]; then
         sed -i "s|REMNAWAVE_API_TOKEN=\$api_token|$existing_api_token|" /opt/remnawave/docker-compose.yml
     fi
+    
+    # Удаляем бэкап
+    rm -f /opt/remnawave/docker-compose.yml.bak 2>/dev/null || true
 
     print_action "Настройка nginx для порта 443..."
     
@@ -6074,6 +6083,7 @@ main_menu() {
                 "──────────────────────────────────────" \
                 "🔄  Обновить панель/ноду" \
                 "🔄  Обновить скрипт$update_notice" \
+                "🗑️   Удалить ноду с сервера" \
                 "🗑️   Удалить скрипт" \
                 "──────────────────────────────────────" \
                 "❌  Выход"
@@ -6087,7 +6097,6 @@ main_menu() {
                         "🖥️   Только панель" \
                         "🌐  Только нода" \
                         "➕  Подключить ноду в панель" \
-                        "🗑️   Удалить ноду с сервера панели" \
                         "──────────────────────────────────────" \
                         "❌  Назад"
                     local install_choice=$?
@@ -6114,11 +6123,8 @@ main_menu() {
                         4)
                             add_node_to_panel
                             ;;
-                        5)
-                            remove_node_from_panel
-                            ;;
+                        5) continue ;;
                         6) continue ;;
-                        7) continue ;;
                     esac
                     ;;
                 1) manage_reinstall ;;
@@ -6134,9 +6140,10 @@ main_menu() {
                 11) continue ;;
                 12) manage_update ;;
                 13) update_script ;;
-                14) remove_script ;;
-                15) continue ;;
-                16) cleanup_terminal; exit 0 ;;
+                14) remove_node_from_panel ;;
+                15) remove_script ;;
+                16) continue ;;
+                17) cleanup_terminal; exit 0 ;;
             esac
         else
             # Для неустановленного состояния
