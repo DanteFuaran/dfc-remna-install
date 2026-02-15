@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.2.7"
+SCRIPT_VERSION="0.2.8"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
@@ -5006,7 +5006,7 @@ manage_panel_access() {
     echo
 
     # Показываем текущий статус доступа по 8443
-    if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
+    if grep -q "# ─── 8443 Fallback" /opt/remnawave/nginx.conf 2>/dev/null; then
         echo -e "${WHITE}Доступ по 8443:${NC} ${GREEN}открыт${NC}"
     else
         echo -e "${WHITE}Доступ по 8443:${NC} ${RED}закрыт${NC}"
@@ -5048,7 +5048,7 @@ manage_panel_access() {
                 echo -e "${GREEN}🔗 Cookie-ссылка на панель (основной порт):${NC}"
                 echo -e "${WHITE}https://${pd}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
                 echo
-                if grep -q "listen 8443 ssl" /opt/remnawave/nginx.conf 2>/dev/null; then
+                if grep -q "# ─── 8443 Fallback" /opt/remnawave/nginx.conf 2>/dev/null; then
                     echo -e "${GREEN}🔗 Cookie-ссылка на панель (доступ по 8443):${NC}"
                     echo -e "${WHITE}https://${pd}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
                     echo
@@ -5098,9 +5098,13 @@ open_panel_access() {
     local panel_domain
     panel_domain=$(grep -oP 'server_name\s+\K[^;]+' "$dir/nginx.conf" | head -1)
 
+    # Определяем сертификат панели
+    local panel_cert
+    panel_cert=$(grep -A 5 "server_name ${panel_domain};" "$dir/nginx.conf" | grep -oP 'ssl_certificate\s+"/etc/nginx/ssl/\K[^/]+' | head -1)
+
     # Проверяем, уже настроен ли 8443
-    if grep -q "listen 8443 ssl" "$dir/nginx.conf" 2>/dev/null; then
-        # 8443 уже в конфиге — проверяем UFW
+    if grep -q "# ─── 8443 Fallback" "$dir/nginx.conf" 2>/dev/null; then
+        # 8443 блок уже существует — проверяем UFW
         if ufw status 2>/dev/null | grep -q "8443/tcp.*ALLOW"; then
             print_success "Доступ по 8443 уже открыт"
         else
@@ -5132,13 +5136,69 @@ open_panel_access() {
         fi
     fi
 
-    # Добавляем listen 8443 ssl в серверный блок панели (как в eGames)
-    # Находим строку server_name панели и добавляем listen 8443 ssl после неё
-    sed -i "/server_name ${panel_domain};/a\\    listen 8443 ssl;" "$dir/nginx.conf"
-    if [ $? -ne 0 ]; then
-        print_error "Не удалось изменить конфигурацию nginx"
-        sleep 2
-        return
+    # Создаем отдельный серверный блок для 8443 (без proxy_protocol)
+    # Вставляем перед последним default_server блоком
+    local fallback_block="# ─── 8443 Fallback (direct access) ───
+server {
+    server_name ${panel_domain};
+    listen 8443 ssl;
+    listen [::]:8443 ssl;
+    http2 on;
+
+    ssl_certificate \"/etc/nginx/ssl/${panel_cert}/fullchain.pem\";
+    ssl_certificate_key \"/etc/nginx/ssl/${panel_cert}/privkey.pem\";
+    ssl_trusted_certificate \"/etc/nginx/ssl/${panel_cert}/fullchain.pem\";
+
+    add_header Set-Cookie \$set_cookie_header;
+
+    location / {
+        error_page 418 = @unauthorized;
+        recursive_error_pages on;
+        if (\$authorized = 0) {
+            return 418;
+        }
+        proxy_http_version 1.1;
+        proxy_pass http://remnawave;
+        proxy_redirect off;
+        proxy_set_header Host \$host;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
+        proxy_set_header X-Real-IP 127.0.0.1;
+        proxy_set_header X-Forwarded-For 127.0.0.1;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Forwarded-Port 8443;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location @unauthorized {
+        root /var/www/html;
+        index index.html;
+    }
+}
+
+"
+
+    # Находим позицию последнего server блока (default_server) и вставляем перед ним
+    # Ищем строку "listen unix:/dev/shm/nginx.sock ssl proxy_protocol default_server;"
+    local insert_before_line
+    insert_before_line=$(grep -n "listen unix:/dev/shm/nginx.sock ssl proxy_protocol default_server;" "$dir/nginx.conf" | cut -d: -f1 | head -1)
+    
+    if [ -z "$insert_before_line" ]; then
+        # Если не нашли (panel-режим), вставляем перед последним "server {"
+        insert_before_line=$(grep -n "^server {" "$dir/nginx.conf" | tail -1 | cut -d: -f1)
+    fi
+
+    if [ -n "$insert_before_line" ]; then
+        # Вставляем fallback блок перед найденной позицией
+        # Уменьшаем на 1 чтобы вставить перед "server {"
+        ((insert_before_line--))
+        sed -i "${insert_before_line}a\\${fallback_block}" "$dir/nginx.conf"
+    else
+        # Если не нашли, просто добавляем в конец
+        echo "$fallback_block" >> "$dir/nginx.conf"
     fi
 
     # Перезапускаем nginx контейнер
@@ -5148,6 +5208,15 @@ open_panel_access() {
         docker compose up -d remnawave-nginx >/dev/null 2>&1
     ) &
     show_spinner "Перезапуск nginx"
+
+    # Проверяем, что nginx запустился без ошибок
+    sleep 2
+    if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnawave-nginx$'; then
+        print_error "Nginx не запустился. Проверьте: docker logs remnawave-nginx"
+        echo
+        read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+        return
+    fi
 
     # Открываем порт в UFW
     ufw allow 8443/tcp >/dev/null 2>&1
@@ -5179,22 +5248,32 @@ close_panel_access() {
         return
     fi
 
-    # Определяем домен панели
-    local panel_domain
-    panel_domain=$(grep -oP 'server_name\s+\K[^;]+' "$dir/nginx.conf" | head -1)
+    # Проверяем, есть ли fallback блок 8443
+    if ! grep -q "# ─── 8443 Fallback" "$dir/nginx.conf" 2>/dev/null; then
+        print_warning "Доступ по 8443 уже закрыт"
+        sleep 2
+        return
+    fi
 
-    # Удаляем listen 8443 ssl из nginx.conf
-    if grep -q "listen 8443 ssl" "$dir/nginx.conf" 2>/dev/null; then
-        sed -i '/listen 8443 ssl/d' "$dir/nginx.conf"
-        sed -i '/listen \[::\]:8443 ssl/d' "$dir/nginx.conf"
+    # Удаляем весь серверный блок для 8443 (от маркера до закрывающей скобки)
+    # Используем sed для удаления блока от "# ─── 8443 Fallback" до следующего "^}"
+    sed -i '/# ─── 8443 Fallback/,/^}$/d' "$dir/nginx.conf"
 
-        # Перезапускаем nginx контейнер
-        (
-            cd "$dir"
-            docker compose down remnawave-nginx >/dev/null 2>&1
-            docker compose up -d remnawave-nginx >/dev/null 2>&1
-        ) &
-        show_spinner "Перезапуск nginx"
+    # Перезапускаем nginx контейнер
+    (
+        cd "$dir"
+        docker compose down remnawave-nginx >/dev/null 2>&1
+        docker compose up -d remnawave-nginx >/dev/null 2>&1
+    ) &
+    show_spinner "Перезапуск nginx"
+
+    # Проверяем, что nginx запустился
+    sleep 2
+    if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnawave-nginx$'; then
+        print_error "Nginx не запустился. Проверьте: docker logs remnawave-nginx"
+        echo
+        read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+        return
     fi
 
     # Закрываем порт в UFW
