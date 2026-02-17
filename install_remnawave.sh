@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.5"
+SCRIPT_VERSION="0.4.6"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -274,7 +274,8 @@ reading_inline() {
     local prompt="$1"
     local var_name="$2"
     local input
-    read -e -p "$(echo -e "${BLUE}➜${NC}  ${YELLOW}$prompt${NC} ")" input
+    echo -en "${BLUE}➜${NC}  ${YELLOW}${prompt}${NC} "
+    read -e input
     eval "$var_name='$input'"
 }
 
@@ -1350,7 +1351,11 @@ create_api_token() {
         return 1
     fi
 
-    sed -i "s|REMNAWAVE_API_TOKEN=.*|REMNAWAVE_API_TOKEN=$api_token|" "$target_dir/docker-compose.yml"
+    if grep -q "^REMNAWAVE_API_TOKEN=" "$target_dir/.env" 2>/dev/null; then
+        sed -i "s|^REMNAWAVE_API_TOKEN=.*|REMNAWAVE_API_TOKEN=$api_token|" "$target_dir/.env"
+    else
+        echo "REMNAWAVE_API_TOKEN=$api_token" >> "$target_dir/.env"
+    fi
     print_success "Регистрация API токена"
 }
 
@@ -1660,6 +1665,9 @@ CLOUDFLARE_TOKEN=ey...
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=postgres
+
+### SUBSCRIPTION PAGE ###
+REMNAWAVE_API_TOKEN=
 EOL
 }
 
@@ -1823,7 +1831,7 @@ COMPOSE_CERT
     environment:
       - REMNAWAVE_PANEL_URL=http://remnawave:3000
       - APP_PORT=3010
-      - REMNAWAVE_API_TOKEN=$api_token
+      - REMNAWAVE_API_TOKEN
     ports:
       - '127.0.0.1:3010:3010'
     networks:
@@ -2042,7 +2050,7 @@ COMPOSE_CERT
     environment:
       - REMNAWAVE_PANEL_URL=http://remnawave:3000
       - APP_PORT=3010
-      - REMNAWAVE_API_TOKEN=$api_token
+      - REMNAWAVE_API_TOKEN
     ports:
       - '127.0.0.1:3010:3010'
     networks:
@@ -3121,7 +3129,7 @@ installation_node_local() {
 
     # Извлекаем API токен
     local existing_api_token
-    existing_api_token=$(grep -oP 'REMNAWAVE_API_TOKEN=\K\S+' /opt/remnawave/docker-compose.yml | head -1)
+    existing_api_token=$(grep -oP '^REMNAWAVE_API_TOKEN=\K\S+' /opt/remnawave/.env 2>/dev/null | head -1)
 
     # Определяем домены сертификатов
     local panel_cert_domain sub_cert_domain
@@ -3262,8 +3270,8 @@ installation_node_local() {
     show_spinner "Обновление docker-compose.yml"
 
     # Восстанавливаем API токен
-    if [ -n "$existing_api_token" ] && [ "$existing_api_token" != "\$api_token" ]; then
-        sed -i "s|REMNAWAVE_API_TOKEN=\$api_token|REMNAWAVE_API_TOKEN=$existing_api_token|" /opt/remnawave/docker-compose.yml
+    if [ -n "$existing_api_token" ]; then
+        sed -i "s|^REMNAWAVE_API_TOKEN=.*|REMNAWAVE_API_TOKEN=$existing_api_token|" /opt/remnawave/.env
     fi
 
     # ─── Перегенерация nginx.conf (full: с selfsteal) ───
@@ -4090,9 +4098,9 @@ db_restore() {
         # Создание API токена для страницы подписки
         print_action "Создание API токена для страницы подписки..."
         if create_api_token "$domain_url" "$token" "$panel_dir"; then
-            # Извлекаем созданный токен из docker-compose.yml
+            # Извлекаем созданный токен из .env
             local api_token
-            api_token=$(grep "REMNAWAVE_API_TOKEN=" "$panel_dir/docker-compose.yml" | cut -d'=' -f2)
+            api_token=$(grep -oP '^REMNAWAVE_API_TOKEN=\K\S+' "$panel_dir/.env" 2>/dev/null | head -1)
 
             # Сброс администратора (CASCADE удалит и API токены)
             (
@@ -4916,19 +4924,20 @@ remove_node_from_panel() {
     
     # Создаём бэкап для восстановления API токена
     cp /opt/remnawave/docker-compose.yml /opt/remnawave/docker-compose.yml.bak 2>/dev/null || true
+    cp /opt/remnawave/.env /opt/remnawave/.env.bak 2>/dev/null || true
     
     # Генерируем новый docker-compose без remnanode
     generate_docker_compose_panel "$panel_cert" "$sub_cert"
     
     # Восстанавливаем API токен из бэкапа
     local existing_api_token
-    existing_api_token=$(grep -oP 'REMNAWAVE_API_TOKEN=\S+' /opt/remnawave/docker-compose.yml.bak 2>/dev/null | head -1)
-    if [ -n "$existing_api_token" ] && [ "$existing_api_token" != "\$api_token" ]; then
-        sed -i "s|REMNAWAVE_API_TOKEN=\$api_token|$existing_api_token|" /opt/remnawave/docker-compose.yml
+    existing_api_token=$(grep -oP '^REMNAWAVE_API_TOKEN=\K\S+' /opt/remnawave/.env.bak 2>/dev/null | head -1)
+    if [ -n "$existing_api_token" ]; then
+        sed -i "s|^REMNAWAVE_API_TOKEN=.*|REMNAWAVE_API_TOKEN=$existing_api_token|" /opt/remnawave/.env
     fi
     
     # Удаляем бэкап
-    rm -f /opt/remnawave/docker-compose.yml.bak 2>/dev/null || true
+    rm -f /opt/remnawave/docker-compose.yml.bak /opt/remnawave/.env.bak 2>/dev/null || true
 
     print_action "Настройка nginx для порта 443..."
     
@@ -5118,16 +5127,6 @@ manage_warp() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    # Проверяем, есть ли нода на сервере
-    if ! grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
-        echo -e "${YELLOW}⚠️  Нода не найдена на этом сервере${NC}"
-        echo -e "${DARKGRAY}WARP работает только с установленной нодой.${NC}"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-        echo
-        return 1
-    fi
-
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
         "📥  Установить WARP Native" \
         "🗑️  Удалить WARP Native" \
@@ -5150,6 +5149,16 @@ manage_warp() {
 }
 
 install_warp_native() {
+    # Проверяем, есть ли нода на сервере
+    if ! grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+        echo -e "${YELLOW}⚠️  Нода не найдена на этом сервере${NC}"
+        echo -e "${DARKGRAY}WARP работает только с установленной нодой.${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${GREEN}   📥 УСТАНОВКА WARP NATIVE${NC}"
