@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.6"
+SCRIPT_VERSION="0.4.7"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5243,14 +5243,18 @@ add_warp_to_config() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    # Проверяем, установлен ли WARP
-    if ! ip link show warp 2>/dev/null | grep -q "warp"; then
-        echo -e "${YELLOW}⚠️  WARP Native не установлен!${NC}"
-        echo -e "${WHITE}Сначала установите WARP Native.${NC}"
-        echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-        echo
-        return 1
+    # Предупреждение — операция должна выполняться на сервере с панелью
+    echo -e "${RED}⚠️  ВНИМАНИЕ!${NC}"
+    echo -e "${YELLOW}Вы уверены, что находитесь на сервере с установленной панелью?${NC}"
+    echo -e "${DARKGRAY}Добавление WARP-настроек должно выполняться только на сервере,${NC}"
+    echo -e "${DARKGRAY}где установлена панель, а не на сервере ноды.${NC}"
+    echo
+    echo -en "${GREEN}[?]${NC} ${YELLOW}Продолжить? [y/N]:${NC} "
+    read confirm
+    echo
+
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        return 0
     fi
 
     # Получаем токен
@@ -5390,6 +5394,20 @@ remove_warp_from_config() {
     echo -e "${RED}   ➖ УДАЛЕНИЕ WARP ИЗ КОНФИГУРАЦИИ${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
+
+    # Предупреждение — операция должна выполняться на сервере с панелью
+    echo -e "${RED}⚠️  ВНИМАНИЕ!${NC}"
+    echo -e "${YELLOW}Вы уверены, что находитесь на сервере с установленной панелью?${NC}"
+    echo -e "${DARKGRAY}Удаление WARP-настроек должно выполняться только на сервере,${NC}"
+    echo -e "${DARKGRAY}где установлена панель, а не на сервере ноды.${NC}"
+    echo
+    echo -en "${GREEN}[?]${NC} ${YELLOW}Продолжить? [y/N]:${NC} "
+    read confirm
+    echo
+
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        return 0
+    fi
 
     # Получаем токен
     get_panel_token
