@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.0"
+SCRIPT_VERSION="0.4.1"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -2823,6 +2823,7 @@ installation_panel() {
 
     prompt_domain_with_retry "Домен панели (например panel.example.com):" PANEL_DOMAIN || return
     prompt_domain_with_retry "Домен подписки (например sub.example.com):" SUB_DOMAIN true || return
+    prompt_domain_with_retry "SelfSteal домен для ноды (например node.example.com):" SELFSTEAL_DOMAIN || return
 
     # Автогенерация учётных данных администратора
     local SUPERADMIN_USERNAME
@@ -2894,8 +2895,6 @@ installation_panel() {
     (setup_firewall) &
     show_spinner "Настройка файрвола"
 
-    randomhtml
-
     echo
     (
         cd /opt/remnawave
@@ -2949,11 +2948,45 @@ installation_panel() {
         return
     fi
 
-    # 2. Создание API токена для subscription-page
+    # 2. Генерация ключей REALITY и создание xray профиля
+    print_action "Генерация REALITY ключей..."
+    local private_key
+    private_key=$(generate_xray_keys "$domain_url" "$token")
+
+    if [ -n "$private_key" ]; then
+        print_action "Удаление дефолтного конфиг-профиля..."
+        delete_config_profile "$domain_url" "$token"
+
+        print_action "Создание конфиг-профиля (StealConfig)..."
+        local config_result config_profile_uuid inbound_uuid
+        config_result=$(create_config_profile "$domain_url" "$token" "StealConfig" "$SELFSTEAL_DOMAIN" "$private_key")
+        read config_profile_uuid inbound_uuid <<< "$config_result"
+
+        if [ -n "$config_profile_uuid" ] && [ -n "$inbound_uuid" ]; then
+            print_action "Создание ноды ($SELFSTEAL_DOMAIN)..."
+            create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "$SELFSTEAL_DOMAIN"
+
+            print_action "Создание хоста ($SELFSTEAL_DOMAIN)..."
+            create_host "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "StealConfig" "$SELFSTEAL_DOMAIN"
+
+            print_action "Настройка сквадов..."
+            local squad_uuids
+            squad_uuids=$(get_default_squad "$domain_url" "$token")
+            if [ -n "$squad_uuids" ]; then
+                while IFS= read -r squad_uuid; do
+                    [ -z "$squad_uuid" ] && continue
+                    update_squad "$domain_url" "$token" "$squad_uuid" "$inbound_uuid"
+                done <<< "$squad_uuids"
+                print_success "Сквады обновлены"
+            fi
+        fi
+    fi
+
+    # 3. Создание API токена для subscription-page
     print_action "Создание API токена для страницы подписки..."
     create_api_token "$domain_url" "$token" "$target_dir"
 
-    # 3. Перезапуск Docker Compose (с обновлённым docker-compose.yml)
+    # 4. Перезапуск Docker Compose (с обновлённым docker-compose.yml)
     print_action "Перезапуск сервисов с обновлённой конфигурацией..."
     (
         cd /opt/remnawave
