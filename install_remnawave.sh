@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.4"
+SCRIPT_VERSION="0.4.5"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -1872,6 +1872,9 @@ networks:
   remnawave-network:
     name: remnawave-network
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
     external: false
 
 COMPOSE_NETWORK_NEW
