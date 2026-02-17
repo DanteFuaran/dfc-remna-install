@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.11"
+SCRIPT_VERSION="0.4.12"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5235,12 +5235,24 @@ uninstall_warp_native() {
     fi
 
     echo
-    (
-        bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh) 2>&1
-    ) &
-    show_spinner "Удаление WARP Native"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${DARKGRAY}   Запуск деинсталлятора WARP Native...${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
 
-    print_success "WARP Native удалён"
+    echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh)
+
+    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем результат
+    if ! ip link show warp 2>/dev/null | grep -q "warp"; then
+        print_success "WARP Native успешно удалён"
+    else
+        print_error "Не удалось удалить WARP Native — интерфейс всё ещё активен"
+    fi
+
     echo
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
     echo
