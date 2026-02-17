@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.9"
+SCRIPT_VERSION="0.4.10"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5179,7 +5179,7 @@ install_warp_native() {
     echo
 
     (
-        bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) 2>&1
+        echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) 2>&1
     ) &
     show_spinner "Установка WARP Native"
 
