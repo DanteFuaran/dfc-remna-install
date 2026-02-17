@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.10"
+SCRIPT_VERSION="0.4.11"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5174,21 +5174,31 @@ install_warp_native() {
         return 0
     fi
 
-    echo -e "${YELLOW}Установка WARP Native...${NC}"
-    echo -e "${DARKGRAY}Это может занять несколько минут${NC}"
+    # Спрашиваем WARP+ ключ
+    echo -e "${YELLOW}Если у вас есть WARP+ ключ — введите его ниже.${NC}"
+    echo -e "${DARKGRAY}Оставьте пустым для бесплатной версии.${NC}"
+    echo
+    reading_inline "WARP+ ключ (Enter для пропуска):" warp_key
     echo
 
-    (
-        echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) 2>&1
-    ) &
-    show_spinner "Установка WARP Native"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${DARKGRAY}   Запуск установщика WARP Native...${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Запускаем установщик в foreground, передаём: язык (2=Русский), затем ключ (или пусто)
+    { echo "2"; echo "${warp_key:-}"; } | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh)
+
+    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
 
     # Проверяем результат
     if ip link show warp 2>/dev/null | grep -q "warp"; then
         print_success "WARP Native успешно установлен"
         echo
         echo -e "${WHITE}WARP интерфейс создан.${NC}"
-        echo -e "${WHITE}Теперь добавьте WARP в конфигурацию ноды.${NC}"
+        echo -e "${DARKGRAY}Теперь добавьте WARP в конфигурацию ноды через соответствующий пункт меню.${NC}"
     else
         print_error "Не удалось установить WARP Native"
         echo -e "${YELLOW}Проверьте подключение к интернету и попробуйте снова.${NC}"
