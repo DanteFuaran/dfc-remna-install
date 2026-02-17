@@ -3,7 +3,7 @@
 SCRIPT_VERSION="0.3.7"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
-SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/main/install_remnawave.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
 
 # Сохраняем исходное состояние терминала (до любых изменений)
 ORIGINAL_STTY=$(stty -g 2>/dev/null || echo "")
@@ -1534,7 +1534,7 @@ apply_template() {
     find /var/www/html/ -mindepth 1 -not -name '.current_template' -not -name '.template_changed' -delete 2>/dev/null
     
     # Скачиваем шаблон с GitHub
-    local base_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/main/templates/${template_id}"
+    local base_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/dev/templates/${template_id}"
     local cache_bust="?t=$(date +%s)"
     
     if curl -fsSL "${base_url}/index.html${cache_bust}" -o /var/www/html/index.html; then
@@ -5862,14 +5862,14 @@ get_installed_version() {
 get_remote_version() {
     # Получаем SHA последнего коммита для обхода кеша CDN
     local latest_sha
-    latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/main" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
+    latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
     
     if [ -n "$latest_sha" ]; then
         # Используем конкретный SHA для получения актуальной версии
         curl -sL --max-time 5 "https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/install_remnawave.sh" 2>/dev/null | grep -m 1 'SCRIPT_VERSION=' | cut -d'"' -f2
     else
         # Фоллбек на прямое обращение с timestamp
-        curl -sL --max-time 5 "https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/main/install_remnawave.sh?t=$(date +%s)" 2>/dev/null | grep -m 1 'SCRIPT_VERSION=' | cut -d'"' -f2
+        curl -sL --max-time 5 "https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/dev/install_remnawave.sh?t=$(date +%s)" 2>/dev/null | grep -m 1 'SCRIPT_VERSION=' | cut -d'"' -f2
     fi
 }
 
@@ -5971,7 +5971,7 @@ update_script() {
         # Получаем SHA для скачивания точной версии
         local download_url="$SCRIPT_URL"
         local latest_sha
-        latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/main" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
+        latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
         
         if [ -n "$latest_sha" ]; then
             download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/install_remnawave.sh"
@@ -6080,7 +6080,7 @@ install_script() {
     # Первая установка - получаем SHA последнего коммита для обхода CDN-кеша
     local download_url="$SCRIPT_URL"
     local latest_sha
-    latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/main" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
+    latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
     if [ -n "$latest_sha" ]; then
         download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/install_remnawave.sh"
     fi
