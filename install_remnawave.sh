@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.2"
+SCRIPT_VERSION="0.4.3"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -1681,7 +1681,7 @@ generate_docker_compose_full() {
 services:
   remnawave-db:
     image: postgres:18.1
-    container_name: remnawave-db
+    container_name: 'remnawave-db'
     hostname: remnawave-db
     restart: always
     ulimits:
@@ -1691,9 +1691,10 @@ services:
     env_file:
       - .env
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=UTC
     ports:
       - '127.0.0.1:6767:5432'
     volumes:
@@ -1701,7 +1702,7 @@ services:
     networks:
       - remnawave-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 3s
       timeout: 10s
       retries: 3
@@ -1871,9 +1872,6 @@ networks:
   remnawave-network:
     name: remnawave-network
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.0.0/16
     external: false
 
 COMPOSE_NETWORK_NEW
@@ -1902,7 +1900,7 @@ generate_docker_compose_panel() {
 services:
   remnawave-db:
     image: postgres:18.1
-    container_name: remnawave-db
+    container_name: 'remnawave-db'
     hostname: remnawave-db
     restart: always
     ulimits:
@@ -1912,9 +1910,10 @@ services:
     env_file:
       - .env
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=UTC
     ports:
       - '127.0.0.1:6767:5432'
     volumes:
@@ -1922,7 +1921,7 @@ services:
     networks:
       - remnawave-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 3s
       timeout: 10s
       retries: 3
@@ -2068,9 +2067,6 @@ networks:
   remnawave-network:
     name: remnawave-network
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.0.0/16
     external: false
 
 COMPOSE_NETWORK_NEW
@@ -2119,11 +2115,6 @@ map \$http_cookie \$auth_cookie {
     "~*${cookie_name}=${cookie_value}" 1;
 }
 
-map \$arg_${cookie_name} \$set_cookie_header {
-    "${cookie_value}" "${cookie_name}=${cookie_value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000";
-    default "";
-}
-
 map \$arg_${cookie_name} \$auth_query {
     default 0;
     "${cookie_value}" 1;
@@ -2134,13 +2125,17 @@ map "\$auth_cookie\$auth_query" \$authorized {
     default 0;
 }
 
+map \$arg_${cookie_name} \$set_cookie_header {
+    "${cookie_value}" "${cookie_name}=${cookie_value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000";
+    default "";
+}
+
 ssl_protocols TLSv1.2 TLSv1.3;
 ssl_ecdh_curve X25519:prime256v1:secp384r1;
 ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
 ssl_prefer_server_ciphers on;
 ssl_session_timeout 1d;
 ssl_session_cache shared:MozSSL:10m;
-ssl_session_tickets off;
 
 server {
     server_name $panel_domain;
@@ -2263,11 +2258,6 @@ map \$http_cookie \$auth_cookie {
     "~*${cookie_name}=${cookie_value}" 1;
 }
 
-map \$arg_${cookie_name} \$set_cookie_header {
-    "${cookie_value}" "${cookie_name}=${cookie_value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000";
-    default "";
-}
-
 map \$arg_${cookie_name} \$auth_query {
     default 0;
     "${cookie_value}" 1;
@@ -2278,13 +2268,17 @@ map "\$auth_cookie\$auth_query" \$authorized {
     default 0;
 }
 
+map \$arg_${cookie_name} \$set_cookie_header {
+    "${cookie_value}" "${cookie_name}=${cookie_value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000";
+    default "";
+}
+
 ssl_protocols TLSv1.2 TLSv1.3;
 ssl_ecdh_curve X25519:prime256v1:secp384r1;
 ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
 ssl_prefer_server_ciphers on;
 ssl_session_timeout 1d;
 ssl_session_cache shared:MozSSL:10m;
-ssl_session_tickets off;
 
 server {
     server_name $panel_domain;
@@ -2373,7 +2367,6 @@ ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDS
 ssl_prefer_server_ciphers on;
 ssl_session_timeout 1d;
 ssl_session_cache shared:MozSSL:10m;
-ssl_session_tickets off;
 
 server {
     server_name $selfsteal_domain;
@@ -2434,12 +2427,6 @@ installation_full() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
 
     mkdir -p "${DIR_PANEL}" && cd "${DIR_PANEL}"
-    mkdir -p /var/www/html
-    mkdir -p "${DIR_PANEL}/backups"
-    mkdir -p "${DIR_PANEL}/logs"
-
-    # Настройка ротации логов
-    setup_log_rotation "${DIR_PANEL}"
 
     # Устанавливаем trap для удаления при прерывании (только для первичной установки)
     if [ "$is_fresh_install" = true ]; then
@@ -2801,12 +2788,6 @@ installation_panel() {
     echo -e "${GREEN}   📦 УСТАНОВКА ТОЛЬКО ПАНЕЛИ${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     mkdir -p "${DIR_PANEL}" && cd "${DIR_PANEL}"
-    mkdir -p /var/www/html
-    mkdir -p "${DIR_PANEL}/backups"
-    mkdir -p "${DIR_PANEL}/logs"
-
-    # Настройка ротации логов
-    setup_log_rotation "${DIR_PANEL}"
 
     # Устанавливаем trap для удаления при прерывании (только для первичной установки)
     if [ "$is_fresh_install" = true ]; then
@@ -3527,15 +3508,11 @@ installation_node_remote() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
 
     mkdir -p "${DIR_PANEL}" && cd "${DIR_PANEL}"
-    mkdir -p /var/www/html
-    mkdir -p "${DIR_PANEL}/backups"
-    mkdir -p "${DIR_PANEL}/logs"
 
     # Устанавливаем trap для удаления при прерывании (только для первичной установки)
     if [ "$is_fresh_install" = true ]; then
         trap 'echo; echo -e "${YELLOW}Установка прервана. Очистка...${NC}"; echo; rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null; exit 1' INT TERM
     fi
-    mkdir -p /var/www/html
 
     prompt_domain_with_retry "Домен selfsteal/ноды (например node.example.com):" SELFSTEAL_DOMAIN || { [ "$is_fresh_install" = true ] && rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null; return; }
 
