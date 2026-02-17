@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.3.8"
+SCRIPT_VERSION="0.4.0"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -1680,7 +1680,7 @@ generate_docker_compose_full() {
     cat > /opt/remnawave/docker-compose.yml <<'COMPOSE_HEAD'
 services:
   remnawave-db:
-    image: postgres:17
+    image: postgres:18.1
     container_name: remnawave-db
     hostname: remnawave-db
     restart: always
@@ -1697,7 +1697,7 @@ services:
     ports:
       - '127.0.0.1:6767:5432'
     volumes:
-      - remnawave-db-data:/var/lib/postgresql/data
+      - remnawave-db-data:/var/lib/postgresql
     networks:
       - remnawave-network
     healthcheck:
@@ -1759,8 +1759,7 @@ services:
       valkey-server
       --save ""
       --appendonly no
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
+      --maxmemory-policy noeviction
       --loglevel warning
     healthcheck:
       test: ['CMD', 'valkey-cli', 'ping']
@@ -1899,10 +1898,10 @@ generate_docker_compose_panel() {
         network_exists=true
     fi
 
-    cat > /opt/remnawave/docker-compose.yml <<'COMPOSE_TAIL'
+    cat > /opt/remnawave/docker-compose.yml <<'COMPOSE_HEAD'
 services:
   remnawave-db:
-    image: postgres:17
+    image: postgres:18.1
     container_name: remnawave-db
     hostname: remnawave-db
     restart: always
@@ -1919,7 +1918,7 @@ services:
     ports:
       - '127.0.0.1:6767:5432'
     volumes:
-      - remnawave-db-data:/var/lib/postgresql/data
+      - remnawave-db-data:/var/lib/postgresql
     networks:
       - remnawave-network
     healthcheck:
@@ -1981,8 +1980,7 @@ services:
       valkey-server
       --save ""
       --appendonly no
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
+      --maxmemory-policy noeviction
       --loglevel warning
     healthcheck:
       test: ['CMD', 'valkey-cli', 'ping']
@@ -2006,7 +2004,17 @@ services:
         hard: 1048576
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+COMPOSE_HEAD
+
+    # Монтируем сертификаты для каждого домена
+    for cert in "$panel_cert_domain" "$sub_cert_domain"; do
+        cat >> /opt/remnawave/docker-compose.yml <<COMPOSE_CERT
+      - /etc/letsencrypt/live/$cert/fullchain.pem:/etc/nginx/ssl/$cert/fullchain.pem:ro
+      - /etc/letsencrypt/live/$cert/privkey.pem:/etc/nginx/ssl/$cert/privkey.pem:ro
+COMPOSE_CERT
+    done
+
+    cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_TAIL'
       - /var/www/html:/var/www/html:ro
     network_mode: host
     depends_on:
@@ -2061,6 +2069,9 @@ networks:
   remnawave-network:
     name: remnawave-network
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
     external: false
 
 COMPOSE_NETWORK_NEW
@@ -2093,12 +2104,10 @@ server_names_hash_bucket_size 64;
 
 upstream remnawave {
     server 127.0.0.1:3000;
-    keepalive 64;
 }
 
 upstream json {
     server 127.0.0.1:3010;
-    keepalive 64;
 }
 
 map \$http_upgrade \$connection_upgrade {
@@ -2153,18 +2162,14 @@ server {
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
-        proxy_busy_buffers_size 24k;
-        proxy_buffers 8 16k;
-        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Real-IP \$proxy_protocol_addr;
-        proxy_set_header X-Forwarded-For \$proxy_protocol_addr;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
-        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
@@ -2187,9 +2192,6 @@ server {
     location / {
         proxy_http_version 1.1;
         proxy_pass http://json;
-        proxy_busy_buffers_size 24k;
-        proxy_buffers 8 16k;
-        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -2198,7 +2200,6 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
-        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
         proxy_intercept_errors on;
@@ -2247,12 +2248,10 @@ server_names_hash_bucket_size 64;
 
 upstream remnawave {
     server 127.0.0.1:3000;
-    keepalive 64;
 }
 
 upstream json {
     server 127.0.0.1:3010;
-    keepalive 64;
 }
 
 map \$http_upgrade \$connection_upgrade {
@@ -2290,12 +2289,12 @@ ssl_session_tickets off;
 
 server {
     server_name $panel_domain;
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    http2 on;
 
-    ssl_certificate "/etc/letsencrypt/live/$panel_cert/fullchain.pem";
-    ssl_certificate_key "/etc/letsencrypt/live/$panel_cert/privkey.pem";
-    ssl_trusted_certificate "/etc/letsencrypt/live/$panel_cert/fullchain.pem";
+    ssl_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
+    ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
+    ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
 
     add_header Set-Cookie \$set_cookie_header;
 
@@ -2307,9 +2306,6 @@ server {
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
-        proxy_busy_buffers_size 24k;
-        proxy_buffers 8 16k;
-        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -2318,7 +2314,6 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
-        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
@@ -2331,19 +2326,16 @@ server {
 
 server {
     server_name $sub_domain;
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    http2 on;
 
-    ssl_certificate "/etc/letsencrypt/live/$sub_cert/fullchain.pem";
-    ssl_certificate_key "/etc/letsencrypt/live/$sub_cert/privkey.pem";
-    ssl_trusted_certificate "/etc/letsencrypt/live/$sub_cert/fullchain.pem";
+    ssl_certificate "/etc/nginx/ssl/$sub_cert/fullchain.pem";
+    ssl_certificate_key "/etc/nginx/ssl/$sub_cert/privkey.pem";
+    ssl_trusted_certificate "/etc/nginx/ssl/$sub_cert/fullchain.pem";
 
     location / {
         proxy_http_version 1.1;
         proxy_pass http://json;
-        proxy_busy_buffers_size 24k;
-        proxy_buffers 8 16k;
-        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -2352,7 +2344,6 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
-        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
         proxy_intercept_errors on;
