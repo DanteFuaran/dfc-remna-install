@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.1"
+SCRIPT_VERSION="0.4.2"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -2015,7 +2015,6 @@ COMPOSE_CERT
     done
 
     cat >> /opt/remnawave/docker-compose.yml <<'COMPOSE_TAIL'
-      - /var/www/html:/var/www/html:ro
     network_mode: host
     depends_on:
       - remnawave
@@ -2299,10 +2298,8 @@ server {
     add_header Set-Cookie \$set_cookie_header;
 
     location / {
-        error_page 418 = @unauthorized;
-        recursive_error_pages on;
         if (\$authorized = 0) {
-            return 418;
+            return 444;
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
@@ -2316,11 +2313,6 @@ server {
         proxy_set_header X-Forwarded-Port \$server_port;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-    }
-
-    location @unauthorized {
-        root /var/www/html;
-        index index.html;
     }
 }
 
