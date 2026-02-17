@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.7"
+SCRIPT_VERSION="0.4.8"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5249,11 +5249,11 @@ add_warp_to_config() {
     echo -e "${DARKGRAY}Добавление WARP-настроек должно выполняться только на сервере,${NC}"
     echo -e "${DARKGRAY}где установлена панель, а не на сервере ноды.${NC}"
     echo
-    echo -en "${GREEN}[?]${NC} ${YELLOW}Продолжить? [y/N]:${NC} "
-    read confirm
+    echo -en "${GREEN}[?]${NC} ${YELLOW}Продолжить? (Enter/Esc):${NC} "
+    read -s -n 1 key
     echo
 
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    if [ "$key" = $'\x1b' ]; then
         return 0
     fi
 
@@ -5401,11 +5401,11 @@ remove_warp_from_config() {
     echo -e "${DARKGRAY}Удаление WARP-настроек должно выполняться только на сервере,${NC}"
     echo -e "${DARKGRAY}где установлена панель, а не на сервере ноды.${NC}"
     echo
-    echo -en "${GREEN}[?]${NC} ${YELLOW}Продолжить? [y/N]:${NC} "
-    read confirm
+    echo -en "${GREEN}[?]${NC} ${YELLOW}Продолжить? (Enter/Esc):${NC} "
+    read -s -n 1 key
     echo
 
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    if [ "$key" = $'\x1b' ]; then
         return 0
     fi
 
