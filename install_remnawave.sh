@@ -1759,7 +1759,8 @@ services:
       valkey-server
       --save ""
       --appendonly no
-      --maxmemory-policy noeviction
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
       --loglevel warning
     healthcheck:
       test: ['CMD', 'valkey-cli', 'ping']
@@ -1980,7 +1981,8 @@ services:
       valkey-server
       --save ""
       --appendonly no
-      --maxmemory-policy noeviction
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
       --loglevel warning
     healthcheck:
       test: ['CMD', 'valkey-cli', 'ping']
@@ -2091,10 +2093,12 @@ server_names_hash_bucket_size 64;
 
 upstream remnawave {
     server 127.0.0.1:3000;
+    keepalive 64;
 }
 
 upstream json {
     server 127.0.0.1:3010;
+    keepalive 64;
 }
 
 map \$http_upgrade \$connection_upgrade {
@@ -2149,6 +2153,9 @@ server {
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -2157,6 +2164,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
+        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
@@ -2179,6 +2187,9 @@ server {
     location / {
         proxy_http_version 1.1;
         proxy_pass http://json;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -2187,6 +2198,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
+        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
         proxy_intercept_errors on;
@@ -2235,10 +2247,12 @@ server_names_hash_bucket_size 64;
 
 upstream remnawave {
     server 127.0.0.1:3000;
+    keepalive 64;
 }
 
 upstream json {
     server 127.0.0.1:3010;
+    keepalive 64;
 }
 
 map \$http_upgrade \$connection_upgrade {
@@ -2293,14 +2307,18 @@ server {
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
+        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
@@ -2323,14 +2341,18 @@ server {
     location / {
         proxy_http_version 1.1;
         proxy_pass http://json;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header X-Forwarded-Host \$host;
         proxy_set_header X-Forwarded-Port \$server_port;
+        proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
         proxy_intercept_errors on;
@@ -5018,11 +5040,14 @@ server {
     location ^~ /api/auth/ {
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_set_header Host $host;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port 8443;
@@ -5039,12 +5064,15 @@ server {
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_redirect off;
         proxy_set_header Host $host;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port 8443;
@@ -5568,11 +5596,14 @@ server {
     location ^~ /api/auth/ {
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_set_header Host $host;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port 8443;
@@ -5589,12 +5620,15 @@ server {
         }
         proxy_http_version 1.1;
         proxy_pass http://remnawave;
+        proxy_busy_buffers_size 24k;
+        proxy_buffers 8 16k;
+        proxy_buffer_size 16k;
         proxy_redirect off;
         proxy_set_header Host $host;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Forwarded-Port 8443;
