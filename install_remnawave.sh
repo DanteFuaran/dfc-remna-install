@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.12"
+SCRIPT_VERSION="0.4.13"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5181,15 +5181,17 @@ install_warp_native() {
     reading_inline "WARP+ ключ (Enter для пропуска):" warp_key
     echo
 
+    clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${DARKGRAY}   Запуск установщика WARP Native...${NC}"
+    echo -e "${GREEN}   📥 УСТАНОВКА WARP NATIVE${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    # Запускаем установщик в foreground, передаём: язык (2=Русский), затем ключ (или пусто)
-    { echo "2"; echo "${warp_key:-}"; } | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh)
+    (
+        { echo "2"; echo "${warp_key:-}"; } | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) >/dev/null 2>&1
+    ) &
+    show_spinner "Установка WARP Native"
 
-    echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
@@ -5235,14 +5237,17 @@ uninstall_warp_native() {
     fi
 
     echo
+    clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${DARKGRAY}   Запуск деинсталлятора WARP Native...${NC}"
+    echo -e "${RED}   🗑️  УДАЛЕНИЕ WARP NATIVE${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh)
+    (
+        echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh) >/dev/null 2>&1
+    ) &
+    show_spinner "Удаление WARP Native"
 
-    echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
