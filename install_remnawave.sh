@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.36"
+SCRIPT_VERSION="0.4.37"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 DIR_NODE="/opt/remnanode/"
@@ -2443,6 +2443,15 @@ map \$http_upgrade \$connection_upgrade {
     ""      close;
 }
 
+# Фильтрация логов: скрываем запросы сканеров (404, 444) для чистоты логов
+map \$status \$loggable {
+    ~^(404|444)\$ 0;
+    default       1;
+}
+
+# Rate limiting: защита от сканирования и DDoS (5 запросов/сек)
+limit_req_zone \$binary_remote_addr zone=node_limit:10m rate=5r/s;
+
 ssl_protocols TLSv1.2 TLSv1.3;
 ssl_ecdh_curve X25519:prime256v1:secp384r1;
 ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
@@ -2462,7 +2471,78 @@ server {
 
     root /var/www/html;
     index index.html;
+
+    # Логирование только успешных запросов (сканеры не засоряют логи)
+    access_log /dev/stdout combined if=\$loggable;
+
+    # Rate limiting
+    limit_req zone=node_limit burst=10 nodelay;
+    limit_req_status 444;
+
+    # Заголовки безопасности
     add_header X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "no-referrer" always;
+
+    # Только GET и HEAD методы (selfsteal — статическая страница)
+    if (\$request_method !~ ^(GET|HEAD)\$) {
+        return 444;
+    }
+
+    # Блокировка сканеров уязвимостей: скрытые файлы (.env, .git, .aws и др.)
+    location ~ /\\. {
+        return 444;
+    }
+
+    # Блокировка PHP-файлов, WordPress, cgi-bin и прочих типичных целей сканирования
+    location ~* \\.(php|asp|aspx|jsp|cgi)\$ {
+        return 444;
+    }
+    location ~* ^/(wp-|wordpress|wp-admin|wp-content|wp-includes|wp-json|xmlrpc) {
+        return 444;
+    }
+    location ~* ^/(cgi-bin|_debugbar|debug|telescope|actuator|console|admin|phpmyadmin|pma|myadmin) {
+        return 444;
+    }
+    location ~* ^/(vendor|node_modules|storage|backup|config|credentials|docker) {
+        return 444;
+    }
+
+    # robots.txt — запрет индексации (отдаём без обращения к файловой системе)
+    location = /robots.txt {
+        default_type text/plain;
+        return 200 "User-agent: *\\nDisallow: /\\n";
+    }
+
+    # favicon — пустой ответ (подавляет 404 в логах браузеров)
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+        return 204;
+    }
+    location = /favicon.png {
+        access_log off;
+        log_not_found off;
+        return 204;
+    }
+
+    # Главная страница (selfsteal)
+    location = / {
+        try_files /index.html =444;
+    }
+
+    # Статика (CSS/JS/картинки) только из разрешённых директорий
+    location ~* ^/(css|js|img|images|fonts|static)/ {
+        try_files \$uri =444;
+        expires 1h;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # Всё остальное — разрыв соединения
+    location / {
+        return 444;
+    }
 }
 
 server {
