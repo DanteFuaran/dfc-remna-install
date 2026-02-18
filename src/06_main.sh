@@ -60,174 +60,117 @@ main_menu() {
             fi
         fi
 
-        if [ "$is_installed" = true ]; then
-            # Формируем заголовок с версией и уведомлением об обновлении
-            local update_notice=""
-            local install_status=""
-            if [ "$has_panel" = true ] && [ "$has_node" = true ]; then
-                install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель + Нода${NC}"
-            elif [ "$has_panel" = true ]; then
-                install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель${NC}"
-            elif [ "$has_node" = true ]; then
-                install_status="\n${DARKGRAY}  Установлено: ${GREEN}Нода${NC}"
-            fi
-            local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${install_status}\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
-            if [ -f /tmp/remna_update_available ]; then
-                local new_version
-                new_version=$(cat /tmp/remna_update_available)
-                update_notice=" ${YELLOW}(Доступно обновление до v$new_version)${NC}"
-            fi
-
-            show_arrow_menu "$menu_title" \
-                "📦  Установить компоненты" \
-                "🔄  Переустановить" \
-                "──────────────────────────────────────" \
-                "▶️   Запустить сервисы" \
-                "⏹️   Остановить сервисы" \
-                "📋  Просмотр логов" \
-                "──────────────────────────────────────" \
-                "💾  База данных" \
-                "🔓  Доступ к панели" \
-                "🎨  Сменить сайт-заглушку" \
-                "──────────────────────────────────────" \
-                "⚙️   Дополнительные настройки" \
-                "──────────────────────────────────────" \
-                "🔄  Обновить панель/ноду" \
-                "🔄  Обновить скрипт$update_notice" \
-                "──────────────────────────────────────" \
-                "🗑️   Удаление компонентов" \
-                "──────────────────────────────────────" \
-                "❌  Выход"
-            local choice=$?
-
-            case $choice in
-                0)
-                    show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" \
-                        "📦  Панель + Нода (один сервер)" \
-                        "──────────────────────────────────────" \
-                        "🖥️   Только панель" \
-                        "🌐  Только нода" \
-                        "➕  Подключить ноду в панель" \
-                        "──────────────────────────────────────" \
-                        "❌  Назад"
-                    local install_choice=$?
-                    case $install_choice in
-                        0)
-                            if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-                                install_packages
-                            fi
-                            installation_full
-                            ;;
-                        1) continue ;;
-                        2)
-                            if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-                                install_packages
-                            fi
-                            installation_panel
-                            ;;
-                        3)
-                            if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-                                install_packages
-                            fi
-                            installation_node
-                            ;;
-                        4)
-                            add_node_to_panel
-                            ;;
-                        5) continue ;;
-                        6) continue ;;
-                    esac
-                    ;;
-                1) manage_reinstall ;;
-                2) continue ;;
-                3) manage_start ;;
-                4) manage_stop ;;
-                5) manage_logs ;;
-                6) continue ;;
-                7) manage_database ;;
-                8) manage_panel_access ;;
-                9) manage_random_template ;;
-                10) continue ;;
-                11) manage_extra_settings ;;
-                12) continue ;;
-                13) manage_update ;;
-                14) update_script ;;
-                15) continue ;;
-                16)
-                    show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" \
-                        "💣  Удалить скрипт и все данные Remnawave" \
-                        "🗑️   Удалить только скрипт" \
-                        "🗑️   Удалить ноду с сервера" \
-                        "──────────────────────────────────────" \
-                        "❌  Назад"
-                    local del_choice=$?
-                    case $del_choice in
-                        0) remove_script_all ;;
-                        1) remove_script ;;
-                        2) remove_node_from_panel ;;
-                        3) continue ;;
-                        4) continue ;;
-                    esac
-                    ;;
-                17) continue ;;
-                18) cleanup_terminal; exit 0 ;;
-            esac
-        else
-            # Для неустановленного состояния
-            local update_notice_uninstalled=""
-            if [ -f /tmp/remna_update_available ]; then
-                local new_version_u
-                new_version_u=$(cat /tmp/remna_update_available)
-                update_notice_uninstalled=" ${YELLOW}(Доступно обновление до v$new_version_u)${NC}"
-            fi
-            local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
-
-            show_arrow_menu "$menu_title" \
-                "📦  Установить компоненты" \
-                "──────────────────────────────────────" \
-                "🔄  Обновить скрипт${update_notice_uninstalled}" \
-                "──────────────────────────────────────" \
-                "❌  Выход"
-            local choice=$?
-
-            case $choice in
-                0)
-                    show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" \
-                        "📦  Панель + Нода (один сервер)" \
-                        "──────────────────────────────────────" \
-                        "🖥️   Только панель" \
-                        "🌐  Только нода" \
-                        "➕  Подключить ноду в панель" \
-                        "──────────────────────────────────────" \
-                        "❌  Назад"
-                    local install_choice=$?
-                    case $install_choice in
-                        0)
-                            install_packages
-                            installation_full
-                            ;;
-                        1) continue ;;
-                        2)
-                            install_packages
-                            installation_panel
-                            ;;
-                        3)
-                            install_packages
-                            installation_node
-                            ;;
-                        4)
-                            add_node_to_panel
-                            ;;
-                        5) continue ;;
-                        6) continue ;;
-                    esac
-                    ;;
-                1) continue ;;
-                2) update_script ;;
-                3) continue ;;
-                4) cleanup_uninstalled; cleanup_terminal; exit 0 ;;
-            esac
+        # Формируем заголовок с версией и статусом установки
+        local update_notice=""
+        local install_status=""
+        if [ "$has_panel" = true ] && [ "$has_node" = true ]; then
+            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель + Нода${NC}"
+        elif [ "$has_panel" = true ]; then
+            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель${NC}"
+        elif [ "$has_node" = true ]; then
+            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Нода${NC}"
         fi
+        local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${install_status}\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
+        if [ -f /tmp/remna_update_available ]; then
+            local new_version
+            new_version=$(cat /tmp/remna_update_available)
+            update_notice=" ${YELLOW}(Доступно обновление до v$new_version)${NC}"
+        fi
+
+        show_arrow_menu "$menu_title" \
+            "📦  Установить компоненты" \
+            "🔄  Переустановить" \
+            "──────────────────────────────────────" \
+            "▶️   Запустить сервисы" \
+            "⏹️   Остановить сервисы" \
+            "📋  Просмотр логов" \
+            "──────────────────────────────────────" \
+            "💾  База данных" \
+            "🔓  Доступ к панели" \
+            "🎨  Сменить сайт-заглушку" \
+            "──────────────────────────────────────" \
+            "⚙️   Дополнительные настройки" \
+            "──────────────────────────────────────" \
+            "🔄  Обновить панель/ноду" \
+            "🔄  Обновить скрипт$update_notice" \
+            "──────────────────────────────────────" \
+            "🗑️   Удаление компонентов" \
+            "──────────────────────────────────────" \
+            "❌  Выход"
+        local choice=$?
+
+        case $choice in
+            0)
+                show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" \
+                    "📦  Панель + Нода (один сервер)" \
+                    "──────────────────────────────────────" \
+                    "🖥️   Только панель" \
+                    "🌐  Только нода" \
+                    "➕  Подключить ноду в панель" \
+                    "──────────────────────────────────────" \
+                    "❌  Назад"
+                local install_choice=$?
+                case $install_choice in
+                    0)
+                        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+                            install_packages
+                        fi
+                        installation_full
+                        ;;
+                    1) continue ;;
+                    2)
+                        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+                            install_packages
+                        fi
+                        installation_panel
+                        ;;
+                    3)
+                        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+                            install_packages
+                        fi
+                        installation_node
+                        ;;
+                    4)
+                        add_node_to_panel
+                        ;;
+                    5) continue ;;
+                    6) continue ;;
+                esac
+                ;;
+            1) manage_reinstall ;;
+            2) continue ;;
+            3) manage_start ;;
+            4) manage_stop ;;
+            5) manage_logs ;;
+            6) continue ;;
+            7) manage_database ;;
+            8) manage_panel_access ;;
+            9) manage_random_template ;;
+            10) continue ;;
+            11) manage_extra_settings ;;
+            12) continue ;;
+            13) manage_update ;;
+            14) update_script ;;
+            15) continue ;;
+            16)
+                show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" \
+                    "💣  Удалить скрипт и все данные Remnawave" \
+                    "🗑️   Удалить только скрипт" \
+                    "🗑️   Удалить ноду с сервера" \
+                    "──────────────────────────────────────" \
+                    "❌  Назад"
+                local del_choice=$?
+                case $del_choice in
+                    0) remove_script_all ;;
+                    1) remove_script ;;
+                    2) remove_node_from_panel ;;
+                    3) continue ;;
+                    4) continue ;;
+                esac
+                ;;
+            17) continue ;;
+            18) cleanup_terminal; exit 0 ;;
+        esac
     done
 }
 
@@ -249,29 +192,25 @@ if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
     exec /usr/local/bin/dfc-remna-install
 fi
 
-# Проверка обновлений только если Remnawave или нода установлены
-if [ -f "/opt/remnawave/docker-compose.yml" ] || [ -f "/opt/remnanode/docker-compose.yml" ]; then
-    UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
-    current_time=$(date +%s)
-    last_check=0
+# Проверка обновлений (всегда)
+UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
+current_time=$(date +%s)
+last_check=0
 
-    if [ -f "$UPDATE_CHECK_FILE" ]; then
-        last_check=$(cat "$UPDATE_CHECK_FILE" 2>/dev/null || echo 0)
-    fi
+if [ -f "$UPDATE_CHECK_FILE" ]; then
+    last_check=$(cat "$UPDATE_CHECK_FILE" 2>/dev/null || echo 0)
+fi
 
-    # Проверяем раз в час (3600 секунд)
-    time_diff=$((current_time - last_check))
-    if [ $time_diff -gt 3600 ] || [ ! -f /tmp/remna_update_available ]; then
-        new_version=$(check_for_updates)
-        if [ $? -eq 0 ] && [ -n "$new_version" ]; then
-            echo "$new_version" > /tmp/remna_update_available
-        else
-            rm -f /tmp/remna_update_available 2>/dev/null
-        fi
-        echo "$current_time" > "$UPDATE_CHECK_FILE"
+# Проверяем раз в час (3600 секунд)
+time_diff=$((current_time - last_check))
+if [ $time_diff -gt 3600 ] || [ ! -f /tmp/remna_update_available ]; then
+    new_version=$(check_for_updates)
+    if [ $? -eq 0 ] && [ -n "$new_version" ]; then
+        echo "$new_version" > /tmp/remna_update_available
+    else
+        rm -f /tmp/remna_update_available 2>/dev/null
     fi
-else
-    rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+    echo "$current_time" > "$UPDATE_CHECK_FILE"
 fi
 
 
