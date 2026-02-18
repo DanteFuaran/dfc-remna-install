@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.23"
+SCRIPT_VERSION="0.4.24"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5723,20 +5723,43 @@ manage_ufw() {
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 echo
 
-                ufw status numbered 2>/dev/null | tail -n +4
-                echo
+                # Собираем правила в массив
+                local rules=()
+                while IFS= read -r line; do
+                    # Убираем номер в скобках, оставляем описание правила
+                    local rule_text
+                    rule_text=$(echo "$line" | sed 's/^\[\s*[0-9]*\]\s*//')
+                    [ -n "$rule_text" ] && rules+=("$rule_text")
+                done < <(ufw status numbered 2>/dev/null | grep '^\[')
 
-                local rule_num
-                reading_inline "Номер правила для удаления:" rule_num
-                if [ -z "$rule_num" ] || ! [[ "$rule_num" =~ ^[0-9]+$ ]]; then
-                    print_error "Номер не указан или некорректен"
+                if [ ${#rules[@]} -eq 0 ]; then
+                    print_warning "Нет правил для удаления"
                     echo
                     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
                     echo
                     continue
                 fi
 
+                # Добавляем кнопку "Назад"
+                local menu_items=()
+                for r in "${rules[@]}"; do
+                    menu_items+=("$r")
+                done
+                menu_items+=("──────────────────────────────────────")
+                menu_items+=("❌  Назад")
+
+                show_arrow_menu "УДАЛИТЬ ПРАВИЛО" "${menu_items[@]}"
+                local del_choice=$?
+
+                # Проверяем что не разделитель и не "Назад"
+                local total_rules=${#rules[@]}
+                if [ "$del_choice" -ge "$total_rules" ]; then
+                    continue
+                fi
+
+                local rule_num=$((del_choice + 1))
                 echo
+                echo -e "${YELLOW}Удалить: ${WHITE}${rules[$del_choice]}${NC}"
                 if ! confirm_action; then
                     print_error "Операция отменена"
                     sleep 2
@@ -5747,8 +5770,8 @@ manage_ufw() {
                 (
                     echo "y" | ufw delete "$rule_num" >/dev/null 2>&1
                 ) &
-                show_spinner "Удаление правила #${rule_num}"
-                print_success "Правило #${rule_num} удалено"
+                show_spinner "Удаление правила"
+                print_success "Правило удалено: ${rules[$del_choice]}"
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -5770,13 +5793,6 @@ manage_logrotate() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    # Текущие настройки
-    local cur_rotate cur_interval
-    cur_interval=$(grep -m1 '^\s*\(daily\|weekly\|monthly\)' /etc/logrotate.conf 2>/dev/null | xargs)
-    cur_rotate=$(grep -m1 '^\s*rotate' /etc/logrotate.conf 2>/dev/null | awk '{print $2}')
-    cur_interval=${cur_interval:-weekly}
-    cur_rotate=${cur_rotate:-4}
-
     # Docker log settings
     local docker_max_size docker_max_file
     docker_max_size=$(grep -oP '"max-size"\s*:\s*"\K[^"]+' /etc/docker/daemon.json 2>/dev/null)
@@ -5784,9 +5800,18 @@ manage_logrotate() {
     docker_max_size=${docker_max_size:-не настроено}
     docker_max_file=${docker_max_file:-не настроено}
 
-    echo -e "${DARKGRAY}Системные логи (logrotate):${NC}"
-    echo -e "  ${WHITE}Интервал${NC}: ${YELLOW}${cur_interval}${NC}"
-    echo -e "  ${WHITE}Хранить${NC}:  ${YELLOW}${cur_rotate}${NC} ротаций"
+    # Текущий cron интервал (если настроен)
+    local cur_hours="не настроено"
+    if [ -f /etc/cron.d/logrotate-custom ]; then
+        local cron_h
+        cron_h=$(grep -oP '^\*/\K[0-9]+' /etc/cron.d/logrotate-custom 2>/dev/null)
+        if [ -n "$cron_h" ]; then
+            cur_hours="${cron_h}ч"
+        fi
+    fi
+
+    echo -e "${DARKGRAY}Системные логи:${NC}"
+    echo -e "  ${WHITE}Ротация каждые${NC}: ${YELLOW}${cur_hours}${NC}"
     echo
     echo -e "${DARKGRAY}Docker логи (daemon.json):${NC}"
     echo -e "  ${WHITE}max-size${NC}: ${YELLOW}${docker_max_size}${NC}"
@@ -5809,53 +5834,55 @@ manage_logrotate() {
             echo -e "${BLUE}══════════════════════════════════════${NC}"
             echo
 
-            echo -e "${DARKGRAY}Выберите частоту ротации (в днях):${NC}"
+            echo -e "${DARKGRAY}Как часто делать ротацию логов:${NC}"
             echo
 
             show_arrow_menu "ЧАСТОТА РОТАЦИИ" \
-                "  1 день" \
-                "  2 дня" \
-                "  3 дня" \
-                "  5 дней" \
-                " 10 дней" \
-                " 15 дней" \
-                " 30 дней"
+                "  1 час" \
+                "  2 часа" \
+                "  3 часа" \
+                "  6 часов" \
+                " 12 часов" \
+                " 24 часа"
             local freq_choice=$?
 
-            local rotate_days
+            local rotate_hours
             case $freq_choice in
-                0) rotate_days=1 ;;
-                1) rotate_days=2 ;;
-                2) rotate_days=3 ;;
-                3) rotate_days=5 ;;
-                4) rotate_days=10 ;;
-                5) rotate_days=15 ;;
-                6) rotate_days=30 ;;
+                0) rotate_hours=1 ;;
+                1) rotate_hours=2 ;;
+                2) rotate_hours=3 ;;
+                3) rotate_hours=6 ;;
+                4) rotate_hours=12 ;;
+                5) rotate_hours=24 ;;
                 *) return ;;
             esac
 
             echo
             local keep_count
-            reading_inline "Сколько ротаций хранить (сейчас ${cur_rotate}):" keep_count
+            reading_inline "Сколько ротаций хранить (по умолчанию 7):" keep_count
             if [ -z "$keep_count" ] || ! [[ "$keep_count" =~ ^[0-9]+$ ]]; then
-                keep_count=$cur_rotate
+                keep_count=7
             fi
 
             echo
             (
-                # Меняем интервал на daily и настраиваем maxage
-                sed -i 's/^\s*\(daily\|weekly\|monthly\)/daily/' /etc/logrotate.conf 2>/dev/null
+                # Устанавливаем rotate count в logrotate.conf
                 sed -i "s/^\s*rotate\s\+[0-9]*/rotate ${keep_count}/" /etc/logrotate.conf 2>/dev/null
-                # Добавляем maxage если нет
-                if grep -q '^\s*maxage' /etc/logrotate.conf 2>/dev/null; then
-                    sed -i "s/^\s*maxage\s\+[0-9]*/maxage ${rotate_days}/" /etc/logrotate.conf 2>/dev/null
-                else
-                    sed -i "/^\s*rotate/a maxage ${rotate_days}" /etc/logrotate.conf 2>/dev/null
+                # Добавляем compress если не стоит
+                if ! grep -q '^\s*compress' /etc/logrotate.conf 2>/dev/null; then
+                    sed -i '/^\s*rotate/a compress' /etc/logrotate.conf 2>/dev/null
                 fi
+                # Создаём cron-задачу для ротации каждые N часов
+                cat > /etc/cron.d/logrotate-custom <<CRON_EOF
+*/${rotate_hours} * * * * root /usr/sbin/logrotate /etc/logrotate.conf >/dev/null 2>&1
+CRON_EOF
+                chmod 644 /etc/cron.d/logrotate-custom
+                # Отключаем стандартный daily cron для logrotate чтобы не дублировать
+                [ -f /etc/cron.daily/logrotate ] && chmod -x /etc/cron.daily/logrotate 2>/dev/null
             ) &
             show_spinner "Применение настроек"
             echo
-            print_success "Ротация: каждые ${rotate_days} дн., хранить ${keep_count} ротаций"
+            print_success "Ротация: каждые ${rotate_hours}ч, хранить ${keep_count} ротаций"
             echo
             echo -e "${BLUE}══════════════════════════════════════${NC}"
             read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -5869,7 +5896,7 @@ manage_logrotate() {
             echo -e "${BLUE}══════════════════════════════════════${NC}"
             echo
 
-            echo -e "${DARKGRAY}Выберите максимальный размер лог-файла:${NC}"
+            echo -e "${DARKGRAY}Максимальный размер одного лог-файла:${NC}"
             echo
 
             show_arrow_menu "РАЗМЕР ЛОГА" \
@@ -5901,7 +5928,6 @@ manage_logrotate() {
 
             echo
             (
-                # Создаём / обновляем daemon.json
                 mkdir -p /etc/docker
                 cat > /etc/docker/daemon.json <<DOCKER_EOF
 {
