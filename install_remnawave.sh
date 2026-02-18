@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.16"
+SCRIPT_VERSION="0.4.17"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -273,9 +273,29 @@ reading() {
 reading_inline() {
     local prompt="$1"
     local var_name="$2"
-    local input
+    local input=""
+    local char
     echo -en "${BLUE}➜${NC}  ${YELLOW}${prompt}${NC} "
-    read -e input
+    while IFS= read -r -s -n1 char; do
+        if [[ -z "$char" ]]; then
+            break
+        elif [[ "$char" == $'\x7f' ]] || [[ "$char" == $'\x08' ]]; then
+            if [[ -n "$input" ]]; then
+                input="${input%?}"
+                echo -en "\b \b"
+            fi
+        elif [[ "$char" == $'\x1b' ]]; then
+            local _seq=""
+            while IFS= read -r -s -n1 -t 0.1 _sc; do
+                _seq+="$_sc"
+                [[ "$_sc" =~ [A-Za-z~] ]] && break
+            done
+        else
+            input+="$char"
+            echo -en "$char"
+        fi
+    done
+    echo
     eval "$var_name='$input'"
 }
 
@@ -5129,7 +5149,7 @@ manage_warp() {
 
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
         "📥  Установить WARP         " \
-        "🗑️     Удалить WARP        " \
+        "🗑️  Удалить WARP          " \
         "──────────────────────────────────────" \
         "➕  Добавить WARP в конфигурацию ноды" \
         "➖  Удалить WARP из конфигурации ноды" \
@@ -5216,7 +5236,6 @@ uninstall_warp_native() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${RED}          🗑️  УДАЛЕНИЕ WARP${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo
 
     # Проверяем, установлен ли WARP
     if ! ip link show warp 2>/dev/null | grep -q "warp"; then
@@ -6276,7 +6295,7 @@ main_menu() {
                 15) continue ;;
                 16)
                     show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" \
-                        "💣   Удалить скрипт и все данные Remnawave" \
+                        "💣    Удалить скрипт и все данные Remnawave" \
                         "🗑️   Удалить только скрипт" \
                         "🗑️   Удалить ноду с сервера" \
                         "──────────────────────────────────────" \
