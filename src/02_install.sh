@@ -1671,6 +1671,15 @@ generate_nginx_conf_full() {
     cat > /opt/remnawave/nginx.conf <<EOL
 server_names_hash_bucket_size 64;
 
+# Не логируем частые Telegram webhook-запросы
+map \$request_uri \$loggable {
+    ~*/api/v1/telegram 0;
+    default 1;
+}
+
+# Rate limiting для защиты от сканирования subscription page
+limit_req_zone \$binary_remote_addr zone=sub_limit:10m rate=10r/s;
+
 upstream remnawave {
     server 127.0.0.1:3000;
 }
@@ -1721,6 +1730,8 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     add_header Set-Cookie \$set_cookie_header;
 
     location / {
@@ -1758,7 +1769,12 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$sub_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$sub_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     location / {
+        limit_req zone=sub_limit burst=20 nodelay;
+        limit_req_status 444;
+
         proxy_http_version 1.1;
         proxy_pass http://json;
         proxy_set_header Host \$host;
@@ -1815,6 +1831,15 @@ generate_nginx_conf_panel() {
     cat > /opt/remnawave/nginx.conf <<EOL
 server_names_hash_bucket_size 64;
 
+# Не логируем частые Telegram webhook-запросы
+map \$request_uri \$loggable {
+    ~*/api/v1/telegram 0;
+    default 1;
+}
+
+# Rate limiting для защиты от сканирования subscription page
+limit_req_zone \$binary_remote_addr zone=sub_limit:10m rate=10r/s;
+
 upstream remnawave {
     server 127.0.0.1:3000;
 }
@@ -1864,6 +1889,8 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     add_header Set-Cookie \$set_cookie_header;
 
     location / {
@@ -1894,7 +1921,12 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$sub_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$sub_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     location / {
+        limit_req zone=sub_limit burst=20 nodelay;
+        limit_req_status 444;
+
         proxy_http_version 1.1;
         proxy_pass http://json;
         proxy_set_header Host \$host;

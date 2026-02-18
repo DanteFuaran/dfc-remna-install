@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.35"
+SCRIPT_VERSION="0.4.36"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 DIR_NODE="/opt/remnanode/"
@@ -400,6 +400,16 @@ install_packages() {
             echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
             echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
             sysctl -p >/dev/null 2>&1
+        fi
+
+        # Memory overcommit (рекомендовано для Redis/Valkey — предотвращает сбои фоновых сохранений)
+        if ! sysctl vm.overcommit_memory 2>/dev/null | grep -q "= 1"; then
+            sysctl -w vm.overcommit_memory=1 >/dev/null 2>&1
+            if ! grep -q 'vm.overcommit_memory' /etc/sysctl.conf 2>/dev/null; then
+                echo 'vm.overcommit_memory=1' >> /etc/sysctl.conf
+            else
+                sed -i 's/vm.overcommit_memory=.*/vm.overcommit_memory=1/' /etc/sysctl.conf
+            fi
         fi
 
         # UFW
@@ -2135,6 +2145,15 @@ generate_nginx_conf_full() {
     cat > /opt/remnawave/nginx.conf <<EOL
 server_names_hash_bucket_size 64;
 
+# Не логируем частые Telegram webhook-запросы
+map \$request_uri \$loggable {
+    ~*/api/v1/telegram 0;
+    default 1;
+}
+
+# Rate limiting для защиты от сканирования subscription page
+limit_req_zone \$binary_remote_addr zone=sub_limit:10m rate=10r/s;
+
 upstream remnawave {
     server 127.0.0.1:3000;
 }
@@ -2185,6 +2204,8 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     add_header Set-Cookie \$set_cookie_header;
 
     location / {
@@ -2222,7 +2243,12 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$sub_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$sub_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     location / {
+        limit_req zone=sub_limit burst=20 nodelay;
+        limit_req_status 444;
+
         proxy_http_version 1.1;
         proxy_pass http://json;
         proxy_set_header Host \$host;
@@ -2279,6 +2305,15 @@ generate_nginx_conf_panel() {
     cat > /opt/remnawave/nginx.conf <<EOL
 server_names_hash_bucket_size 64;
 
+# Не логируем частые Telegram webhook-запросы
+map \$request_uri \$loggable {
+    ~*/api/v1/telegram 0;
+    default 1;
+}
+
+# Rate limiting для защиты от сканирования subscription page
+limit_req_zone \$binary_remote_addr zone=sub_limit:10m rate=10r/s;
+
 upstream remnawave {
     server 127.0.0.1:3000;
 }
@@ -2328,6 +2363,8 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$panel_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$panel_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     add_header Set-Cookie \$set_cookie_header;
 
     location / {
@@ -2358,7 +2395,12 @@ server {
     ssl_certificate_key "/etc/nginx/ssl/$sub_cert/privkey.pem";
     ssl_trusted_certificate "/etc/nginx/ssl/$sub_cert/fullchain.pem";
 
+    access_log /dev/stdout combined if=\$loggable;
+
     location / {
+        limit_req zone=sub_limit burst=20 nodelay;
+        limit_req_status 444;
+
         proxy_http_version 1.1;
         proxy_pass http://json;
         proxy_set_header Host \$host;

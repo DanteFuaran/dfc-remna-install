@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.35"
+SCRIPT_VERSION="0.4.36"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 DIR_NODE="/opt/remnanode/"
@@ -400,6 +400,16 @@ install_packages() {
             echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
             echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
             sysctl -p >/dev/null 2>&1
+        fi
+
+        # Memory overcommit (рекомендовано для Redis/Valkey — предотвращает сбои фоновых сохранений)
+        if ! sysctl vm.overcommit_memory 2>/dev/null | grep -q "= 1"; then
+            sysctl -w vm.overcommit_memory=1 >/dev/null 2>&1
+            if ! grep -q 'vm.overcommit_memory' /etc/sysctl.conf 2>/dev/null; then
+                echo 'vm.overcommit_memory=1' >> /etc/sysctl.conf
+            else
+                sed -i 's/vm.overcommit_memory=.*/vm.overcommit_memory=1/' /etc/sysctl.conf
+            fi
         fi
 
         # UFW
