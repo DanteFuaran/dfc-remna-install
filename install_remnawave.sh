@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.18"
+SCRIPT_VERSION="0.4.19"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -695,6 +695,7 @@ prompt_domain_with_retry() {
     local prompt_text="$1"
     local var_name="$2"
     local use_inline="${3:-false}"
+    local skip_ip_check="${4:-false}"
 
     local first=true
     while true; do
@@ -709,7 +710,9 @@ prompt_domain_with_retry() {
             reading_inline "$prompt_text" "$var_name"
         fi
 
-        if check_domain "${!var_name}" true; then
+        local check_ip_flag=true
+        [ "$skip_ip_check" = true ] && check_ip_flag=false
+        if check_domain "${!var_name}" "$check_ip_flag"; then
             return 0
         fi
 
@@ -2829,7 +2832,7 @@ installation_panel() {
 
     prompt_domain_with_retry "Домен панели (например panel.example.com):" PANEL_DOMAIN || return
     prompt_domain_with_retry "Домен подписки (например sub.example.com):" SUB_DOMAIN true || return
-    prompt_domain_with_retry "SelfSteal домен для ноды (например node.example.com):" SELFSTEAL_DOMAIN || return
+    prompt_domain_with_retry "SelfSteal домен для ноды (например node.example.com):" SELFSTEAL_DOMAIN false true || return
 
     # Автогенерация учётных данных администратора
     local SUPERADMIN_USERNAME
