@@ -2115,7 +2115,7 @@ installation_full() {
     echo -e "${GREEN}   📦 УСТАНОВКА ПАНЕЛИ + НОДЫ${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
 
-    mkdir -p "${DIR_PANEL}" && cd "${DIR_PANEL}"
+    mkdir -p "${DIR_PANEL}" "${DIR_PANEL}/backups" && cd "${DIR_PANEL}"
 
     # Устанавливаем trap для удаления при прерывании (только для первичной установки)
     if [ "$is_fresh_install" = true ]; then
@@ -2476,7 +2476,7 @@ installation_panel() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${GREEN}   📦 УСТАНОВКА ТОЛЬКО ПАНЕЛИ${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    mkdir -p "${DIR_PANEL}" && cd "${DIR_PANEL}"
+    mkdir -p "${DIR_PANEL}" "${DIR_PANEL}/backups" && cd "${DIR_PANEL}"
 
     # Устанавливаем trap для удаления при прерывании (только для первичной установки)
     if [ "$is_fresh_install" = true ]; then
