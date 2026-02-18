@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.17"
+SCRIPT_VERSION="0.4.18"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5149,7 +5149,7 @@ manage_warp() {
 
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
         "📥  Установить WARP         " \
-        "🗑️  Удалить WARP          " \
+        "🗑️   Удалить WARP         " \
         "──────────────────────────────────────" \
         "➕  Добавить WARP в конфигурацию ноды" \
         "➖  Удалить WARP из конфигурации ноды" \
@@ -5239,9 +5239,11 @@ uninstall_warp_native() {
 
     # Проверяем, установлен ли WARP
     if ! ip link show warp 2>/dev/null | grep -q "warp"; then
+        echo
         print_error "WARP не установлен"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
         echo
         return 0
     fi
@@ -6295,7 +6297,7 @@ main_menu() {
                 15) continue ;;
                 16)
                     show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" \
-                        "💣    Удалить скрипт и все данные Remnawave" \
+                        "💣  Удалить скрипт и все данные Remnawave" \
                         "🗑️   Удалить только скрипт" \
                         "🗑️   Удалить ноду с сервера" \
                         "──────────────────────────────────────" \
