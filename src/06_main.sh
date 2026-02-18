@@ -174,10 +174,18 @@ main_menu() {
             esac
         else
             # Для неустановленного состояния
+            local update_notice_uninstalled=""
+            if [ -f /tmp/remna_update_available ]; then
+                local new_version_u
+                new_version_u=$(cat /tmp/remna_update_available)
+                update_notice_uninstalled=" ${YELLOW}(Доступно обновление до v$new_version_u)${NC}"
+            fi
             local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
-            
+
             show_arrow_menu "$menu_title" \
                 "📦  Установить компоненты" \
+                "──────────────────────────────────────" \
+                "🔄  Обновить скрипт${update_notice_uninstalled}" \
                 "──────────────────────────────────────" \
                 "❌  Выход"
             local choice=$?
@@ -215,7 +223,9 @@ main_menu() {
                     esac
                     ;;
                 1) continue ;;
-                2) cleanup_uninstalled; cleanup_terminal; exit 0 ;;
+                2) update_script ;;
+                3) continue ;;
+                4) cleanup_uninstalled; cleanup_terminal; exit 0 ;;
             esac
         fi
     done

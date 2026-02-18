@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.31"
+SCRIPT_VERSION="0.4.32"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 DIR_NODE="/opt/remnanode/"
