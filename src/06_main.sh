@@ -71,9 +71,9 @@ main_menu() {
             install_status="\n${DARKGRAY}  Установлено: ${GREEN}Нода${NC}"
         fi
         local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${install_status}\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
-        if [ -f /tmp/remna_update_available ]; then
+        if [ -f "${UPDATE_AVAILABLE_FILE}" ]; then
             local new_version
-            new_version=$(cat /tmp/remna_update_available)
+            new_version=$(cat "${UPDATE_AVAILABLE_FILE}")
             update_notice=" ${YELLOW}(Доступно обновление до v$new_version)${NC}"
         fi
 
@@ -193,24 +193,23 @@ if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
 fi
 
 # Проверка обновлений (всегда)
-UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
 current_time=$(date +%s)
 last_check=0
 
-if [ -f "$UPDATE_CHECK_FILE" ]; then
-    last_check=$(cat "$UPDATE_CHECK_FILE" 2>/dev/null || echo 0)
+if [ -f "${UPDATE_CHECK_TIME_FILE}" ]; then
+    last_check=$(cat "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null || echo 0)
 fi
 
 # Проверяем раз в час (3600 секунд)
 time_diff=$((current_time - last_check))
-if [ $time_diff -gt 3600 ] || [ ! -f /tmp/remna_update_available ]; then
+if [ $time_diff -gt 3600 ] || [ ! -f "${UPDATE_AVAILABLE_FILE}" ]; then
     new_version=$(check_for_updates)
     if [ $? -eq 0 ] && [ -n "$new_version" ]; then
-        echo "$new_version" > /tmp/remna_update_available
+        echo "$new_version" > "${UPDATE_AVAILABLE_FILE}"
     else
-        rm -f /tmp/remna_update_available 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" 2>/dev/null
     fi
-    echo "$current_time" > "$UPDATE_CHECK_FILE"
+    echo "$current_time" > "${UPDATE_CHECK_TIME_FILE}"
 fi
 
 

@@ -1,10 +1,13 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.34"
+SCRIPT_VERSION="0.4.35"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 DIR_NODE="/opt/remnanode/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
+# Файлы кэша проверки обновлений (в стабильной директории, а не в /tmp)
+UPDATE_AVAILABLE_FILE="${DIR_REMNAWAVE}update_available"
+UPDATE_CHECK_TIME_FILE="${DIR_REMNAWAVE}last_update_check"
 
 # Сохраняем исходное состояние терминала (до любых изменений)
 ORIGINAL_STTY=$(stty -g 2>/dev/null || echo "")
@@ -46,7 +49,7 @@ cleanup_uninstalled() {
         rm -f /usr/local/bin/dfc-remna-install
         rm -f /usr/local/bin/dfc-ri
         rm -rf "${DIR_REMNAWAVE:-/usr/local/dfc-remna-install/}"
-        rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
         cleanup_old_aliases
     fi
 }
@@ -6936,7 +6939,7 @@ update_script() {
     
     if [ "$new_installed_version" = "$remote_version" ]; then
         # Удаляем файл с информацией об обновлении и сбрасываем кеш
-        rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
         
         print_success "Скрипт успешно обновлён до версии v$new_installed_version"
     echo
@@ -6980,7 +6983,7 @@ remove_script_all() {
     rm -f /usr/local/bin/dfc-remna-install
     rm -f /usr/local/bin/dfc-ri
     rm -rf "${DIR_REMNAWAVE}"
-    rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+    rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
     cleanup_old_aliases
     print_success "Скрипт и все данные удалены"
     echo
@@ -7006,7 +7009,7 @@ remove_script() {
             rm -f /usr/local/bin/dfc-remna-install
             rm -f /usr/local/bin/dfc-ri
             rm -rf "${DIR_REMNAWAVE}"
-            rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+            rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
             cleanup_old_aliases
             print_success "Скрипт удалён"
             echo
@@ -7028,7 +7031,7 @@ remove_script() {
                 rm -f /usr/local/bin/dfc-remna-install
                 rm -f /usr/local/bin/dfc-ri
                 rm -rf "${DIR_REMNAWAVE}"
-                rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+                rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
                 cleanup_old_aliases
                 print_success "Всё удалено"
                 echo
@@ -7113,9 +7116,9 @@ main_menu() {
             install_status="\n${DARKGRAY}  Установлено: ${GREEN}Нода${NC}"
         fi
         local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${install_status}\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
-        if [ -f /tmp/remna_update_available ]; then
+        if [ -f "${UPDATE_AVAILABLE_FILE}" ]; then
             local new_version
-            new_version=$(cat /tmp/remna_update_available)
+            new_version=$(cat "${UPDATE_AVAILABLE_FILE}")
             update_notice=" ${YELLOW}(Доступно обновление до v$new_version)${NC}"
         fi
 
@@ -7235,24 +7238,23 @@ if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
 fi
 
 # Проверка обновлений (всегда)
-UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
 current_time=$(date +%s)
 last_check=0
 
-if [ -f "$UPDATE_CHECK_FILE" ]; then
-    last_check=$(cat "$UPDATE_CHECK_FILE" 2>/dev/null || echo 0)
+if [ -f "${UPDATE_CHECK_TIME_FILE}" ]; then
+    last_check=$(cat "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null || echo 0)
 fi
 
 # Проверяем раз в час (3600 секунд)
 time_diff=$((current_time - last_check))
-if [ $time_diff -gt 3600 ] || [ ! -f /tmp/remna_update_available ]; then
+if [ $time_diff -gt 3600 ] || [ ! -f "${UPDATE_AVAILABLE_FILE}" ]; then
     new_version=$(check_for_updates)
     if [ $? -eq 0 ] && [ -n "$new_version" ]; then
-        echo "$new_version" > /tmp/remna_update_available
+        echo "$new_version" > "${UPDATE_AVAILABLE_FILE}"
     else
-        rm -f /tmp/remna_update_available 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" 2>/dev/null
     fi
-    echo "$current_time" > "$UPDATE_CHECK_FILE"
+    echo "$current_time" > "${UPDATE_CHECK_TIME_FILE}"
 fi
 
 

@@ -932,7 +932,7 @@ update_script() {
     
     if [ "$new_installed_version" = "$remote_version" ]; then
         # Удаляем файл с информацией об обновлении и сбрасываем кеш
-        rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
         
         print_success "Скрипт успешно обновлён до версии v$new_installed_version"
     echo
@@ -976,7 +976,7 @@ remove_script_all() {
     rm -f /usr/local/bin/dfc-remna-install
     rm -f /usr/local/bin/dfc-ri
     rm -rf "${DIR_REMNAWAVE}"
-    rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+    rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
     cleanup_old_aliases
     print_success "Скрипт и все данные удалены"
     echo
@@ -1002,7 +1002,7 @@ remove_script() {
             rm -f /usr/local/bin/dfc-remna-install
             rm -f /usr/local/bin/dfc-ri
             rm -rf "${DIR_REMNAWAVE}"
-            rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+            rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
             cleanup_old_aliases
             print_success "Скрипт удалён"
             echo
@@ -1024,7 +1024,7 @@ remove_script() {
                 rm -f /usr/local/bin/dfc-remna-install
                 rm -f /usr/local/bin/dfc-ri
                 rm -rf "${DIR_REMNAWAVE}"
-                rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+                rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
                 cleanup_old_aliases
                 print_success "Всё удалено"
                 echo

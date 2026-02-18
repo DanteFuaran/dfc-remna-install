@@ -1,10 +1,13 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.34"
+SCRIPT_VERSION="0.4.35"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 DIR_NODE="/opt/remnanode/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
+# Файлы кэша проверки обновлений (в стабильной директории, а не в /tmp)
+UPDATE_AVAILABLE_FILE="${DIR_REMNAWAVE}update_available"
+UPDATE_CHECK_TIME_FILE="${DIR_REMNAWAVE}last_update_check"
 
 # Сохраняем исходное состояние терминала (до любых изменений)
 ORIGINAL_STTY=$(stty -g 2>/dev/null || echo "")
@@ -46,7 +49,7 @@ cleanup_uninstalled() {
         rm -f /usr/local/bin/dfc-remna-install
         rm -f /usr/local/bin/dfc-ri
         rm -rf "${DIR_REMNAWAVE:-/usr/local/dfc-remna-install/}"
-        rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
         cleanup_old_aliases
     fi
 }
