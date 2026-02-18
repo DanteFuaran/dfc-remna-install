@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.14"
+SCRIPT_VERSION="0.4.15"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5123,13 +5123,13 @@ EOF
 manage_warp() {
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   🌐 WARP NATIVE${NC}"
+    echo -e "${GREEN}   🌐 WARP${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
-        "📥  Установить WARP Native" \
-        "🗑️  Удалить WARP Native" \
+        "📥  Установить WARP          " \
+        "🗑️  Удалить WARP             " \
         "──────────────────────────────────────" \
         "➕  Добавить WARP в конфигурацию ноды" \
         "➖  Удалить WARP из конфигурации ноды" \
@@ -5191,22 +5191,22 @@ install_warp_native() {
         { echo "2"; echo "${warp_key:-}"; } | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) >/dev/null 2>&1
     ) &
     show_spinner "Установка WARP"
-
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     # Проверяем результат
     if ip link show warp 2>/dev/null | grep -q "warp"; then
+        print_success "Настройка WARP"
+        print_success "Создание WARP интерфейса"
         print_success "WARP успешно установлен"
         echo
-        echo -e "${WHITE}WARP интерфейс создан.${NC}"
-        echo -e "${DARKGRAY}Теперь добавьте WARP в конфигурацию ноды через соответствующий пункт меню.${NC}"
+        echo -e "${YELLOW}⚠️  Добавьте WARP в конфигурацию ноды через соответствующий пункт меню.${NC}"
     else
-        print_error "Не удалось установить WARP Native"
+        print_error "Не удалось установить WARP"
         echo -e "${YELLOW}Проверьте подключение к интернету и попробуйте снова.${NC}"
     fi
 
     echo
+    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
     echo
 }
@@ -5214,21 +5214,18 @@ install_warp_native() {
 uninstall_warp_native() {
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${RED}   🗑️  УДАЛЕНИЕ WARP NATIVE${NC}"
+    echo -e "${RED}   🗑️  УДАЛЕНИЕ WARP${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     # Проверяем, установлен ли WARP
     if ! ip link show warp 2>/dev/null | grep -q "warp"; then
-        echo -e "${YELLOW}⚠️  WARP Native не установлен${NC}"
+        print_error "WARP не установлен"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
         echo
         return 0
     fi
-
-    echo -e "${YELLOW}⚠️  Это удалит WARP интерфейс${NC}"
-    echo
 
     if ! confirm_action; then
         print_error "Операция отменена"
@@ -5236,10 +5233,9 @@ uninstall_warp_native() {
         return 1
     fi
 
-    echo
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${RED}   🗑️  УДАЛЕНИЕ WARP NATIVE${NC}"
+    echo -e "${RED}   🗑️  УДАЛЕНИЕ WARP${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
@@ -5247,18 +5243,17 @@ uninstall_warp_native() {
         echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh) >/dev/null 2>&1
     ) &
     show_spinner "Удаление WARP"
-
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     # Проверяем результат
     if ! ip link show warp 2>/dev/null | grep -q "warp"; then
-        print_success "WARP Native успешно удалён"
+        print_success "WARP успешно удалён"
     else
-        print_error "Не удалось удалить WARP Native — интерфейс всё ещё активен"
+        print_error "Не удалось удалить WARP — интерфейс всё ещё активен"
     fi
 
     echo
+    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
     echo
 }
@@ -6179,7 +6174,7 @@ main_menu() {
                 "💾  База данных" \
                 "🔓  Доступ к панели" \
                 "🎨  Сменить шаблон сайта-заглушки" \
-                "🌐  WARP Native" \
+                "🌐  WARP" \
                 "──────────────────────────────────────" \
                 "🔄  Обновить панель/ноду" \
                 "🔄  Обновить скрипт$update_notice" \
