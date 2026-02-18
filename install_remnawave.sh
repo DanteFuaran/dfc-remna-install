@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.27"
+SCRIPT_VERSION="0.4.28"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5409,7 +5409,7 @@ JAIL_EOF
                 echo
                 echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
                 echo
-                echo -e "${DARKGRAY}Настройки обновлены:${NC}"
+                echo -e "${GREEN}Настройки обновлены:${NC}"
                 echo -e "  ${WHITE}Количество:${NC}   ${YELLOW}${new_maxretry}${NC} попыток"
                 echo -e "  ${WHITE}Длит. бана:${NC}   ${YELLOW}${new_bantime_min}${NC} мин"
                 echo -e "  ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
