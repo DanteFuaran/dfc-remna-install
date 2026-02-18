@@ -53,6 +53,12 @@ main_menu() {
                 has_node=true
             fi
         fi
+        if [ -f "/opt/remnanode/docker-compose.yml" ]; then
+            is_installed=true
+            if grep -q "remnanode:" /opt/remnanode/docker-compose.yml 2>/dev/null; then
+                has_node=true
+            fi
+        fi
 
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
@@ -234,7 +240,7 @@ if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
 fi
 
 # Проверка обновлений только если Remnawave или нода установлены
-if [ -f "/opt/remnawave/docker-compose.yml" ]; then
+if [ -f "/opt/remnawave/docker-compose.yml" ] || [ -f "/opt/remnanode/docker-compose.yml" ]; then
     UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
     current_time=$(date +%s)
     last_check=0
@@ -257,5 +263,6 @@ if [ -f "/opt/remnawave/docker-compose.yml" ]; then
 else
     rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
 fi
+
 
 main_menu

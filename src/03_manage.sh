@@ -2,15 +2,19 @@
 # БАЗА ДАННЫХ: ОПРЕДЕЛЕНИЕ ПУТИ К REMNAWAVE
 # ═══════════════════════════════════════════════
 detect_remnawave_path() {
-    local panel_dir="/opt/remnawave"
-
-    if [ -f "${panel_dir}/docker-compose.yml" ]; then
-        echo "$panel_dir"
+    # Сначала проверяем /opt/remnawave (панель или панель+нода)
+    if [ -f "/opt/remnawave/docker-compose.yml" ]; then
+        echo "/opt/remnawave"
+        return 0
+    fi
+    # Затем проверяем /opt/remnanode (только нода)
+    if [ -f "/opt/remnanode/docker-compose.yml" ]; then
+        echo "/opt/remnanode"
         return 0
     fi
 
     echo
-    echo -e "${YELLOW}⚠️  Remnawave не найдена по стандартному пути ${WHITE}/opt/remnawave${NC}"
+    echo -e "${YELLOW}⚠️  Remnawave не найдена по стандартному пути ${WHITE}/opt/remnawave${NC} или ${WHITE}/opt/remnanode${NC}"
     echo
     reading "Укажите путь к директории Remnawave:" custom_path
 

@@ -1,8 +1,9 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.30"
+SCRIPT_VERSION="0.4.31"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
+DIR_NODE="/opt/remnanode/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
 
 # Сохраняем исходное состояние терминала (до любых изменений)
@@ -2387,8 +2388,9 @@ EOL
 generate_nginx_conf_node() {
     local selfsteal_domain=$1
     local node_cert=$2
+    local target_dir="${3:-/opt/remnawave}"
 
-    cat > /opt/remnawave/nginx.conf <<EOL
+    cat > "${target_dir}/nginx.conf" <<EOL
 server_names_hash_bucket_size 64;
 
 map \$http_upgrade \$connection_upgrade {
@@ -3532,9 +3534,12 @@ installation_node_local() {
 
 # ─── Установка ноды на отдельный сервер (удалённая панель) ───
 installation_node_remote() {
+    # Узнаём куда устанавливать: /opt/remnanode (отдельная нода)
+    local NODE_INSTALL_DIR="/opt/remnanode"
+
     # Проверяем, это первичная установка?
     local is_fresh_install=false
-    if [ ! -d "${DIR_PANEL}" ] || [ -z "$(ls -A "${DIR_PANEL}" 2>/dev/null)" ]; then
+    if [ ! -d "${NODE_INSTALL_DIR}" ] || [ -z "$(ls -A "${NODE_INSTALL_DIR}" 2>/dev/null)" ]; then
         is_fresh_install=true
     fi
 
@@ -3543,14 +3548,14 @@ installation_node_remote() {
     echo -e "${GREEN}   📦 УСТАНОВКА ТОЛЬКО НОДЫ${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
 
-    mkdir -p "${DIR_PANEL}" && cd "${DIR_PANEL}"
+    mkdir -p "${NODE_INSTALL_DIR}" && cd "${NODE_INSTALL_DIR}"
 
     # Устанавливаем trap для удаления при прерывании (только для первичной установки)
     if [ "$is_fresh_install" = true ]; then
-        trap 'echo; echo -e "${RED}Установка прервана пользователем${NC}"; echo; rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null; exit 1' INT TERM
+        trap 'echo; echo -e "${RED}Установка прервана пользователем${NC}"; echo; rm -rf "'"${NODE_INSTALL_DIR}"'" "${DIR_REMNAWAVE}" 2>/dev/null; exit 1' INT TERM
     fi
 
-    prompt_domain_with_retry "Домен selfsteal/ноды (например node.example.com):" SELFSTEAL_DOMAIN || { [ "$is_fresh_install" = true ] && rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null; return; }
+    prompt_domain_with_retry "Домен selfsteal/ноды (например node.example.com):" SELFSTEAL_DOMAIN || { [ "$is_fresh_install" = true ] && rm -rf "${NODE_INSTALL_DIR}" "${DIR_REMNAWAVE}" 2>/dev/null; return; }
 
     local PANEL_IP
     while true; do
@@ -3613,7 +3618,7 @@ installation_node_remote() {
 
     # Docker-compose для ноды
     (
-        cat > /opt/remnawave/docker-compose.yml <<EOL
+        cat > "${NODE_INSTALL_DIR}/docker-compose.yml" <<EOL
 services:
   remnawave-nginx:
     image: nginx:1.28
@@ -3664,7 +3669,7 @@ EOL
     ) &
     show_spinner "Создание docker-compose.yml"
 
-    (generate_nginx_conf_node "$SELFSTEAL_DOMAIN" "$NODE_CERT_DOMAIN") &
+    (generate_nginx_conf_node "$SELFSTEAL_DOMAIN" "$NODE_CERT_DOMAIN" "$NODE_INSTALL_DIR") &
     show_spinner "Создание nginx.conf"
 
     (
@@ -3674,7 +3679,7 @@ EOL
     show_spinner "Настройка файрвола"
 
     (
-        cd /opt/remnawave
+        cd "${NODE_INSTALL_DIR}"
         docker compose up -d >/dev/null 2>&1
     ) &
     show_spinner "Запуск Docker контейнеров"
@@ -3693,6 +3698,7 @@ EOL
     echo -e "${GREEN}   🎉 НОДА УСТАНОВЛЕНА!${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
+    echo -e "${WHITE}Директория:${NC}   ${NODE_INSTALL_DIR}"
     echo -e "${WHITE}SelfSteal:${NC}    https://$SELFSTEAL_DOMAIN"
     echo -e "${WHITE}IP панели:${NC}    $PANEL_IP"
     echo
@@ -3851,15 +3857,19 @@ regenerate_cookies() {
 # БАЗА ДАННЫХ: ОПРЕДЕЛЕНИЕ ПУТИ К REMNAWAVE
 # ═══════════════════════════════════════════════
 detect_remnawave_path() {
-    local panel_dir="/opt/remnawave"
-
-    if [ -f "${panel_dir}/docker-compose.yml" ]; then
-        echo "$panel_dir"
+    # Сначала проверяем /opt/remnawave (панель или панель+нода)
+    if [ -f "/opt/remnawave/docker-compose.yml" ]; then
+        echo "/opt/remnawave"
+        return 0
+    fi
+    # Затем проверяем /opt/remnanode (только нода)
+    if [ -f "/opt/remnanode/docker-compose.yml" ]; then
+        echo "/opt/remnanode"
         return 0
     fi
 
     echo
-    echo -e "${YELLOW}⚠️  Remnawave не найдена по стандартному пути ${WHITE}/opt/remnawave${NC}"
+    echo -e "${YELLOW}⚠️  Remnawave не найдена по стандартному пути ${WHITE}/opt/remnawave${NC} или ${WHITE}/opt/remnanode${NC}"
     echo
     reading "Укажите путь к директории Remnawave:" custom_path
 
@@ -7078,6 +7088,12 @@ main_menu() {
                 has_node=true
             fi
         fi
+        if [ -f "/opt/remnanode/docker-compose.yml" ]; then
+            is_installed=true
+            if grep -q "remnanode:" /opt/remnanode/docker-compose.yml 2>/dev/null; then
+                has_node=true
+            fi
+        fi
 
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
@@ -7259,7 +7275,7 @@ if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
 fi
 
 # Проверка обновлений только если Remnawave или нода установлены
-if [ -f "/opt/remnawave/docker-compose.yml" ]; then
+if [ -f "/opt/remnawave/docker-compose.yml" ] || [ -f "/opt/remnanode/docker-compose.yml" ]; then
     UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
     current_time=$(date +%s)
     last_check=0
@@ -7282,5 +7298,6 @@ if [ -f "/opt/remnawave/docker-compose.yml" ]; then
 else
     rm -f /tmp/remna_update_available /tmp/remna_last_update_check 2>/dev/null
 fi
+
 
 main_menu
