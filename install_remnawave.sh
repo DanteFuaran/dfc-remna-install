@@ -5185,14 +5185,15 @@ manage_swap() {
         echo
 
         show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
-            "🗑️   Удалить текущий SWAP и создать новый (${swap_size_gb} GB)" \
+            "�  Пересоздать SWAP (${swap_size_gb} GB)" \
+            "🗑️   Удалить SWAP" \
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
 
         case $choice in
             0)
-                # Удаляем текущий swap
+                # Удаляем текущий swap, потом создаём новый
                 echo
                 (
                     swapoff -a 2>/dev/null
@@ -5201,8 +5202,32 @@ manage_swap() {
                 ) &
                 show_spinner "Удаление текущего SWAP"
                 ;;
-            1) return ;;
+            1)
+                # Только удаляем
+                echo
+                if ! confirm_action; then
+                    print_error "Операция отменена"
+                    sleep 2
+                    return 1
+                fi
+                echo
+                (
+                    swapoff -a 2>/dev/null
+                    rm -f /swapfile 2>/dev/null
+                    sed -i '/\/swapfile/d' /etc/fstab 2>/dev/null
+                    sed -i '/vm.swappiness/d' /etc/sysctl.conf 2>/dev/null
+                ) &
+                show_spinner "Удаление SWAP"
+                echo
+                print_success "SWAP удалён"
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                return
+                ;;
             2) return ;;
+            3) return ;;
         esac
     else
         echo -e "${YELLOW}⚠️  SWAP не настроен на сервере${NC}"
@@ -5285,7 +5310,7 @@ manage_swap() {
 manage_fail2ban() {
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   🛡️  FAIL2BAN${NC}"
+    echo -e "${GREEN}         🛡️  FAIL 2 BAN${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
@@ -5314,6 +5339,7 @@ manage_fail2ban() {
         echo
 
         show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+            "⚙️   Настройки" \
             "🔄  Перезапустить Fail2ban" \
             "🗑️   Удалить Fail2ban" \
             "──────────────────────────────────────" \
@@ -5322,6 +5348,73 @@ manage_fail2ban() {
 
         case $choice in
             0)
+                # Настройки Fail2ban
+                clear
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo -e "${GREEN}      ⚙️  НАСТРОЙКИ FAIL2BAN${NC}"
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo
+
+                # Читаем текущие значения из jail.local
+                local cur_maxretry cur_bantime_sec cur_findtime_sec
+                cur_maxretry=$(grep -m1 '^maxretry' /etc/fail2ban/jail.local 2>/dev/null | awk '{print $3}')
+                cur_bantime_sec=$(grep -m1 '^bantime' /etc/fail2ban/jail.local 2>/dev/null | awk '{print $3}')
+                cur_findtime_sec=$(grep -m1 '^findtime' /etc/fail2ban/jail.local 2>/dev/null | awk '{print $3}')
+                cur_maxretry=${cur_maxretry:-5}
+                local cur_bantime_min=$(( ${cur_bantime_sec:-3600} / 60 ))
+                local cur_findtime_min=$(( ${cur_findtime_sec:-600} / 60 ))
+
+                echo -e "${DARKGRAY}Текущие настройки SSH jail:${NC}"
+                echo -e "  ${WHITE}maxretry${NC}: ${YELLOW}${cur_maxretry}${NC} попыток"
+                echo -e "  ${WHITE}findtime${NC}: ${YELLOW}${cur_findtime_min}${NC} мин"
+                echo -e "  ${WHITE}bantime${NC}:  ${YELLOW}${cur_bantime_min}${NC} мин"
+                echo
+
+                local new_maxretry new_bantime_min new_findtime_min
+                reading_inline "Количество попыток (сейчас ${cur_maxretry}):" new_maxretry
+                if [ -z "$new_maxretry" ] || ! [[ "$new_maxretry" =~ ^[0-9]+$ ]]; then
+                    new_maxretry=$cur_maxretry
+                fi
+                reading_inline "Длительность бана в минутах (сейчас ${cur_bantime_min}):" new_bantime_min
+                if [ -z "$new_bantime_min" ] || ! [[ "$new_bantime_min" =~ ^[0-9]+$ ]]; then
+                    new_bantime_min=$cur_bantime_min
+                fi
+                reading_inline "Окно поиска в минутах (сейчас ${cur_findtime_min}):" new_findtime_min
+                if [ -z "$new_findtime_min" ] || ! [[ "$new_findtime_min" =~ ^[0-9]+$ ]]; then
+                    new_findtime_min=$cur_findtime_min
+                fi
+
+                local new_bantime_sec=$(( new_bantime_min * 60 ))
+                local new_findtime_sec=$(( new_findtime_min * 60 ))
+
+                echo
+                (
+                    cat > /etc/fail2ban/jail.local <<JAIL_EOF
+[DEFAULT]
+bantime  = ${new_bantime_sec}
+findtime = ${new_findtime_sec}
+maxretry = ${new_maxretry}
+banaction = iptables-multiport
+
+[sshd]
+enabled  = true
+port     = ssh
+filter   = sshd
+logpath  = /var/log/auth.log
+maxretry = ${new_maxretry}
+JAIL_EOF
+                    systemctl restart fail2ban >/dev/null 2>&1
+                ) &
+                show_spinner "Применение настроек"
+                echo
+                print_success "Настройки обновлены: ${new_maxretry} попыток / бан ${new_bantime_min} мин / окно ${new_findtime_min} мин"
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                return
+                ;;
+            1)
                 echo
                 (
                     systemctl restart fail2ban >/dev/null 2>&1
@@ -5333,7 +5426,7 @@ manage_fail2ban() {
                 echo
                 return
                 ;;
-            1)
+            2)
                 echo
                 if ! confirm_action; then
                     print_error "Операция отменена"
@@ -5354,8 +5447,8 @@ manage_fail2ban() {
                 echo
                 return
                 ;;
-            2) return ;;
             3) return ;;
+            4) return ;;
         esac
     else
         echo -e "${YELLOW}⚠️  Fail2ban не установлен${NC}"
@@ -5452,7 +5545,7 @@ manage_extra_settings() {
         echo
 
         show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
-            "💾  Создать SWAP" \
+            "💾  Управление SWAP" \
             "🌐  Настройка WARP" \
             "🛡️   Установить / управлять Fail2ban" \
             "──────────────────────────────────────" \
