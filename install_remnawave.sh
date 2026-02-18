@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.13"
+SCRIPT_VERSION="0.4.14"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -275,7 +275,7 @@ reading_inline() {
     local var_name="$2"
     local input
     echo -en "${BLUE}➜${NC}  ${YELLOW}${prompt}${NC} "
-    read -e input
+    read input
     eval "$var_name='$input'"
 }
 
@@ -5161,13 +5161,13 @@ install_warp_native() {
 
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   📥 УСТАНОВКА WARP NATIVE${NC}"
+    echo -e "${GREEN}   📥 УСТАНОВКА WARP${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     # Проверяем, установлен ли уже WARP
     if ip link show warp 2>/dev/null | grep -q "warp"; then
-        print_success "WARP Native уже установлен"
+        print_success "WARP уже установлен"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
         echo
@@ -5175,7 +5175,7 @@ install_warp_native() {
     fi
 
     # Спрашиваем WARP+ ключ
-    echo -e "${YELLOW}Если у вас есть WARP+ ключ — введите его ниже.${NC}"
+    echo -e "${YELLOW}Если у вас есть ключ для WARP, вы можете ввести его ниже.${NC}"
     echo -e "${DARKGRAY}Оставьте пустым для бесплатной версии.${NC}"
     echo
     reading_inline "WARP+ ключ (Enter для пропуска):" warp_key
@@ -5183,21 +5183,21 @@ install_warp_native() {
 
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   📥 УСТАНОВКА WARP NATIVE${NC}"
+    echo -e "${GREEN}   📥 УСТАНОВКА WARP${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     (
         { echo "2"; echo "${warp_key:-}"; } | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) >/dev/null 2>&1
     ) &
-    show_spinner "Установка WARP Native"
+    show_spinner "Установка WARP"
 
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     # Проверяем результат
     if ip link show warp 2>/dev/null | grep -q "warp"; then
-        print_success "WARP Native успешно установлен"
+        print_success "WARP успешно установлен"
         echo
         echo -e "${WHITE}WARP интерфейс создан.${NC}"
         echo -e "${DARKGRAY}Теперь добавьте WARP в конфигурацию ноды через соответствующий пункт меню.${NC}"
@@ -5246,7 +5246,7 @@ uninstall_warp_native() {
     (
         echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh) >/dev/null 2>&1
     ) &
-    show_spinner "Удаление WARP Native"
+    show_spinner "Удаление WARP"
 
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
