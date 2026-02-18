@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.21"
+SCRIPT_VERSION="0.4.23"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -4651,7 +4651,7 @@ manage_domains() {
     fi
     echo
 
-    show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+    show_arrow_menu "РЕДАКТИРОВАНИЕ ДОМЕНОВ" \
         "🌐  Сменить домен панели" \
         "🌐  Сменить домен страницы подписки" \
         "🌐  Сменить домен ноды" \
@@ -4678,7 +4678,7 @@ manage_database() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+    show_arrow_menu "БАЗА ДАННЫХ" \
         "💾  Сохранить базу данных" \
         "📥  Загрузить базу данных" \
         "──────────────────────────────────────" \
@@ -4837,7 +4837,7 @@ manage_panel_access() {
     fi
     echo
 
-    show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+    show_arrow_menu "ДОСТУП К ПАНЕЛИ" \
         "🔓  Открыть доступ по 8443" \
         "🔒  Закрыть доступ по 8443" \
         "🔗  Показать cookie-ссылку" \
@@ -5184,8 +5184,8 @@ manage_swap() {
         swapon --show 2>/dev/null
         echo
 
-        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
-            "�  Пересоздать SWAP (${swap_size_gb} GB)" \
+        show_arrow_menu "SWAP" \
+            "💾  Пересоздать SWAP (${swap_size_gb} GB)" \
             "🗑️   Удалить SWAP" \
             "──────────────────────────────────────" \
             "❌  Назад"
@@ -5233,7 +5233,7 @@ manage_swap() {
         echo -e "${YELLOW}⚠️  SWAP не настроен на сервере${NC}"
         echo
 
-        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+        show_arrow_menu "SWAP" \
             "💾  Создать SWAP (${swap_size_gb} GB)" \
             "──────────────────────────────────────" \
             "❌  Назад"
@@ -5338,7 +5338,7 @@ manage_fail2ban() {
         done
         echo
 
-        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+        show_arrow_menu "FAIL2BAN" \
             "⚙️   Настройки" \
             "🔄  Перезапустить Fail2ban" \
             "🗑️   Удалить Fail2ban" \
@@ -5457,7 +5457,7 @@ JAIL_EOF
         echo -e "${DARKGRAY}блокируя IP-адреса после нескольких неудачных попыток входа.${NC}"
         echo
 
-        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+        show_arrow_menu "FAIL2BAN" \
             "📥  Установить Fail2ban" \
             "──────────────────────────────────────" \
             "❌  Назад"
@@ -5534,6 +5534,401 @@ JAIL_EOF
 }
 
 # ═══════════════════════════════════════════════════
+# BBR
+# ═══════════════════════════════════════════════════
+manage_bbr() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}            🚀 BBR${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем текущий статус BBR
+    local current_cc
+    current_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+    local qdisc
+    qdisc=$(sysctl -n net.core.default_qdisc 2>/dev/null)
+
+    if [ "$current_cc" = "bbr" ]; then
+        print_success "BBR активен"
+        echo -e "  ${WHITE}tcp_congestion_control${NC}: ${YELLOW}${current_cc}${NC}"
+        echo -e "  ${WHITE}default_qdisc${NC}: ${YELLOW}${qdisc}${NC}"
+    else
+        print_warning "BBR не активен (текущий: ${current_cc:-unknown})"
+    fi
+    echo
+
+    show_arrow_menu "BBR" \
+        "✅  Включить BBR" \
+        "❌  Выключить BBR" \
+        "──────────────────────────────────────" \
+        "↩️   Назад"
+    local choice=$?
+
+    case $choice in
+        0)
+            echo
+            (
+                sysctl -w net.core.default_qdisc=fq >/dev/null 2>&1
+                sysctl -w net.ipv4.tcp_congestion_control=bbr >/dev/null 2>&1
+                # Сохраняем в sysctl.conf
+                sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf 2>/dev/null
+                sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
+                echo 'net.core.default_qdisc=fq' >> /etc/sysctl.conf
+                echo 'net.ipv4.tcp_congestion_control=bbr' >> /etc/sysctl.conf
+                sysctl -p >/dev/null 2>&1
+            ) &
+            show_spinner "Включение BBR"
+
+            local new_cc
+            new_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+            if [ "$new_cc" = "bbr" ]; then
+                print_success "BBR успешно включён"
+            else
+                print_error "Не удалось включить BBR"
+            fi
+            echo
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+            echo
+            ;;
+        1)
+            echo
+            (
+                sysctl -w net.core.default_qdisc=pfifo_fast >/dev/null 2>&1
+                sysctl -w net.ipv4.tcp_congestion_control=cubic >/dev/null 2>&1
+                sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf 2>/dev/null
+                sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
+                sysctl -p >/dev/null 2>&1
+            ) &
+            show_spinner "Выключение BBR"
+
+            local new_cc
+            new_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+            if [ "$new_cc" = "cubic" ]; then
+                print_success "BBR выключен (переключено на cubic)"
+            else
+                print_error "Не удалось выключить BBR"
+            fi
+            echo
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+            echo
+            ;;
+        2) return ;;
+        3) return ;;
+    esac
+}
+
+# ═══════════════════════════════════════════════════
+# FIREWALL (UFW)
+# ═══════════════════════════════════════════════════
+manage_ufw() {
+    while true; do
+        clear
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo -e "${GREEN}        🔥 FIREWALL (UFW)${NC}"
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo
+
+        # Статус UFW
+        local ufw_status
+        ufw_status=$(ufw status 2>/dev/null | head -1)
+        if echo "$ufw_status" | grep -q "active"; then
+            print_success "UFW активен"
+        else
+            print_warning "UFW не активен"
+        fi
+        echo
+
+        show_arrow_menu "FIREWALL (UFW)" \
+            "📋  Показать открытые порты" \
+            "➕  Открыть порт" \
+            "➖  Удалить правило" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+
+        case $choice in
+            0)
+                # Показать открытые порты
+                clear
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo -e "${GREEN}     📋 ОТКРЫТЫЕ ПОРТЫ (UFW)${NC}"
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo
+                ufw status numbered 2>/dev/null | tail -n +4
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                ;;
+            1)
+                # Открыть порт
+                clear
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo -e "${GREEN}        ➕ ОТКРЫТЬ ПОРТ${NC}"
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo
+
+                local ufw_port ufw_proto ufw_comment ufw_ip
+
+                reading_inline "Порт (обязательно):" ufw_port
+                if [ -z "$ufw_port" ] || ! [[ "$ufw_port" =~ ^[0-9]+$ ]]; then
+                    print_error "Порт не указан или некорректен"
+                    echo
+                    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                    echo
+                    continue
+                fi
+
+                reading_inline "Протокол (tcp/пусто для any):" ufw_proto
+                reading_inline "Комментарий (Enter для пропуска):" ufw_comment
+                reading_inline "IP-адрес (Enter для всех):" ufw_ip
+
+                echo
+
+                # Формируем правило
+                local ufw_cmd="ufw allow"
+                if [ -n "$ufw_ip" ]; then
+                    ufw_cmd+=" from $ufw_ip to any"
+                fi
+                ufw_cmd+=" port $ufw_port"
+                if [ -n "$ufw_proto" ]; then
+                    ufw_cmd+=" proto $ufw_proto"
+                fi
+                if [ -n "$ufw_comment" ]; then
+                    ufw_cmd+=" comment '$ufw_comment'"
+                fi
+
+                (
+                    eval "$ufw_cmd" >/dev/null 2>&1
+                ) &
+                show_spinner "Открытие порта $ufw_port"
+
+                print_success "Порт $ufw_port открыт"
+                [ -n "$ufw_proto" ] && echo -e "  ${DARKGRAY}Протокол: ${WHITE}${ufw_proto}${NC}"
+                [ -n "$ufw_ip" ] && echo -e "  ${DARKGRAY}Для IP: ${WHITE}${ufw_ip}${NC}"
+                [ -n "$ufw_comment" ] && echo -e "  ${DARKGRAY}Комментарий: ${WHITE}${ufw_comment}${NC}"
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                ;;
+            2)
+                # Удалить правило
+                clear
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo -e "${GREEN}       ➖ УДАЛИТЬ ПРАВИЛО${NC}"
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo
+
+                ufw status numbered 2>/dev/null | tail -n +4
+                echo
+
+                local rule_num
+                reading_inline "Номер правила для удаления:" rule_num
+                if [ -z "$rule_num" ] || ! [[ "$rule_num" =~ ^[0-9]+$ ]]; then
+                    print_error "Номер не указан или некорректен"
+                    echo
+                    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                    echo
+                    continue
+                fi
+
+                echo
+                if ! confirm_action; then
+                    print_error "Операция отменена"
+                    sleep 2
+                    continue
+                fi
+
+                echo
+                (
+                    echo "y" | ufw delete "$rule_num" >/dev/null 2>&1
+                ) &
+                show_spinner "Удаление правила #${rule_num}"
+                print_success "Правило #${rule_num} удалено"
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                ;;
+            3) continue ;;
+            4) return ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════════════
+# LOGROTATE
+# ═══════════════════════════════════════════════════
+manage_logrotate() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}          📝 LOGROTATE${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Текущие настройки
+    local cur_rotate cur_interval
+    cur_interval=$(grep -m1 '^\s*\(daily\|weekly\|monthly\)' /etc/logrotate.conf 2>/dev/null | xargs)
+    cur_rotate=$(grep -m1 '^\s*rotate' /etc/logrotate.conf 2>/dev/null | awk '{print $2}')
+    cur_interval=${cur_interval:-weekly}
+    cur_rotate=${cur_rotate:-4}
+
+    # Docker log settings
+    local docker_max_size docker_max_file
+    docker_max_size=$(grep -oP '"max-size"\s*:\s*"\K[^"]+' /etc/docker/daemon.json 2>/dev/null)
+    docker_max_file=$(grep -oP '"max-file"\s*:\s*"\K[^"]+' /etc/docker/daemon.json 2>/dev/null)
+    docker_max_size=${docker_max_size:-не настроено}
+    docker_max_file=${docker_max_file:-не настроено}
+
+    echo -e "${DARKGRAY}Системные логи (logrotate):${NC}"
+    echo -e "  ${WHITE}Интервал${NC}: ${YELLOW}${cur_interval}${NC}"
+    echo -e "  ${WHITE}Хранить${NC}:  ${YELLOW}${cur_rotate}${NC} ротаций"
+    echo
+    echo -e "${DARKGRAY}Docker логи (daemon.json):${NC}"
+    echo -e "  ${WHITE}max-size${NC}: ${YELLOW}${docker_max_size}${NC}"
+    echo -e "  ${WHITE}max-file${NC}: ${YELLOW}${docker_max_file}${NC}"
+    echo
+
+    show_arrow_menu "LOGROTATE" \
+        "📝  Настроить ротацию системных логов" \
+        "🐳  Настроить ротацию Docker логов" \
+        "──────────────────────────────────────" \
+        "❌  Назад"
+    local choice=$?
+
+    case $choice in
+        0)
+            # Ротация системных логов
+            clear
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo -e "${GREEN}     📝 СИСТЕМНЫЕ ЛОГИ${NC}"
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo
+
+            echo -e "${DARKGRAY}Выберите частоту ротации (в днях):${NC}"
+            echo
+
+            show_arrow_menu "ЧАСТОТА РОТАЦИИ" \
+                "  1 день" \
+                "  2 дня" \
+                "  3 дня" \
+                "  5 дней" \
+                " 10 дней" \
+                " 15 дней" \
+                " 30 дней"
+            local freq_choice=$?
+
+            local rotate_days
+            case $freq_choice in
+                0) rotate_days=1 ;;
+                1) rotate_days=2 ;;
+                2) rotate_days=3 ;;
+                3) rotate_days=5 ;;
+                4) rotate_days=10 ;;
+                5) rotate_days=15 ;;
+                6) rotate_days=30 ;;
+                *) return ;;
+            esac
+
+            echo
+            local keep_count
+            reading_inline "Сколько ротаций хранить (сейчас ${cur_rotate}):" keep_count
+            if [ -z "$keep_count" ] || ! [[ "$keep_count" =~ ^[0-9]+$ ]]; then
+                keep_count=$cur_rotate
+            fi
+
+            echo
+            (
+                # Меняем интервал на daily и настраиваем maxage
+                sed -i 's/^\s*\(daily\|weekly\|monthly\)/daily/' /etc/logrotate.conf 2>/dev/null
+                sed -i "s/^\s*rotate\s\+[0-9]*/rotate ${keep_count}/" /etc/logrotate.conf 2>/dev/null
+                # Добавляем maxage если нет
+                if grep -q '^\s*maxage' /etc/logrotate.conf 2>/dev/null; then
+                    sed -i "s/^\s*maxage\s\+[0-9]*/maxage ${rotate_days}/" /etc/logrotate.conf 2>/dev/null
+                else
+                    sed -i "/^\s*rotate/a maxage ${rotate_days}" /etc/logrotate.conf 2>/dev/null
+                fi
+            ) &
+            show_spinner "Применение настроек"
+            echo
+            print_success "Ротация: каждые ${rotate_days} дн., хранить ${keep_count} ротаций"
+            echo
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+            echo
+            ;;
+        1)
+            # Ротация Docker логов
+            clear
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo -e "${GREEN}     🐳 DOCKER ЛОГИ${NC}"
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo
+
+            echo -e "${DARKGRAY}Выберите максимальный размер лог-файла:${NC}"
+            echo
+
+            show_arrow_menu "РАЗМЕР ЛОГА" \
+                " 10m" \
+                " 20m" \
+                " 50m" \
+                "100m" \
+                "200m" \
+                "500m"
+            local size_choice=$?
+
+            local log_size
+            case $size_choice in
+                0) log_size="10m" ;;
+                1) log_size="20m" ;;
+                2) log_size="50m" ;;
+                3) log_size="100m" ;;
+                4) log_size="200m" ;;
+                5) log_size="500m" ;;
+                *) return ;;
+            esac
+
+            echo
+            local log_files
+            reading_inline "Количество лог-файлов (сейчас ${docker_max_file}):" log_files
+            if [ -z "$log_files" ] || ! [[ "$log_files" =~ ^[0-9]+$ ]]; then
+                log_files=${docker_max_file:-3}
+            fi
+
+            echo
+            (
+                # Создаём / обновляем daemon.json
+                mkdir -p /etc/docker
+                cat > /etc/docker/daemon.json <<DOCKER_EOF
+{
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "${log_size}",
+        "max-file": "${log_files}"
+    }
+}
+DOCKER_EOF
+                systemctl restart docker >/dev/null 2>&1
+            ) &
+            show_spinner "Применение настроек Docker"
+            echo
+            print_success "Docker логи: max-size=${log_size}, max-file=${log_files}"
+            echo -e "${YELLOW}⚠️  Docker перезапущен. Контейнеры будут перезапущены автоматически.${NC}"
+            echo
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+            echo
+            ;;
+        2) return ;;
+        3) return ;;
+    esac
+}
+
+# ═══════════════════════════════════════════════════
 # ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ
 # ═══════════════════════════════════════════════════
 manage_extra_settings() {
@@ -5544,10 +5939,13 @@ manage_extra_settings() {
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
 
-        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
-            "💾  Управление SWAP" \
-            "🌐  Настройка WARP" \
-            "🛡️   Установить / управлять Fail2ban" \
+        show_arrow_menu "ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ" \
+            "💾  SWAP" \
+            "🌐  WARP" \
+            "🛡️   Fail2ban" \
+            "🚀  BBR" \
+            "🔥  Firewall (UFW)" \
+            "📝  Logrotate" \
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
@@ -5556,8 +5954,11 @@ manage_extra_settings() {
             0) manage_swap ;;
             1) manage_warp ;;
             2) manage_fail2ban ;;
-            3) continue ;;
-            4) return ;;
+            3) manage_bbr ;;
+            4) manage_ufw ;;
+            5) manage_logrotate ;;
+            6) continue ;;
+            7) return ;;
         esac
     done
 }
@@ -5572,7 +5973,7 @@ manage_warp() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+    show_arrow_menu "WARP" \
         "📥  Установить WARP         " \
         "🗑️   Удалить WARP         " \
         "──────────────────────────────────────" \
@@ -6541,7 +6942,7 @@ remove_script() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    show_arrow_menu "Выберите действие" \
+    show_arrow_menu "УДАЛЕНИЕ СКРИПТА" \
         "🗑️   Удалить только скрипт" \
         "💣  Удалить скрипт + все данные Remnawave" \
         "──────────────────────────────────────" \
