@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.25"
+SCRIPT_VERSION="0.4.26"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5403,13 +5403,17 @@ logpath  = /var/log/auth.log
 maxretry = ${new_maxretry}
 JAIL_EOF
                     systemctl restart fail2ban >/dev/null 2>&1
-                ) &
-                show_spinner "Применение настроек"
+                ) >/dev/null 2>&1 &
+                wait
+                
+                echo
+                echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
                 echo
                 echo -e "${GREEN}✅ Настройки обновлены:${NC}"
                 echo -e "      ${WHITE}Количество:${NC}   ${YELLOW}${new_maxretry}${NC} попыток"
                 echo -e "      ${WHITE}Длит. бана:${NC}   ${YELLOW}${new_bantime_min}${NC} мин"
                 echo -e "      ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
+                echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 read -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
                 return
