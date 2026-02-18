@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.24"
+SCRIPT_VERSION="0.4.25"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5351,7 +5351,7 @@ manage_fail2ban() {
                 # Настройки Fail2ban
                 clear
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                echo -e "${GREEN}      ⚙️  НАСТРОЙКИ FAIL2BAN${NC}"
+                echo -e "${GREEN}         ⚙️  НАСТРОЙКИ FAIL2BAN${NC}"
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 echo
 
@@ -5365,9 +5365,9 @@ manage_fail2ban() {
                 local cur_findtime_min=$(( ${cur_findtime_sec:-600} / 60 ))
 
                 echo -e "${DARKGRAY}Текущие настройки SSH jail:${NC}"
-                echo -e "  ${WHITE}maxretry${NC}: ${YELLOW}${cur_maxretry}${NC} попыток"
-                echo -e "  ${WHITE}findtime${NC}: ${YELLOW}${cur_findtime_min}${NC} мин"
-                echo -e "  ${WHITE}bantime${NC}:  ${YELLOW}${cur_bantime_min}${NC} мин"
+                echo -e "  ${WHITE}Количество:${NC}   ${YELLOW}${cur_maxretry}${NC} попыток"
+                echo -e "  ${WHITE}Длит. бана:${NC}   ${YELLOW}${cur_bantime_min}${NC} мин"
+                echo -e "  ${WHITE}Окно поиска:${NC}  ${YELLOW}${cur_findtime_min}${NC} мин"
                 echo
 
                 local new_maxretry new_bantime_min new_findtime_min
@@ -5387,7 +5387,6 @@ manage_fail2ban() {
                 local new_bantime_sec=$(( new_bantime_min * 60 ))
                 local new_findtime_sec=$(( new_findtime_min * 60 ))
 
-                echo
                 (
                     cat > /etc/fail2ban/jail.local <<JAIL_EOF
 [DEFAULT]
@@ -5407,11 +5406,12 @@ JAIL_EOF
                 ) &
                 show_spinner "Применение настроек"
                 echo
-                print_success "Настройки обновлены: ${new_maxretry} попыток / бан ${new_bantime_min} мин / окно ${new_findtime_min} мин"
-                echo
+                echo -e "${GREEN}✅ Настройки обновлены:${NC}"
+                echo -e "      ${WHITE}Количество:${NC}   ${YELLOW}${new_maxretry}${NC} попыток"
+                echo -e "      ${WHITE}Длит. бана:${NC}   ${YELLOW}${new_bantime_min}${NC} мин"
+                echo -e "      ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-                echo
+                read -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
                 return
                 ;;
             1)
@@ -5519,17 +5519,16 @@ JAIL_EOF
             print_success "Fail2ban успешно установлен и запущен"
             echo
             echo -e "${DARKGRAY}Настройки SSH jail:${NC}"
-            echo -e "  ${WHITE}maxretry${NC}: 5 попыток"
-            echo -e "  ${WHITE}findtime${NC}: 10 минут"
-            echo -e "  ${WHITE}bantime${NC}: 1 час"
+            echo -e "  ${WHITE}Количество:${NC}   5 попыток"
+            echo -e "  ${WHITE}Длит. бана:${NC}   60 мин"
+            echo -e "  ${WHITE}Окно поиска:${NC}  10 мин"
         else
             print_error "Fail2ban установлен, но не удалось запустить"
         fi
 
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-        echo
+        read -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
     fi
 }
 
