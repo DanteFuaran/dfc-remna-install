@@ -268,12 +268,12 @@ JAIL_EOF
                 echo
                 echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
                 echo
-                echo -e "${GREEN}✅ Настройки обновлены:${NC}"
-                echo -e "      ${WHITE}Количество:${NC}   ${YELLOW}${new_maxretry}${NC} попыток"
-                echo -e "      ${WHITE}Длит. бана:${NC}   ${YELLOW}${new_bantime_min}${NC} мин"
-                echo -e "      ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
+                echo -e "${DARKGRAY}Настройки обновлены:${NC}"
+                echo -e "  ${WHITE}Количество:${NC}   ${YELLOW}${new_maxretry}${NC} попыток"
+                echo -e "  ${WHITE}Длит. бана:${NC}   ${YELLOW}${new_bantime_min}${NC} мин"
+                echo -e "  ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
                 echo
-                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                echo -e "${BLUE}════════════════════════════════${NC}"
                 read -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
                 return
                 ;;
