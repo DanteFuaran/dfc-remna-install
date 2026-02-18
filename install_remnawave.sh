@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.20"
+SCRIPT_VERSION="0.4.21"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -5141,6 +5141,335 @@ EOF
 }
 
 # ═══════════════════════════════════════════════════
+# SWAP
+# ═══════════════════════════════════════════════════
+manage_swap() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   💾 УПРАВЛЕНИЕ SWAP${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Определяем текущий объём RAM
+    local ram_kb
+    ram_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    local ram_mb=$((ram_kb / 1024))
+    local ram_gb=$((ram_mb / 1024))
+
+    # Определяем оптимальный размер SWAP
+    local swap_size_gb
+    if [ "$ram_mb" -le 2048 ]; then
+        swap_size_gb=2
+    elif [ "$ram_mb" -le 4096 ]; then
+        swap_size_gb=2
+    elif [ "$ram_mb" -le 8192 ]; then
+        swap_size_gb=4
+    else
+        swap_size_gb=8
+    fi
+
+    echo -e "${DARKGRAY}RAM на сервере: ${WHITE}${ram_mb} MB (~${ram_gb} GB)${NC}"
+    echo -e "${DARKGRAY}Рекомендуемый размер SWAP: ${WHITE}${swap_size_gb} GB${NC}"
+    echo
+
+    # Проверяем текущий SWAP
+    local current_swap
+    current_swap=$(swapon --show --noheadings 2>/dev/null)
+    if [ -n "$current_swap" ]; then
+        local swap_total
+        swap_total=$(free -h | awk '/Swap:/ {print $2}')
+        print_success "SWAP уже активен (${swap_total})"
+        echo
+        echo -e "${DARKGRAY}Текущие SWAP-устройства:${NC}"
+        swapon --show 2>/dev/null
+        echo
+
+        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+            "🗑️   Удалить текущий SWAP и создать новый (${swap_size_gb} GB)" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+
+        case $choice in
+            0)
+                # Удаляем текущий swap
+                echo
+                (
+                    swapoff -a 2>/dev/null
+                    rm -f /swapfile 2>/dev/null
+                    sed -i '/\/swapfile/d' /etc/fstab 2>/dev/null
+                ) &
+                show_spinner "Удаление текущего SWAP"
+                ;;
+            1) return ;;
+            2) return ;;
+        esac
+    else
+        echo -e "${YELLOW}⚠️  SWAP не настроен на сервере${NC}"
+        echo
+
+        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+            "💾  Создать SWAP (${swap_size_gb} GB)" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+
+        case $choice in
+            0) ;; # продолжаем создание
+            1) return ;;
+            2) return ;;
+        esac
+    fi
+
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   💾 СОЗДАНИЕ SWAP (${swap_size_gb} GB)${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    # Проверяем свободное место
+    local free_space_kb
+    free_space_kb=$(df / --output=avail | tail -1)
+    local needed_kb=$((swap_size_gb * 1024 * 1024))
+    if [ "$free_space_kb" -lt "$needed_kb" ]; then
+        print_error "Недостаточно места на диске для создания SWAP"
+        echo -e "${DARKGRAY}Свободно: $((free_space_kb / 1024)) MB, требуется: $((needed_kb / 1024)) MB${NC}"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+        return 1
+    fi
+
+    # Создаём swapfile
+    (
+        fallocate -l "${swap_size_gb}G" /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=$((swap_size_gb * 1024)) status=none 2>/dev/null
+        chmod 600 /swapfile
+        mkswap /swapfile >/dev/null 2>&1
+        swapon /swapfile 2>/dev/null
+    ) &
+    show_spinner "Создание SWAP-файла (${swap_size_gb} GB)"
+
+    # Добавляем в fstab если нет
+    if ! grep -q '/swapfile' /etc/fstab 2>/dev/null; then
+        echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        print_success "Добавлено в /etc/fstab"
+    fi
+
+    # Настройка swappiness
+    sysctl vm.swappiness=10 >/dev/null 2>&1
+    if ! grep -q 'vm.swappiness' /etc/sysctl.conf 2>/dev/null; then
+        echo 'vm.swappiness=10' >> /etc/sysctl.conf
+    else
+        sed -i 's/vm.swappiness=.*/vm.swappiness=10/' /etc/sysctl.conf
+    fi
+    print_success "Swappiness установлен на 10"
+
+    # Проверяем результат
+    if swapon --show | grep -q '/swapfile'; then
+        echo
+        print_success "SWAP (${swap_size_gb} GB) успешно создан и активирован"
+    else
+        echo
+        print_error "Не удалось активировать SWAP"
+    fi
+
+    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    echo
+}
+
+# ═══════════════════════════════════════════════════
+# FAIL2BAN
+# ═══════════════════════════════════════════════════
+manage_fail2ban() {
+    clear
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${GREEN}   🛡️  FAIL2BAN${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo
+
+    local f2b_installed=false
+    if command -v fail2ban-client >/dev/null 2>&1; then
+        f2b_installed=true
+        local f2b_status
+        f2b_status=$(systemctl is-active fail2ban 2>/dev/null || echo "inactive")
+        if [ "$f2b_status" = "active" ]; then
+            print_success "Fail2ban установлен и активен"
+        else
+            print_warning "Fail2ban установлен, но не запущен (${f2b_status})"
+        fi
+
+        # Показываем статистику
+        echo
+        echo -e "${DARKGRAY}Статус jail'ов:${NC}"
+        fail2ban-client status 2>/dev/null | grep "Jail list" | sed 's/.*://;s/,/\n/g' | while read -r jail; do
+            jail=$(echo "$jail" | xargs)
+            if [ -n "$jail" ]; then
+                local banned
+                banned=$(fail2ban-client status "$jail" 2>/dev/null | grep "Currently banned" | awk '{print $NF}')
+                echo -e "  ${WHITE}${jail}${NC}: ${YELLOW}${banned:-0}${NC} заблокировано"
+            fi
+        done
+        echo
+
+        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+            "🔄  Перезапустить Fail2ban" \
+            "🗑️   Удалить Fail2ban" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+
+        case $choice in
+            0)
+                echo
+                (
+                    systemctl restart fail2ban >/dev/null 2>&1
+                ) &
+                show_spinner "Перезапуск Fail2ban"
+                print_success "Fail2ban перезапущен"
+                echo
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                return
+                ;;
+            1)
+                echo
+                if ! confirm_action; then
+                    print_error "Операция отменена"
+                    sleep 2
+                    return 1
+                fi
+                echo
+                (
+                    systemctl stop fail2ban >/dev/null 2>&1
+                    systemctl disable fail2ban >/dev/null 2>&1
+                    apt-get remove --purge -y fail2ban >/dev/null 2>&1
+                    rm -rf /etc/fail2ban 2>/dev/null
+                ) &
+                show_spinner "Удаление Fail2ban"
+                print_success "Fail2ban удалён"
+                echo
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                return
+                ;;
+            2) return ;;
+            3) return ;;
+        esac
+    else
+        echo -e "${YELLOW}⚠️  Fail2ban не установлен${NC}"
+        echo
+        echo -e "${DARKGRAY}Fail2ban защищает сервер от брутфорс-атак,${NC}"
+        echo -e "${DARKGRAY}блокируя IP-адреса после нескольких неудачных попыток входа.${NC}"
+        echo
+
+        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+            "📥  Установить Fail2ban" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+
+        case $choice in
+            0) ;; # продолжаем установку
+            1) return ;;
+            2) return ;;
+        esac
+
+        clear
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo -e "${GREEN}   📥 УСТАНОВКА FAIL2BAN${NC}"
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo
+
+        # Установка
+        (
+            apt-get update -qq >/dev/null 2>&1
+            apt-get install -y -qq fail2ban >/dev/null 2>&1
+        ) &
+        show_spinner "Установка Fail2ban"
+
+        if ! command -v fail2ban-client >/dev/null 2>&1; then
+            print_error "Не удалось установить Fail2ban"
+            echo
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+            echo
+            return 1
+        fi
+
+        # Создаём jail.local для SSH
+        cat > /etc/fail2ban/jail.local <<'JAIL_EOF'
+[DEFAULT]
+bantime  = 3600
+findtime = 600
+maxretry = 5
+banaction = iptables-multiport
+
+[sshd]
+enabled  = true
+port     = ssh
+filter   = sshd
+logpath  = /var/log/auth.log
+maxretry = 5
+JAIL_EOF
+        print_success "Конфигурация SSH jail создана"
+
+        # Включаем и запускаем
+        (
+            systemctl enable fail2ban >/dev/null 2>&1
+            systemctl restart fail2ban >/dev/null 2>&1
+        ) &
+        show_spinner "Запуск Fail2ban"
+
+        if systemctl is-active --quiet fail2ban 2>/dev/null; then
+            echo
+            print_success "Fail2ban успешно установлен и запущен"
+            echo
+            echo -e "${DARKGRAY}Настройки SSH jail:${NC}"
+            echo -e "  ${WHITE}maxretry${NC}: 5 попыток"
+            echo -e "  ${WHITE}findtime${NC}: 10 минут"
+            echo -e "  ${WHITE}bantime${NC}: 1 час"
+        else
+            print_error "Fail2ban установлен, но не удалось запустить"
+        fi
+
+        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        echo
+    fi
+}
+
+# ═══════════════════════════════════════════════════
+# ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ
+# ═══════════════════════════════════════════════════
+manage_extra_settings() {
+    while true; do
+        clear
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo -e "${GREEN}   ⚙️  ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ${NC}"
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo
+
+        show_arrow_menu "ВЫБЕРИТЕ ДЕЙСТВИЕ" \
+            "💾  Создать SWAP" \
+            "🌐  Настройка WARP" \
+            "🛡️   Установить / управлять Fail2ban" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+
+        case $choice in
+            0) manage_swap ;;
+            1) manage_warp ;;
+            2) manage_fail2ban ;;
+            3) continue ;;
+            4) return ;;
+        esac
+    done
+}
+
+# ═══════════════════════════════════════════════════
 # WARP NATIVE
 # ═══════════════════════════════════════════════════
 manage_warp() {
@@ -6235,7 +6564,7 @@ main_menu() {
                 "🔓  Доступ к панели" \
                 "🎨  Сменить сайт-заглушку" \
                 "──────────────────────────────────────" \
-                "🌐  Настройка WARP" \
+                "⚙️   Дополнительные настройки" \
                 "──────────────────────────────────────" \
                 "🔄  Обновить панель/ноду" \
                 "🔄  Обновить скрипт$update_notice" \
@@ -6293,7 +6622,7 @@ main_menu() {
                 8) manage_panel_access ;;
                 9) manage_random_template ;;
                 10) continue ;;
-                11) manage_warp ;;
+                11) manage_extra_settings ;;
                 12) continue ;;
                 13) manage_update ;;
                 14) update_script ;;
