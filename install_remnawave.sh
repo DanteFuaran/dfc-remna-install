@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_VERSION="0.4.28"
+SCRIPT_VERSION="0.4.29"
 DIR_REMNAWAVE="/usr/local/dfc-remna-install/"
 DIR_PANEL="/opt/remnawave/"
 SCRIPT_URL="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/refs/heads/dev/install_remnawave.sh"
@@ -6259,15 +6259,22 @@ add_warp_to_config() {
 
     config_json=$(echo "$config_json" | jq --argjson warp_out "$warp_outbound" '.outbounds += [$warp_out]' 2>/dev/null)
 
-    # Добавляем правило маршрутизации
+    # Добавляем правило маршрутизации — весь tcp/udp трафик через WARP
     local warp_rule
     warp_rule='{
         "type": "field",
-        "domain": ["whoer.net", "browserleaks.com", "2ip.io", "2ip.ru"],
+        "network": ["tcp", "udp"],
         "outboundTag": "warp-out"
     }'
 
     config_json=$(echo "$config_json" | jq --argjson warp_rule "$warp_rule" '.routing.rules += [$warp_rule]' 2>/dev/null)
+
+    # Устанавливаем domainStrategy на AsIs на уровне routing если не задано
+    if echo "$config_json" | jq -e '.routing.domainStrategy' >/dev/null 2>&1; then
+        : # уже есть
+    else
+        config_json=$(echo "$config_json" | jq '.routing.domainStrategy = "AsIs"' 2>/dev/null)
+    fi
 
     # Обновляем конфигурацию
     local update_response
@@ -6276,8 +6283,7 @@ add_warp_to_config() {
     if [ -n "$update_response" ] && echo "$update_response" | jq -e '.' >/dev/null 2>&1; then
         print_success "WARP добавлен в конфигурацию"
         echo
-        echo -e "${DARKGRAY}Трафик для whoer.net, browserleaks.com, 2ip.io, 2ip.ru${NC}"
-        echo -e "${DARKGRAY}теперь будет идти через WARP${NC}"
+        echo -e "${DARKGRAY}Весь трафик (TCP/UDP) будет идти через WARP${NC}"
     else
         print_error "Не удалось обновить конфигурацию"
     fi
