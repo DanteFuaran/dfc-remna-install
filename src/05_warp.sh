@@ -31,7 +31,14 @@ manage_warp() {
 
 install_warp_native() {
     # Проверяем, есть ли нода на сервере
-    if ! grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+    local node_found=false
+    if grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+        node_found=true
+    fi
+    if grep -q "remnanode:" /opt/remnanode/docker-compose.yml 2>/dev/null; then
+        node_found=true
+    fi
+    if [ "$node_found" = false ]; then
         echo -e "${YELLOW}⚠️  Нода не найдена на этом сервере${NC}"
         echo -e "${DARKGRAY}WARP работает только с установленной нодой.${NC}"
         echo
