@@ -42,14 +42,30 @@ main_menu() {
     
     while true; do
         local is_installed=false
+        local has_panel=false
+        local has_node=false
         if [ -f "/opt/remnawave/docker-compose.yml" ]; then
             is_installed=true
+            if grep -q "remnawave:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+                has_panel=true
+            fi
+            if grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
+                has_node=true
+            fi
         fi
 
         if [ "$is_installed" = true ]; then
             # Формируем заголовок с версией и уведомлением об обновлении
             local update_notice=""
-            local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
+            local install_status=""
+            if [ "$has_panel" = true ] && [ "$has_node" = true ]; then
+                install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель + Нода${NC}"
+            elif [ "$has_panel" = true ]; then
+                install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель${NC}"
+            elif [ "$has_node" = true ]; then
+                install_status="\n${DARKGRAY}  Установлено: ${GREEN}Нода${NC}"
+            fi
+            local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${install_status}\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
             if [ -f /tmp/remna_update_available ]; then
                 local new_version
                 new_version=$(cat /tmp/remna_update_available)
@@ -217,7 +233,7 @@ if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
     exec /usr/local/bin/dfc-remna-install
 fi
 
-# Проверка обновлений только если Remnawave установлен
+# Проверка обновлений только если Remnawave или нода установлены
 if [ -f "/opt/remnawave/docker-compose.yml" ]; then
     UPDATE_CHECK_FILE="/tmp/remna_last_update_check"
     current_time=$(date +%s)
