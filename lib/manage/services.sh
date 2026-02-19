@@ -37,6 +37,14 @@ manage_update() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
+    if ! is_panel_installed && ! is_node_installed; then
+        print_error "Компоненты Remnawave не установлены"
+        echo
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+        echo
+        return
+    fi
+
     local rw_path
     rw_path=$(detect_remnawave_path) || return
 
