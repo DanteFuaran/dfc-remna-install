@@ -7,9 +7,10 @@ is_panel_installed() {
     [ -f "/opt/remnawave/docker-compose.yml" ]
 }
 
-# Проверяет, установлена ли нода (/opt/remnanode)
+# Проверяет, установлена ли нода (/opt/remnanode или как сервис в /opt/remnawave)
 is_node_installed() {
-    [ -f "/opt/remnanode/docker-compose.yml" ]
+    [ -f "/opt/remnanode/docker-compose.yml" ] || \
+        grep -q 'container_name: remnanode' "/opt/remnawave/docker-compose.yml" 2>/dev/null
 }
 
 # Возвращает путь к установленному компоненту:
