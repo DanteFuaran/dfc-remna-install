@@ -121,6 +121,7 @@ remove_script_all() {
     ) &
     show_spinner "Удаление контейнеров"
     rm -rf "${DIR_PANEL}"
+    rm -rf "${DIR_NODE}"
     rm -f /usr/local/bin/dfc-remna-install
     rm -f /usr/local/bin/dfc-ri
     rm -rf "${DIR_REMNAWAVE}"
@@ -138,48 +139,22 @@ remove_script() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    show_arrow_menu "УДАЛЕНИЕ СКРИПТА" \
-        "🗑️   Удалить только скрипт" \
-        "💣  Удалить скрипт + все данные Remnawave" \
-        "──────────────────────────────────────" \
-        "❌  Назад"
-    local choice=$?
+    echo -e "${YELLOW}⚠️  Скрипт и все его файлы будут удалены с сервера.${NC}"
+    echo -e "${DARKGRAY}   Данные Remnawave (панель/нода) останутся нетронутыми.${NC}"
+    echo
 
-    case $choice in
-        0)
-            rm -f /usr/local/bin/dfc-remna-install
-            rm -f /usr/local/bin/dfc-ri
-            rm -rf "${DIR_REMNAWAVE}"
-            rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
-            cleanup_old_aliases
-            print_success "Скрипт удалён"
-            echo
-            exit 0
-            ;;
-        1)
-            echo
-            echo -e "${RED}⚠️  ВСЕ ДАННЫЕ БУДУТ УДАЛЕНЫ!${NC}"
+    if ! confirm_action; then
+        print_error "Операция отменена"
+        sleep 2
+        return
+    fi
 
-            if confirm_action; then
-                echo
-                (
-                    cd "${DIR_PANEL}" 2>/dev/null
-                    docker compose down -v --rmi all >/dev/null 2>&1 || true
-                    docker system prune -af >/dev/null 2>&1 || true
-                ) &
-                show_spinner "Удаление контейнеров"
-                rm -rf "${DIR_PANEL}"
-                rm -f /usr/local/bin/dfc-remna-install
-                rm -f /usr/local/bin/dfc-ri
-                rm -rf "${DIR_REMNAWAVE}"
-                rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
-                cleanup_old_aliases
-                print_success "Всё удалено"
-                echo
-                exit 0
-            fi
-            ;;
-        2) : ;;
-        3) return ;;
-    esac
+    rm -f /usr/local/bin/dfc-remna-install
+    rm -f /usr/local/bin/dfc-ri
+    rm -rf "${DIR_REMNAWAVE}"
+    rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
+    cleanup_old_aliases
+    print_success "Скрипт удалён с сервера"
+    echo
+    exit 0
 }
