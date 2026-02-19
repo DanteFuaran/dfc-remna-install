@@ -90,8 +90,8 @@ show_arrow_menu() {
     local selected=0
 
     # Сохраняем настройки терминала
-    local original_stty
-    original_stty=$(stty -g 2>/dev/null)
+    local original_stty=""
+    original_stty=$(stty -g 2>/dev/null || echo "")
 
     # Скрываем курсор
     tput civis 2>/dev/null || true
@@ -101,7 +101,11 @@ show_arrow_menu() {
 
     # Функция восстановления терминала
     _restore_term() {
-        stty "$original_stty" 2>/dev/null || stty sane 2>/dev/null || true
+        if [ -n "${original_stty:-}" ]; then
+            stty "$original_stty" 2>/dev/null || stty sane 2>/dev/null || true
+        else
+            stty sane 2>/dev/null || true
+        fi
         tput cnorm 2>/dev/null || true
     }
 
