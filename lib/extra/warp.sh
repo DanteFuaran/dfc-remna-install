@@ -13,6 +13,20 @@ manage_warp() {
     local -a items=()
     local -a actions=()
 
+    # Ничего не установлено
+    if [ "$has_panel" = false ] && [ "$has_node" = false ]; then
+        clear
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo -e "${GREEN}   🌐 WARP${NC}"
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo
+        echo -e "${YELLOW}На сервере нет приложений требующих WARP${NC}"
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+        echo
+        return
+    fi
+
     # Только панель (без ноды) — только пункты конфигурации
     if [ "$has_panel" = true ] && [ "$has_node" = false ]; then
         items+=("➕  Добавить WARP в конфигурацию ноды");  actions+=("add_config")

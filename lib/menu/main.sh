@@ -69,35 +69,38 @@ main_menu() {
 
         case "$action" in
             install)
-                show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" \
-                    "📦  Панель + Нода (один сервер)" \
-                    "──────────────────────────────────────" \
-                    "🖥️   Только панель" \
-                    "🌐  Только нода" \
-                    "➕  Подключить ноду в панель" \
-                    "──────────────────────────────────────" \
-                    "❌  Назад"
+                local -a inst_items=() inst_actions=()
+                inst_items+=("📦  Панель + Нода (один сервер)"); inst_actions+=("full")
+                inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
+                inst_items+=("🖥️   Только панель"); inst_actions+=("panel")
+                inst_items+=("🌐  Только нода");    inst_actions+=("node")
+                if is_panel_installed; then
+                    inst_items+=("➕  Подключить ноду в панель"); inst_actions+=("add_node")
+                fi
+                inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
+                inst_items+=("❌  Назад"); inst_actions+=("back")
+
+                show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" "${inst_items[@]}"
                 local install_choice=$?
-                case $install_choice in
-                    0)
+                local inst_action="${inst_actions[$install_choice]:-back}"
+                case "$inst_action" in
+                    full)
                         if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                             install_packages
                         fi
                         installation_full ;;
-                    1) continue ;;
-                    2)
+                    panel)
                         if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                             install_packages
                         fi
                         installation_panel ;;
-                    3)
+                    node)
                         if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                             install_packages
                         fi
                         installation_node ;;
-                    4) add_node_to_panel ;;
-                    5) continue ;;
-                    6) continue ;;
+                    add_node) add_node_to_panel ;;
+                    *) continue ;;
                 esac ;;
             reinstall)        manage_reinstall ;;
             start)            manage_start ;;
