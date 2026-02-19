@@ -13,14 +13,30 @@ _BRANCH="dev"
 _SELF="${BASH_SOURCE[0]}"
 if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
     echo "⏳ Загрузка скрипта..."
-    mkdir -p "${_INSTALL_DIR}"
-    curl -sL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" \
-        | tar -xz -C "${_INSTALL_DIR}" --strip-components=1
+    mkdir -p "${_INSTALL_DIR}" || { echo "✖ Ошибка создания ${_INSTALL_DIR}"; exit 1; }
+    
+    # Скачиваем архив
+    _TMP_FILE=$(mktemp)
+    if ! curl -fsSL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" -o "${_TMP_FILE}" 2>/dev/null; then
+        echo "✖ Ошибка загрузки архива. Проверьте соединение с интернетом."
+        rm -f "${_TMP_FILE}"
+        exit 1
+    fi
+    
+    # Распаковываем
+    if ! tar -xz -C "${_INSTALL_DIR}" --strip-components=1 -f "${_TMP_FILE}" 2>/dev/null; then
+        echo "✖ Ошибка распаковки архива."
+        rm -f "${_TMP_FILE}"
+        exit 1
+    fi
+    rm -f "${_TMP_FILE}"
+    
     if [ ! -f "${_INSTALL_DIR}/dfc-remna-install.sh" ]; then
-        echo "✖ Ошибка загрузки. Проверьте соединение с интернетом."
+        echo "✖ Файл скрипта не найден. Архив повреждён?"
         exit 1
     fi
     chmod +x "${_INSTALL_DIR}/dfc-remna-install.sh"
+    mkdir -p /usr/local/bin
     ln -sf "${_INSTALL_DIR}/dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
     ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
     export REMNA_INSTALLED_RUN=1
