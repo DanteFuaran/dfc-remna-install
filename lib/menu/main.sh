@@ -35,7 +35,9 @@ main_menu() {
         local -a actions=()
 
         items+=("📦  Установить компоненты");  actions+=("install")
-        items+=("🔄  Переустановить");          actions+=("reinstall")
+        if [ "$is_installed" = true ]; then
+            items+=("🔄  Переустановить");      actions+=("reinstall")
+        fi
         items+=("──────────────────────────────────────"); actions+=("sep")
 
         if [ "$is_installed" = true ]; then
