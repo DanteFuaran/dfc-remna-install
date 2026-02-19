@@ -2,32 +2,61 @@
 # WARP NATIVE
 # ═══════════════════════════════════════════════════
 manage_warp() {
-    clear
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   🌐 WARP${NC}"
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo
+    local has_panel=false
+    local has_node=false
+    is_panel_installed && has_panel=true
+    is_node_installed  && has_node=true
 
-    show_arrow_menu "WARP" \
-        "📥  Установить WARP         " \
-        "🗑️   Удалить WARP         " \
-        "──────────────────────────────────────" \
-        "➕  Добавить WARP в конфигурацию ноды" \
-        "➖  Удалить WARP из конфигурации ноды" \
-        "──────────────────────────────────────" \
-        "❌  Назад"
+    local warp_installed=false
+    ip link show warp 2>/dev/null | grep -q "warp" && warp_installed=true
+
+    local -a items=()
+    local -a actions=()
+
+    # Только панель (без ноды) — только пункты конфигурации
+    if [ "$has_panel" = true ] && [ "$has_node" = false ]; then
+        items+=("➕  Добавить WARP в конфигурацию ноды");  actions+=("add_config")
+        items+=("➖  Удалить WARP из конфигурации ноды");  actions+=("del_config")
+        items+=("──────────────────────────────────────");  actions+=("sep")
+        items+=("❌  Назад");                               actions+=("back")
+
+    # Только нода (без панели) — только установка/удаление WARP
+    elif [ "$has_node" = true ] && [ "$has_panel" = false ]; then
+        if [ "$warp_installed" = false ]; then
+            items+=("📥  Установить WARP");  actions+=("install")
+        else
+            items+=("🗑️   Удалить WARP");    actions+=("uninstall")
+        fi
+        items+=("──────────────────────────────────────"); actions+=("sep")
+        items+=("❌  Назад");                              actions+=("back")
+
+    # Оба компонента — все пункты
+    else
+        if [ "$warp_installed" = false ]; then
+            items+=("📥  Установить WARP");  actions+=("install")
+        else
+            items+=("🗑️   Удалить WARP");    actions+=("uninstall")
+        fi
+        items+=("──────────────────────────────────────");  actions+=("sep")
+        items+=("➕  Добавить WARP в конфигурацию ноды");  actions+=("add_config")
+        items+=("➖  Удалить WARP из конфигурации ноды");  actions+=("del_config")
+        items+=("──────────────────────────────────────");  actions+=("sep")
+        items+=("❌  Назад");                               actions+=("back")
+    fi
+
+    show_arrow_menu "WARP" "${items[@]}"
     local choice=$?
+    local action="${actions[$choice]:-back}"
 
-    case $choice in
-        0) install_warp_native ;;
-        1) uninstall_warp_native ;;
-        2) ;; # разделитель
-        3) add_warp_to_config ;;
-        4) remove_warp_from_config ;;
-        5) ;; # разделитель
-        6) return ;;
+    case "$action" in
+        install)   install_warp_native ;;
+        uninstall) uninstall_warp_native ;;
+        add_config) add_warp_to_config ;;
+        del_config) remove_warp_from_config ;;
+        *) return ;;
     esac
 }
+
 
 install_warp_native() {
     # Проверяем, есть ли нода на сервере
