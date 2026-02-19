@@ -18,7 +18,7 @@ install_script() {
     local latest_sha
     latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
     if [ -n "$latest_sha" ]; then
-        download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/install_remnawave.sh"
+        download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/dfc-remna-install.sh"
     fi
 
     if ! wget -O "${DIR_REMNAWAVE}dfc-remna-install" "$download_url" >/dev/null 2>&1; then
@@ -78,7 +78,7 @@ update_script() {
         latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
         
         if [ -n "$latest_sha" ]; then
-            download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/install_remnawave.sh"
+            download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/dfc-remna-install.sh"
         fi
         
         wget -q --no-cache -O "${DIR_REMNAWAVE}dfc-remna-install" "$download_url" 2>/dev/null
