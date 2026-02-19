@@ -6,7 +6,7 @@ make_api_request() {
     local method=$1
     local url=$2
     local token=$3
-    local data=$4
+    local data="${4:-}"
 
     local headers=(
         -H "Authorization: Bearer $token"
