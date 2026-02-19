@@ -135,13 +135,13 @@ remove_script_all() {
 remove_script() {
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${RED}   🗑️ УДАЛЕНИЕ СКРИПТА${NC}"
+    echo -e "${RED}   🗑️   УДАЛЕНИЕ СКРИПТА${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    echo -e "${YELLOW}⚠️  Скрипт и все его файлы будут удалены с сервера.${NC}"
-    echo -e "${DARKGRAY}   Данные Remnawave (панель/нода) останутся нетронутыми.${NC}"
+    echo -e "${YELLOW}⚠️  Данные скрипта будут полностью удалены.${NC}"
     echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
 
     if ! confirm_action; then
         print_error "Операция отменена"

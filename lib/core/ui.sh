@@ -237,7 +237,7 @@ reading_inline() {
 
 confirm_action() {
     echo
-    echo -e "${YELLOW}⚠️  Нажмите Enter для подтверждения, или Esc для отмены.${NC}"
+    echo -e "${YELLOW}⚠️  Нажмите Enter для подтверждения, или Esc для отмены${NC}"
     tput civis  # Скрыть курсор
 
     local key
