@@ -139,7 +139,7 @@ remove_script() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
-    echo -e "${RED}⚠️  Данные скрипта будут удалены.${NC}"
+    echo -e "${YELLOW}⚠️  Данные скрипта будут удалены.${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     if ! confirm_action; then
@@ -153,6 +153,7 @@ remove_script() {
     rm -rf "${DIR_REMNAWAVE}"
     rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
     cleanup_old_aliases
+    echo
     print_success "Скрипт удалён с сервера"
     echo
     exit 0
