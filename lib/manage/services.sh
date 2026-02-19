@@ -38,8 +38,9 @@ manage_update() {
     echo
 
     if ! is_panel_installed && ! is_node_installed; then
-        print_error "Компоненты Remnawave не установлены"
+        echo -e "${RED}✖  Не найдено установленных компонентов.${NC}"
         echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
         echo
         return
