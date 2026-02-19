@@ -17,7 +17,7 @@ main_menu() {
         local update_notice=""
         local install_status=""
         if [ "$has_panel" = true ] && [ "$has_node" = true ]; then
-            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель + Нода${NC}"
+            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель и Нода${NC}"
         elif [ "$has_panel" = true ]; then
             install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель${NC}"
         elif [ "$has_node" = true ]; then
@@ -74,7 +74,9 @@ main_menu() {
                     inst_items+=("📦  Панель + Нода (один сервер)"); inst_actions+=("full")
                     inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
                 fi
-                inst_items+=("🖥️   Только панель"); inst_actions+=("panel")
+                if ! is_panel_installed; then
+                    inst_items+=("🖥️   Только панель"); inst_actions+=("panel")
+                fi
                 inst_items+=("🌐  Только нода");    inst_actions+=("node")
                 if is_panel_installed; then
                     inst_items+=("➕  Подключить ноду в панель"); inst_actions+=("add_node")
