@@ -19,17 +19,17 @@ cleanup_terminal() {
 
 # Удаление старых алиасов и команд
 cleanup_old_aliases() {
-    # Удаляем старый алиас ri
-    sed -i "/alias ri='remna_install'/d" /etc/bash.bashrc 2>/dev/null
-    sed -i "/alias ri='remna_install'/d" /etc/bashrc 2>/dev/null
-    sed -i "/alias ri='remna_install'/d" /root/.bashrc 2>/dev/null
-    sed -i "/alias ri='remna_install'/d" /root/.bash_aliases 2>/dev/null
+    # Удаляем старый алиас ri (|| true чтобы не прерывать при set -e если файл не существует)
+    sed -i "/alias ri='remna_install'/d" /etc/bash.bashrc 2>/dev/null || true
+    sed -i "/alias ri='remna_install'/d" /etc/bashrc 2>/dev/null || true
+    sed -i "/alias ri='remna_install'/d" /root/.bashrc 2>/dev/null || true
+    sed -i "/alias ri='remna_install'/d" /root/.bash_aliases 2>/dev/null || true
     if [ -n "$HOME" ] && [ "$HOME" != "/root" ]; then
-        sed -i "/alias ri='remna_install'/d" "$HOME/.bashrc" 2>/dev/null
-        sed -i "/alias ri='remna_install'/d" "$HOME/.bash_aliases" 2>/dev/null
+        sed -i "/alias ri='remna_install'/d" "$HOME/.bashrc" 2>/dev/null || true
+        sed -i "/alias ri='remna_install'/d" "$HOME/.bash_aliases" 2>/dev/null || true
     fi
-    rm -f /etc/profile.d/remna_install.sh 2>/dev/null
-    rm -f /usr/local/bin/remna_install 2>/dev/null
+    rm -f /etc/profile.d/remna_install.sh 2>/dev/null || true
+    rm -f /usr/local/bin/remna_install 2>/dev/null || true
     unalias ri 2>/dev/null || true
 }
 

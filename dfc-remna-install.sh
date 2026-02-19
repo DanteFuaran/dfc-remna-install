@@ -45,8 +45,8 @@ fi
 
 set -euo pipefail
 
-# Определяем директорию скрипта (уже установлен)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Определяем директорию скрипта (уже установлен), резолвим симлинки
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # ─── Загрузка модулей ───
 
@@ -123,11 +123,11 @@ fi
 # Проверяем раз в час (3600 секунд)
 time_diff=$((current_time - last_check))
 if [ $time_diff -gt 3600 ] || [ ! -f "${UPDATE_AVAILABLE_FILE}" ]; then
-    new_version=$(check_for_updates)
-    if [ $? -eq 0 ] && [ -n "$new_version" ]; then
+    new_version=$(check_for_updates) || true
+    if [ -n "$new_version" ]; then
         echo "$new_version" > "${UPDATE_AVAILABLE_FILE}"
     else
-        rm -f "${UPDATE_AVAILABLE_FILE}" 2>/dev/null
+        rm -f "${UPDATE_AVAILABLE_FILE}" 2>/dev/null || true
     fi
     echo "$current_time" > "${UPDATE_CHECK_TIME_FILE}"
 fi
