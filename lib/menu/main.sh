@@ -3,30 +3,17 @@
 # ═══════════════════════════════════════════════
 
 main_menu() {
-    # Создаём алиасы при каждом запуске главного меню
     alias dfc-ri="/usr/local/bin/dfc-remna-install" 2>/dev/null || true
-    
+
     while true; do
-        local is_installed=false
         local has_panel=false
         local has_node=false
-        if [ -f "/opt/remnawave/docker-compose.yml" ]; then
-            is_installed=true
-            if grep -q "remnawave:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
-                has_panel=true
-            fi
-            if grep -q "remnanode:" /opt/remnawave/docker-compose.yml 2>/dev/null; then
-                has_node=true
-            fi
-        fi
-        if [ -f "/opt/remnanode/docker-compose.yml" ]; then
-            is_installed=true
-            if grep -q "remnanode:" /opt/remnanode/docker-compose.yml 2>/dev/null; then
-                has_node=true
-            fi
-        fi
+        is_panel_installed && has_panel=true
+        is_node_installed  && has_node=true
+        local is_installed=false
+        { [ "$has_panel" = true ] || [ "$has_node" = true ]; } && is_installed=true
 
-        # Формируем заголовок с версией и статусом установки
+        # Заголовок
         local update_notice=""
         local install_status=""
         if [ "$has_panel" = true ] && [ "$has_node" = true ]; then
@@ -43,30 +30,43 @@ main_menu() {
             update_notice=" ${YELLOW}(Доступно обновление до v$new_version)${NC}"
         fi
 
-        show_arrow_menu "$menu_title" \
-            "📦  Установить компоненты" \
-            "🔄  Переустановить" \
-            "──────────────────────────────────────" \
-            "▶️   Запустить сервисы" \
-            "⏹️   Остановить сервисы" \
-            "📋  Просмотр логов" \
-            "──────────────────────────────────────" \
-            "💾  База данных" \
-            "🔓  Доступ к панели" \
-            "🎨  Сменить сайт-заглушку" \
-            "──────────────────────────────────────" \
-            "⚙️   Дополнительные настройки" \
-            "──────────────────────────────────────" \
-            "🔄  Обновить панель/ноду" \
-            "🔄  Обновить скрипт$update_notice" \
-            "──────────────────────────────────────" \
-            "🗑️   Удаление компонентов" \
-            "──────────────────────────────────────" \
-            "❌  Выход"
-        local choice=$?
+        # Динамическое построение меню
+        local -a items=()
+        local -a actions=()
 
-        case $choice in
-            0)
+        items+=("📦  Установить компоненты");  actions+=("install")
+        items+=("🔄  Переустановить");          actions+=("reinstall")
+        items+=("──────────────────────────────────────"); actions+=("sep")
+
+        if [ "$is_installed" = true ]; then
+            items+=("▶️   Запустить сервисы");       actions+=("start")
+            items+=("⏹️   Остановить сервисы");      actions+=("stop")
+            items+=("📋  Просмотр логов");            actions+=("logs")
+            items+=("──────────────────────────────────────"); actions+=("sep")
+            items+=("💾  База данных");               actions+=("database")
+            items+=("🔓  Доступ к панели");           actions+=("access")
+            items+=("🎨  Сменить сайт-заглушку");     actions+=("template")
+            items+=("──────────────────────────────────────"); actions+=("sep")
+        fi
+
+        items+=("⚙️   Дополнительные настройки"); actions+=("extra")
+        items+=("──────────────────────────────────────"); actions+=("sep")
+
+        if [ "$is_installed" = true ]; then
+            items+=("🔄  Обновить панель/ноду");    actions+=("update_components")
+        fi
+        items+=("🔄  Обновить скрипт$update_notice"); actions+=("update_script")
+        items+=("──────────────────────────────────────"); actions+=("sep")
+        items+=("🗑️   Удаление компонентов");        actions+=("remove")
+        items+=("──────────────────────────────────────"); actions+=("sep")
+        items+=("❌  Выход");                         actions+=("exit")
+
+        show_arrow_menu "$menu_title" "${items[@]}"
+        local choice=$?
+        local action="${actions[$choice]:-}"
+
+        case "$action" in
+            install)
                 show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" \
                     "📦  Панель + Нода (один сервер)" \
                     "──────────────────────────────────────" \
@@ -81,61 +81,54 @@ main_menu() {
                         if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                             install_packages
                         fi
-                        installation_full
-                        ;;
+                        installation_full ;;
                     1) continue ;;
                     2)
                         if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                             install_packages
                         fi
-                        installation_panel
-                        ;;
+                        installation_panel ;;
                     3)
                         if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                             install_packages
                         fi
-                        installation_node
-                        ;;
-                    4)
-                        add_node_to_panel
-                        ;;
+                        installation_node ;;
+                    4) add_node_to_panel ;;
                     5) continue ;;
                     6) continue ;;
-                esac
-                ;;
-            1) manage_reinstall ;;
-            2) continue ;;
-            3) manage_start ;;
-            4) manage_stop ;;
-            5) manage_logs ;;
-            6) continue ;;
-            7) manage_database ;;
-            8) manage_panel_access ;;
-            9) manage_random_template ;;
-            10) continue ;;
-            11) manage_extra_settings ;;
-            12) continue ;;
-            13) manage_update ;;
-            14) update_script ;;
-            15) continue ;;
-            16)
-                show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" \
-                    "💣  Удалить скрипт и все данные Remnawave" \
-                    "🗑️   Удалить только скрипт" \
-                    "🗑️   Удалить ноду с сервера" \
-                    "──────────────────────────────────────" \
-                    "❌  Назад"
+                esac ;;
+            reinstall)        manage_reinstall ;;
+            start)            manage_start ;;
+            stop)             manage_stop ;;
+            logs)             manage_logs ;;
+            database)         manage_database ;;
+            access)           manage_panel_access ;;
+            template)         manage_random_template ;;
+            extra)            manage_extra_settings ;;
+            update_components) manage_update ;;
+            update_script)    update_script ;;
+            remove)
+                # Удаление — разное меню в зависимости от установки
+                local -a del_items=()
+                local -a del_actions=()
+                if [ "$is_installed" = true ]; then
+                    del_items+=("💣  Удалить скрипт и все данные Remnawave"); del_actions+=("remove_all")
+                fi
+                del_items+=("🗑️   Удалить скрипт с сервера"); del_actions+=("remove_script")
+                del_items+=("──────────────────────────────────────");        del_actions+=("sep")
+                del_items+=("❌  Назад");                                      del_actions+=("back")
+
+                show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" "${del_items[@]}"
                 local del_choice=$?
-                case $del_choice in
-                    0) remove_script_all ;;
-                    1) remove_script ;;
-                    2) remove_node_from_panel ;;
-                    3) continue ;;
-                    4) continue ;;
-                esac
-                ;;
-            17) continue ;;
-            18) cleanup_terminal; exit 0 ;;
+                local del_action="${del_actions[$del_choice]:-back}"
+                case "$del_action" in
+                    remove_all)    remove_script_all ;;
+                    remove_script) remove_script ;;
+                    *) continue ;;
+                esac ;;
+            sep)    continue ;;
+            exit)   cleanup_terminal; exit 0 ;;
+            *)      continue ;;
         esac
     done
 }
