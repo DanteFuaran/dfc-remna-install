@@ -7,27 +7,23 @@ install_script() {
 
     cleanup_old_aliases
 
-    if [ -f "${DIR_REMNAWAVE}dfc-remna-install" ]; then
-        chmod +x "${DIR_REMNAWAVE}dfc-remna-install"
-        ln -sf "${DIR_REMNAWAVE}dfc-remna-install" /usr/local/bin/dfc-remna-install
+    # Уже установлен — только актуализируем симлинки
+    if [ -d "${DIR_REMNAWAVE}lib" ]; then
+        chmod +x "${DIR_REMNAWAVE}dfc-remna-install.sh"
+        ln -sf "${DIR_REMNAWAVE}dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
         ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
         return
     fi
 
-    local download_url="$SCRIPT_URL"
-    local latest_sha
-    latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
-    if [ -n "$latest_sha" ]; then
-        download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/dfc-remna-install.sh"
-    fi
-
-    if ! wget -O "${DIR_REMNAWAVE}dfc-remna-install" "$download_url" >/dev/null 2>&1; then
+    # Первичная установка — скачиваем полный архив
+    if ! curl -sL "https://github.com/DanteFuaran/dfc-remna-install/archive/refs/heads/dev.tar.gz" \
+        | tar -xz -C "${DIR_REMNAWAVE}" --strip-components=1; then
         echo -e "${RED}✖ Не удалось скачать скрипт${NC}"
         exit 1
     fi
-    
-    chmod +x "${DIR_REMNAWAVE}dfc-remna-install"
-    ln -sf "${DIR_REMNAWAVE}dfc-remna-install" /usr/local/bin/dfc-remna-install
+
+    chmod +x "${DIR_REMNAWAVE}dfc-remna-install.sh"
+    ln -sf "${DIR_REMNAWAVE}dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
     ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
 }
 
@@ -72,18 +68,10 @@ update_script() {
 
     (
         mkdir -p "${DIR_REMNAWAVE}"
-        
-        local download_url="$SCRIPT_URL"
-        local latest_sha
-        latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
-        
-        if [ -n "$latest_sha" ]; then
-            download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/dfc-remna-install.sh"
-        fi
-        
-        wget -q --no-cache -O "${DIR_REMNAWAVE}dfc-remna-install" "$download_url" 2>/dev/null
-        chmod +x "${DIR_REMNAWAVE}dfc-remna-install"
-        ln -sf "${DIR_REMNAWAVE}dfc-remna-install" /usr/local/bin/dfc-remna-install
+        curl -sL "https://github.com/DanteFuaran/dfc-remna-install/archive/refs/heads/dev.tar.gz" \
+            | tar -xz -C "${DIR_REMNAWAVE}" --strip-components=1 2>/dev/null
+        chmod +x "${DIR_REMNAWAVE}dfc-remna-install.sh"
+        ln -sf "${DIR_REMNAWAVE}dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
         ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
     ) &
     show_spinner "Загрузка обновлений"

@@ -4,9 +4,32 @@
 #   https://github.com/DanteFuaran/dfc-remna-install
 # ═══════════════════════════════════════════════════════════
 
+_INSTALL_DIR="/usr/local/dfc-remna-install"
+_REPO="DanteFuaran/dfc-remna-install"
+_BRANCH="dev"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Bootstrap: при запуске через curl pipe рядом нет lib/
+# Скачиваем полный архив репозитория и переключаемся на установленную копию
+if [ ! -d "${SCRIPT_DIR}/lib" ]; then
+    echo "⏳ Загрузка скрипта..."
+    mkdir -p "${_INSTALL_DIR}"
+    if ! curl -sL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" \
+        | tar -xz -C "${_INSTALL_DIR}" --strip-components=1; then
+        echo "✖ Ошибка загрузки. Проверьте соединение с интернетом."
+        exit 1
+    fi
+    chmod +x "${_INSTALL_DIR}/dfc-remna-install.sh"
+    ln -sf "${_INSTALL_DIR}/dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
+    ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
+    export REMNA_INSTALLED_RUN=1
+    exec "${_INSTALL_DIR}/dfc-remna-install.sh"
+fi
+
 set -euo pipefail
 
-# Определяем директорию скрипта
+# Определяем директорию скрипта (уже установлен)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ─── Загрузка модулей ───
