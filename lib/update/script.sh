@@ -142,7 +142,6 @@ remove_script() {
     echo -e "${YELLOW}⚠️  Данные скрипта будут полностью удалены.${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-
     if ! confirm_action; then
         print_error "Операция отменена"
         sleep 2
