@@ -124,7 +124,7 @@ show_arrow_menu() {
             # Проверяем, является ли элемент разделителем
             if [[ "${options[$i]}" =~ ^[─━═\s]*$ ]]; then
                 # Разделители без отступа - вровень с рамкой
-                echo -e "${options[$i]}"
+                echo -e "${DARKGRAY}${options[$i]}${NC}"
             elif [ $i -eq $selected ]; then
                 echo -e "${BLUE}▶${NC} ${YELLOW}${options[$i]}${NC}"
             else
