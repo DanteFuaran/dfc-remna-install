@@ -1,41 +1,7 @@
 # ═══════════════════════════════════════════════
-# УСТАНОВКА СКРИПТА
-# ═══════════════════════════════════════════════
-install_script() {
-    mkdir -p "${DIR_REMNAWAVE}"
-
-    # Чистим старые артефакты (remna_install, alias ri)
-    cleanup_old_aliases
-
-    # Если скрипт уже установлен - обновляем симлинки и запускаем его
-    if [ -f "${DIR_REMNAWAVE}dfc-remna-install" ]; then
-        chmod +x "${DIR_REMNAWAVE}dfc-remna-install"
-        ln -sf "${DIR_REMNAWAVE}dfc-remna-install" /usr/local/bin/dfc-remna-install
-        ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
-        return
-    fi
-
-    # Первая установка - получаем SHA последнего коммита для обхода CDN-кеша
-    local download_url="$SCRIPT_URL"
-    local latest_sha
-    latest_sha=$(curl -sL --max-time 5 "https://api.github.com/repos/DanteFuaran/dfc-remna-install/commits/dev" 2>/dev/null | grep -m 1 '"sha"' | cut -d'"' -f4)
-    if [ -n "$latest_sha" ]; then
-        download_url="https://raw.githubusercontent.com/DanteFuaran/dfc-remna-install/$latest_sha/install_remnawave.sh"
-    fi
-
-    if ! wget -O "${DIR_REMNAWAVE}dfc-remna-install" "$download_url" >/dev/null 2>&1; then
-        echo -e "${RED}✖ Не удалось скачать скрипт${NC}"
-        exit 1
-    fi
-    
-    chmod +x "${DIR_REMNAWAVE}dfc-remna-install"
-    ln -sf "${DIR_REMNAWAVE}dfc-remna-install" /usr/local/bin/dfc-remna-install
-    ln -sf /usr/local/bin/dfc-remna-install /usr/local/bin/dfc-ri
-}
-
-# ═══════════════════════════════════════════════
 # ГЛАВНОЕ МЕНЮ
 # ═══════════════════════════════════════════════
+
 main_menu() {
     # Создаём алиасы при каждом запуске главного меню
     alias dfc-ri="/usr/local/bin/dfc-remna-install" 2>/dev/null || true
@@ -173,44 +139,3 @@ main_menu() {
         esac
     done
 }
-
-# ═══════════════════════════════════════════════
-# ТОЧКА ВХОДА
-# ═══════════════════════════════════════════════
-if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
-    echo -e "${BLUE}⏳ Происходит подготовка установки... Пожалуйста, подождите${NC}"
-    echo ""
-fi
-
-check_root
-check_os
-
-# Если запущены НЕ из установленной копии - скачиваем свежую и переключаемся
-install_script
-if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
-    export REMNA_INSTALLED_RUN=1
-    exec /usr/local/bin/dfc-remna-install
-fi
-
-# Проверка обновлений (всегда)
-current_time=$(date +%s)
-last_check=0
-
-if [ -f "${UPDATE_CHECK_TIME_FILE}" ]; then
-    last_check=$(cat "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null || echo 0)
-fi
-
-# Проверяем раз в час (3600 секунд)
-time_diff=$((current_time - last_check))
-if [ $time_diff -gt 3600 ] || [ ! -f "${UPDATE_AVAILABLE_FILE}" ]; then
-    new_version=$(check_for_updates)
-    if [ $? -eq 0 ] && [ -n "$new_version" ]; then
-        echo "$new_version" > "${UPDATE_AVAILABLE_FILE}"
-    else
-        rm -f "${UPDATE_AVAILABLE_FILE}" 2>/dev/null
-    fi
-    echo "$current_time" > "${UPDATE_CHECK_TIME_FILE}"
-fi
-
-
-main_menu

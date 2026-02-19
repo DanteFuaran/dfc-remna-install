@@ -1,0 +1,57 @@
+# ═══════════════════════════════════════════════
+# ВОССТАНОВЛЕНИЕ ТЕРМИНАЛА И ОБРАБОТКА ПРЕРЫВАНИЙ
+# ═══════════════════════════════════════════════
+
+# Сохраняем исходное состояние терминала (до любых изменений)
+ORIGINAL_STTY=$(stty -g 2>/dev/null || echo "")
+
+cleanup_terminal() {
+    # Полное восстановление терминала
+    tput cnorm 2>/dev/null || true
+    tput sgr0 2>/dev/null || true
+    printf "\033[0m\033[?25h" 2>/dev/null || true
+    if [ -n "$ORIGINAL_STTY" ]; then
+        stty "$ORIGINAL_STTY" 2>/dev/null || stty sane 2>/dev/null || true
+    else
+        stty sane 2>/dev/null || true
+    fi
+}
+
+# Удаление старых алиасов и команд
+cleanup_old_aliases() {
+    # Удаляем старый алиас ri
+    sed -i "/alias ri='remna_install'/d" /etc/bash.bashrc 2>/dev/null
+    sed -i "/alias ri='remna_install'/d" /etc/bashrc 2>/dev/null
+    sed -i "/alias ri='remna_install'/d" /root/.bashrc 2>/dev/null
+    sed -i "/alias ri='remna_install'/d" /root/.bash_aliases 2>/dev/null
+    if [ -n "$HOME" ] && [ "$HOME" != "/root" ]; then
+        sed -i "/alias ri='remna_install'/d" "$HOME/.bashrc" 2>/dev/null
+        sed -i "/alias ri='remna_install'/d" "$HOME/.bash_aliases" 2>/dev/null
+    fi
+    rm -f /etc/profile.d/remna_install.sh 2>/dev/null
+    rm -f /usr/local/bin/remna_install 2>/dev/null
+    unalias ri 2>/dev/null || true
+}
+
+# Тихая самоочистка если ничего не установлено
+cleanup_uninstalled() {
+    if [ ! -f "/opt/remnawave/docker-compose.yml" ]; then
+        rm -f /usr/local/bin/dfc-remna-install
+        rm -f /usr/local/bin/dfc-ri
+        rm -rf "${DIR_REMNAWAVE:-/usr/local/dfc-remna-install/}"
+        rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
+        cleanup_old_aliases
+    fi
+}
+
+handle_interrupt() {
+    cleanup_terminal
+    echo
+    echo -e "${RED}⚠️  Скрипт был остановлен пользователем${NC}"
+    echo
+    cleanup_uninstalled
+    exit 130
+}
+
+trap cleanup_terminal EXIT
+trap handle_interrupt INT TERM
