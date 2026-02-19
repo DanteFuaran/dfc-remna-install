@@ -3,29 +3,63 @@
 # ═══════════════════════════════════════════════════
 manage_ufw() {
     while true; do
-        clear
-        echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "${GREEN}        🔥 FIREWALL (UFW)${NC}"
-        echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo
+        # Проверяем установлен ли ufw
+        local ufw_installed=0
+        command -v ufw >/dev/null 2>&1 && ufw_installed=1
 
-        # Статус UFW
-        local ufw_status
-        ufw_status=$(ufw status 2>/dev/null | head -1)
-        if echo "$ufw_status" | grep -q "active"; then
-            print_success "UFW активен"
+        if [ "$ufw_installed" -eq 0 ]; then
+            show_arrow_menu "FIREWALL (UFW)" \
+                "🛡️   Установить Firewall (ufw)" \
+                "──────────────────────────────────────" \
+                "📋  Показать открытые порты" \
+                "➕  Открыть порт" \
+                "➖  Удалить правило" \
+                "──────────────────────────────────────" \
+                "❌  Назад"
+            local choice=$?
+
+            # Индекс 0 — установить ufw
+            if [ "$choice" -eq 0 ]; then
+                (apt-get install -y ufw >/dev/null 2>&1) &
+                show_spinner "Установка UFW"
+                if command -v ufw >/dev/null 2>&1; then
+                    print_success "UFW успешно установлен"
+                else
+                    print_error "Не удалось установить UFW"
+                fi
+                echo
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                continue
+            fi
+            # Разделитель (index 1) — пропускаем, остальные сдвинуты на 2
+            [ "$choice" -eq 1 ] && continue
+            choice=$((choice - 2))
         else
-            print_warning "UFW не активен"
-        fi
-        echo
+            # Статус UFW
+            clear
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo -e "${GREEN}        🔥 FIREWALL (UFW)${NC}"
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            echo
 
-        show_arrow_menu "FIREWALL (UFW)" \
-            "📋  Показать открытые порты" \
-            "➕  Открыть порт" \
-            "➖  Удалить правило" \
-            "──────────────────────────────────────" \
-            "❌  Назад"
-        local choice=$?
+            local ufw_status
+            ufw_status=$(ufw status 2>/dev/null | head -1)
+            if echo "$ufw_status" | grep -q "active"; then
+                print_success "UFW активен"
+            else
+                print_warning "UFW не активен"
+            fi
+            echo
+
+            show_arrow_menu "FIREWALL (UFW)" \
+                "📋  Показать открытые порты" \
+                "➕  Открыть порт" \
+                "➖  Удалить правило" \
+                "──────────────────────────────────────" \
+                "❌  Назад"
+            local choice=$?
+        fi
 
         case $choice in
             0)
