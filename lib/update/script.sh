@@ -106,10 +106,8 @@ remove_script_all() {
 
     echo -e "${RED}⚠️  ВСЕ ДАННЫЕ REMNAWAVE БУДУТ УДАЛЕНЫ!${NC}"
     echo
-
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
     if ! confirm_action; then
-        print_error "Операция отменена"
-        sleep 2
         return 1
     fi
 
@@ -143,8 +141,6 @@ remove_script() {
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     if ! confirm_action; then
-        print_error "Операция отменена"
-        sleep 2
         return
     fi
 

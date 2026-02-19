@@ -70,8 +70,10 @@ main_menu() {
         case "$action" in
             install)
                 local -a inst_items=() inst_actions=()
-                inst_items+=("📦  Панель + Нода (один сервер)"); inst_actions+=("full")
-                inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
+                if ! is_panel_installed && ! is_node_installed; then
+                    inst_items+=("📦  Панель + Нода (один сервер)"); inst_actions+=("full")
+                    inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
+                fi
                 inst_items+=("🖥️   Только панель"); inst_actions+=("panel")
                 inst_items+=("🌐  Только нода");    inst_actions+=("node")
                 if is_panel_installed; then

@@ -222,36 +222,55 @@ get_public_key() {
     local domain_url=$1
     local token=$2
     local target_dir=$3
+    local max_attempts=8
+    local attempt=1
 
-    local response
-    response=$(make_api_request "GET" "$domain_url/api/keygen" "$token")
-    local pubkey
-    pubkey=$(echo "$response" | jq -r '.response.pubKey // empty' 2>/dev/null)
+    while [ $attempt -le $max_attempts ]; do
+        local response
+        response=$(make_api_request "GET" "$domain_url/api/keygen" "$token")
+        local pubkey
+        pubkey=$(echo "$response" | jq -r '.response.pubKey // empty' 2>/dev/null)
 
-    if [ -z "$pubkey" ]; then
-        print_error "Не удалось получить публичный ключ из API"
-        return 1
-    fi
+        if [ -n "$pubkey" ]; then
+            sed -i "s|SECRET_KEY=.*|SECRET_KEY=\"$pubkey\"|" "$target_dir/docker-compose.yml" 2>/dev/null
+            return 0
+        fi
 
-    sed -i "s|SECRET_KEY=.*|SECRET_KEY=\"$pubkey\"|" "$target_dir/docker-compose.yml" 2>/dev/null
-    return 0
+        sleep 4
+        ((attempt++))
+    done
+
+    print_error "Не удалось получить публичный ключ из API"
+    return 1
 }
 
 generate_xray_keys() {
     local domain_url=$1
     local token=$2
+    local max_attempts=8
+    local attempt=1
 
-    local response
-    response=$(make_api_request "GET" "$domain_url/api/system/tools/x25519/generate" "$token")
-    local private_key
-    private_key=$(echo "$response" | jq -r '.response.keypairs[0].privateKey // empty' 2>/dev/null)
+    while [ $attempt -le $max_attempts ]; do
+        local response
+        response=$(make_api_request "GET" "$domain_url/api/system/tools/x25519/generate" "$token")
+        local private_key
+        private_key=$(echo "$response" | jq -r '.response.keypairs[0].privateKey // empty' 2>/dev/null)
 
-    if [ -z "$private_key" ] || [ "$private_key" = "null" ]; then
-        # Fallback - возможно другая версия API
-        private_key=$(echo "$response" | jq -r '.response.privateKey // empty' 2>/dev/null)
-    fi
+        if [ -z "$private_key" ] || [ "$private_key" = "null" ]; then
+            # Fallback - возможно другая версия API
+            private_key=$(echo "$response" | jq -r '.response.privateKey // empty' 2>/dev/null)
+        fi
 
-    echo "$private_key"
+        if [ -n "$private_key" ] && [ "$private_key" != "null" ]; then
+            echo "$private_key"
+            return 0
+        fi
+
+        sleep 4
+        ((attempt++))
+    done
+
+    echo ""
 }
 
 create_config_profile() {
