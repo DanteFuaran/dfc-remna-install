@@ -8,15 +8,15 @@ _INSTALL_DIR="/usr/local/dfc-remna-install"
 _REPO="DanteFuaran/dfc-remna-install"
 _BRANCH="dev"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Bootstrap: при запуске через curl pipe рядом нет lib/
-# Скачиваем полный архив репозитория и переключаемся на установленную копию
-if [ ! -d "${SCRIPT_DIR}/lib" ]; then
+# Bootstrap: при запуске через bash <(curl ...) скрипт читается из /dev/fd/N
+# В этом случае рядом нет lib/ — скачиваем архив и переключаемся на установленную копию
+_SELF="${BASH_SOURCE[0]}"
+if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
     echo "⏳ Загрузка скрипта..."
     mkdir -p "${_INSTALL_DIR}"
-    if ! curl -sL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" \
-        | tar -xz -C "${_INSTALL_DIR}" --strip-components=1; then
+    curl -sL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" \
+        | tar -xz -C "${_INSTALL_DIR}" --strip-components=1
+    if [ ! -f "${_INSTALL_DIR}/dfc-remna-install.sh" ]; then
         echo "✖ Ошибка загрузки. Проверьте соединение с интернетом."
         exit 1
     fi
