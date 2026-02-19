@@ -3,27 +3,31 @@
 # ═══════════════════════════════════════════════
 
 manage_start() {
+    local rw_path
+    rw_path=$(detect_remnawave_path) || return
     (
-        cd /opt/remnawave
+        cd "$rw_path"
         docker compose up -d >/dev/null 2>&1
     ) &
     show_spinner "Запуск сервисов"
     print_success "Сервисы запущены"
     echo
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
-        echo
+    echo
 }
 
 manage_stop() {
+    local rw_path
+    rw_path=$(detect_remnawave_path) || return
     (
-        cd /opt/remnawave
+        cd "$rw_path"
         docker compose down >/dev/null 2>&1
     ) &
     show_spinner "Остановка сервисов"
     print_success "Сервисы остановлены"
     echo
     read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
-        echo
+    echo
 }
 
 manage_update() {
@@ -33,14 +37,17 @@ manage_update() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
+    local rw_path
+    rw_path=$(detect_remnawave_path) || return
+
     (
-        cd /opt/remnawave
+        cd "$rw_path"
         docker compose pull >/dev/null 2>&1
     ) &
     show_spinner "Скачивание обновлений"
 
     (
-        cd /opt/remnawave
+        cd "$rw_path"
         docker compose up -d >/dev/null 2>&1
     ) &
     show_spinner "Перезапуск сервисов"
@@ -57,10 +64,12 @@ manage_update() {
 }
 
 manage_logs() {
+    local rw_path
+    rw_path=$(detect_remnawave_path) || return
     clear
     echo -e "${YELLOW}Для выхода из логов нажмите Ctrl+C${NC}"
     sleep 1
-    cd /opt/remnawave
+    cd "$rw_path"
     docker compose logs -f -t --tail 100
 }
 
@@ -77,17 +86,20 @@ manage_reinstall() {
         return
     fi
 
+    local rw_path
+    rw_path=$(detect_remnawave_path) || return
+
     (
-        cd /opt/remnawave
+        cd "$rw_path"
         docker compose down -v --rmi all >/dev/null 2>&1
         docker system prune -af >/dev/null 2>&1
     ) &
     show_spinner "Удаление контейнеров и данных"
 
     (
-        rm -f /opt/remnawave/.env
-        rm -f /opt/remnawave/docker-compose.yml
-        rm -f /opt/remnawave/nginx.conf
+        rm -f "$rw_path/.env"
+        rm -f "$rw_path/docker-compose.yml"
+        rm -f "$rw_path/nginx.conf"
     ) &
     show_spinner "Очистка конфигурации"
 
@@ -105,11 +117,11 @@ manage_reinstall() {
 
     case $choice in
         0) installation_full ;;
-        1) continue ;;
+        1) : ;;
         2) installation_panel ;;
         3) installation_node ;;
         4) add_node_to_panel ;;
-        5) continue ;;
+        5) : ;;
         6) return ;;
     esac
 }

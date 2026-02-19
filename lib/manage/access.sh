@@ -448,11 +448,10 @@ change_credentials() {
     ) &
     show_spinner "Остановка панели"
 
-    docker exec -i remnawave-db psql -U postgres -d postgres <<'EOSQL' >/dev/null 2>&1
+    if docker exec -i remnawave-db psql -U postgres -d postgres <<'EOSQL' >/dev/null 2>&1
 DELETE FROM admin;
 EOSQL
-
-    if [ $? -eq 0 ]; then
+    then
         print_success "Суперадмин удалён из базы данных"
     else
         print_error "Не удалось удалить суперадмина"

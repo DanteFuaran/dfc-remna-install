@@ -28,7 +28,7 @@ install_script() {
 }
 
 update_script() {
-    local force_update="$1"
+    local force_update="${1:-}"
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${GREEN}   🔄 ОБНОВЛЕНИЕ СКРИПТА${NC}"
@@ -179,7 +179,7 @@ remove_script() {
                 exit 0
             fi
             ;;
-        2) continue ;;
+        2) : ;;
         3) return ;;
     esac
 }

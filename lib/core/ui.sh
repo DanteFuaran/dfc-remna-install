@@ -22,6 +22,7 @@ show_spinner() {
         i=$(( (i+1) % 10 ))
         sleep $delay
     done
+    wait $pid 2>/dev/null || true
     printf "\r${GREEN}✅${NC} %s\n" "$msg"
     tput cnorm 2>/dev/null || true
 }
@@ -202,7 +203,7 @@ reading() {
     local input
     echo
     read -e -p "$(echo -e "${BLUE}➜${NC}  ${YELLOW}$prompt${NC} ")" input
-    eval "$var_name='$input'"
+    printf -v "$var_name" '%s' "$input"
 }
 
 reading_inline() {
@@ -231,7 +232,7 @@ reading_inline() {
         fi
     done
     echo
-    eval "$var_name='$input'"
+    printf -v "$var_name" '%s' "$input"
 }
 
 confirm_action() {

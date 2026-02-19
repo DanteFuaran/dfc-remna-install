@@ -35,13 +35,9 @@ cleanup_old_aliases() {
 
 # Тихая самоочистка если ничего не установлено
 cleanup_uninstalled() {
-    if [ ! -f "/opt/remnawave/docker-compose.yml" ]; then
-        rm -f /usr/local/bin/dfc-remna-install
-        rm -f /usr/local/bin/dfc-ri
-        rm -rf "${DIR_REMNAWAVE:-/usr/local/dfc-remna-install/}"
-        rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
-        cleanup_old_aliases
-    fi
+    # Не удаляем скрипт — он может понадобиться для установки
+    # Удаляем только если нет ни панели, ни ноды, ни скрипта в /usr/local
+    :  # Отключено — скрипт остаётся установленным после Ctrl+C
 }
 
 handle_interrupt() {

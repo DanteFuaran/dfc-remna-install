@@ -170,8 +170,7 @@ add_warp_to_config() {
     fi
 
     # Получаем токен
-    get_panel_token
-    if [ $? -ne 0 ]; then
+    if ! get_panel_token; then
         return 1
     fi
     local token
@@ -328,8 +327,7 @@ remove_warp_from_config() {
     fi
 
     # Получаем токен
-    get_panel_token
-    if [ $? -ne 0 ]; then
+    if ! get_panel_token; then
         return 1
     fi
     local token

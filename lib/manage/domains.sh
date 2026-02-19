@@ -108,8 +108,7 @@ change_panel_domain() {
     echo
 
     local panel_dir
-    panel_dir=$(detect_remnawave_path)
-    if [ $? -ne 0 ]; then
+    if ! panel_dir=$(detect_remnawave_path); then
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
         echo
@@ -226,8 +225,7 @@ change_sub_domain() {
     echo
 
     local panel_dir
-    panel_dir=$(detect_remnawave_path)
-    if [ $? -ne 0 ]; then
+    if ! panel_dir=$(detect_remnawave_path); then
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
         echo
@@ -317,8 +315,7 @@ change_node_domain() {
     echo
 
     local panel_dir
-    panel_dir=$(detect_remnawave_path)
-    if [ $? -ne 0 ]; then
+    if ! panel_dir=$(detect_remnawave_path); then
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
         echo
@@ -415,8 +412,7 @@ manage_domains() {
     echo
 
     local panel_dir
-    panel_dir=$(detect_remnawave_path)
-    if [ $? -ne 0 ]; then
+    if ! panel_dir=$(detect_remnawave_path); then
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
         echo
@@ -452,7 +448,7 @@ manage_domains() {
         0) change_panel_domain ;;
         1) change_sub_domain ;;
         2) change_node_domain ;;
-        3) continue ;;
+        3) : ;;
         4) return ;;
     esac
 }

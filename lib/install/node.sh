@@ -94,8 +94,7 @@ installation_node_local() {
 
     # Извлекаем cookie
     local COOKIE_NAME COOKIE_VALUE
-    get_cookie_from_nginx
-    if [ $? -ne 0 ]; then
+    if ! get_cookie_from_nginx; then
         print_error "Не удалось извлечь cookie из nginx.conf"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -149,8 +148,7 @@ installation_node_local() {
     done
 
     # ─── Авторизация в панели (до изменения конфигов) ───
-    get_panel_token
-    if [ $? -ne 0 ]; then
+    if ! get_panel_token; then
         echo -e "${YELLOW}Установка отменена${NC}"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -161,8 +159,7 @@ installation_node_local() {
     token=$(cat "${DIR_REMNAWAVE}/token")
 
     # ─── Проверка уникальности домена/имени в API (до изменения конфигов) ───
-    check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"
-    if [ $? -ne 0 ]; then
+    if ! check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"; then
         print_error "Домен $SELFSTEAL_DOMAIN уже используется в панели"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -275,8 +272,7 @@ installation_node_local() {
 
     show_spinner_timer 20 "Ожидание запуска Remnawave" "Запуск Remnawave"
 
-    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 120
-    if [ $? -ne 0 ]; then
+    if ! show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 120; then
         print_error "API не отвечает. Восстановление конфигурации..."
         _restore_panel_config
         echo
@@ -317,8 +313,7 @@ installation_node_local() {
 
     print_action "Создание конфиг-профиля ($entity_name)..."
     local config_result config_profile_uuid inbound_uuid
-    config_result=$(create_config_profile "$domain_url" "$token" "$entity_name" "$SELFSTEAL_DOMAIN" "$private_key" "$entity_name")
-    if [ $? -ne 0 ]; then
+    if ! config_result=$(create_config_profile "$domain_url" "$token" "$entity_name" "$SELFSTEAL_DOMAIN" "$private_key" "$entity_name"); then
         print_error "Не удалось создать конфигурационный профиль. Восстановление конфигурации..."
         _restore_panel_config
         echo
@@ -330,8 +325,7 @@ installation_node_local() {
     print_success "Конфигурационный профиль: $entity_name"
 
     print_action "Создание ноды ($entity_name)..."
-    create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "172.30.0.1" "$entity_name"
-    if [ $? -eq 0 ]; then
+    if create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "172.30.0.1" "$entity_name"; then
         print_success "Нода создана"
     else
         print_error "Не удалось создать ноду. Восстановление конфигурации..."
@@ -373,8 +367,7 @@ installation_node_local() {
     # Ожидаем готовность панели после перезапуска
     show_spinner_timer 15 "Ожидание запуска сервисов" "Запуск сервисов"
 
-    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности панели" 120
-    if [ $? -ne 0 ]; then
+    if ! show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности панели" 120; then
         print_error "Панель не отвечает после перезапуска. Восстановление..."
         _restore_panel_config
         echo
@@ -386,8 +379,7 @@ installation_node_local() {
     # ─── API: создание токена для subscription-page (если не было) ───
     if [ -z "$existing_api_token" ] || [ "$existing_api_token" = "\$api_token" ]; then
         print_action "Создание API токена для подписок..."
-        create_api_token "$domain_url" "$token" "/opt/remnawave"
-        if [ $? -eq 0 ]; then
+        if create_api_token "$domain_url" "$token" "/opt/remnawave"; then
             print_success "API токен создан"
             # Перезапускаем subscription-page с новым токеном
             (cd /opt/remnawave && docker compose up -d remnawave-subscription-page >/dev/null 2>&1) &
@@ -542,7 +534,7 @@ installation_node_remote() {
         case $cert_choice in
             0) CERT_METHOD=1 ;;
             1) CERT_METHOD=2 ;;
-            2) continue ;;
+            2) : ;;
             3) return ;;
         esac
 

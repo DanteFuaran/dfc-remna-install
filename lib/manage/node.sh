@@ -89,7 +89,7 @@ remove_node_from_panel() {
 
     show_spinner_timer 15 "Ожидание запуска панели" "Запуск панели"
 
-    if curl -s -f http://127.0.0.1:3000/api/auth_status >/dev/null 2>&1; then
+    if curl -s -f http://127.0.0.1:3000/api/auth/status >/dev/null 2>&1; then
         print_success "Панель запущена и работает"
     fi
 
@@ -131,8 +131,7 @@ add_node_to_panel() {
     echo -e "${DARKGRAY}через \"Только нода\".${NC}"
 
     echo
-    get_panel_token
-    if [ $? -ne 0 ]; then
+    if ! get_panel_token; then
         print_error "Не удалось получить токен"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
@@ -145,8 +144,7 @@ add_node_to_panel() {
     local SELFSTEAL_DOMAIN
     while true; do
         reading_inline "Введите selfsteal домен для ноды (например, node.example.com):" SELFSTEAL_DOMAIN
-        check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"
-        if [ $? -eq 0 ]; then
+        if check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"; then
             break
         fi
         echo -e "${YELLOW}Пожалуйста, используйте другой домен${NC}"
@@ -185,8 +183,7 @@ add_node_to_panel() {
 
     print_action "Создание конфиг-профиля ($entity_name)..."
     local config_result config_profile_uuid inbound_uuid
-    config_result=$(create_config_profile "$domain_url" "$token" "$entity_name" "$SELFSTEAL_DOMAIN" "$private_key" "$entity_name")
-    if [ $? -ne 0 ]; then
+    if ! config_result=$(create_config_profile "$domain_url" "$token" "$entity_name" "$SELFSTEAL_DOMAIN" "$private_key" "$entity_name"); then
         print_error "Не удалось создать конфигурационный профиль"
         return 1
     fi
@@ -194,8 +191,7 @@ add_node_to_panel() {
     print_success "Конфигурационный профиль: $entity_name"
 
     print_action "Создание ноды ($entity_name)..."
-    create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "$SELFSTEAL_DOMAIN" "$entity_name"
-    if [ $? -eq 0 ]; then
+    if create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "$SELFSTEAL_DOMAIN" "$entity_name"; then
         print_success "Нода создана"
     else
         print_error "Не удалось создать ноду"

@@ -84,7 +84,7 @@ installation_full() {
         case $cert_choice in
             0) CERT_METHOD=1 ;;
             1) CERT_METHOD=2 ;;
-            2) continue ;;
+            2) : ;;
             3) return ;;
         esac
 
@@ -165,8 +165,7 @@ installation_full() {
     local domain_url="127.0.0.1:3000"
     local target_dir="${DIR_PANEL}"
 
-    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 120
-    if [ $? -ne 0 ]; then
+    if ! show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 120; then
         print_error "API не отвечает. Проверьте: docker compose -f /opt/remnawave/docker-compose.yml logs"
         return
     fi
@@ -248,8 +247,7 @@ installation_full() {
 
     # 6. Создание ноды
     print_action "Создание ноды ($entity_name)..."
-    create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "172.30.0.1" "$entity_name"
-    if [ $? -eq 0 ]; then
+    if create_node "$domain_url" "$token" "$config_profile_uuid" "$inbound_uuid" "172.30.0.1" "$entity_name"; then
         print_success "Создание ноды"
     else
         print_error "Не удалось создать ноду"
@@ -294,7 +292,7 @@ installation_full() {
     # Ожидаем готовность после перезапуска
     show_spinner_timer 15 "Ожидание запуска сервисов" "Запуск сервисов"
 
-    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности панели" 120
+    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности панели" 120 || true
 
     # Верификация: ждём пока remnanode запустит xray на порту 443
     print_action "Ожидание подключения ноды (xray → порт 443)..."
@@ -317,8 +315,7 @@ installation_full() {
 
     # 12. Сброс суперадмина — при первом входе пользователь задаст свои данные
     print_action "Сброс суперадмина для первого входа..."
-    docker exec -i remnawave-db psql -U postgres -d postgres -c "DELETE FROM admin;" >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    if docker exec -i remnawave-db psql -U postgres -d postgres -c "DELETE FROM admin;" >/dev/null 2>&1; then
         print_success "Суперадмин сброшен"
     else
         print_error "Не удалось сбросить суперадмина"

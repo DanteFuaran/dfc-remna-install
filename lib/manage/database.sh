@@ -10,8 +10,7 @@ db_backup() {
     echo
 
     local panel_dir
-    panel_dir=$(detect_remnawave_path)
-    if [ $? -ne 0 ]; then
+    if ! panel_dir=$(detect_remnawave_path); then
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
         echo
@@ -74,8 +73,7 @@ db_restore() {
     echo
 
     local panel_dir
-    panel_dir=$(detect_remnawave_path)
-    if [ $? -ne 0 ]; then
+    if ! panel_dir=$(detect_remnawave_path); then
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
         echo
@@ -212,8 +210,7 @@ db_restore() {
 
     local domain_url="127.0.0.1:3000"
 
-    show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 60
-    if [ $? -ne 0 ]; then
+    if ! show_spinner_until_ready "http://$domain_url/api/auth/status" "Проверка доступности API" 60; then
         print_error "API не отвечает после восстановления"
         echo -e "${YELLOW}Запустите панель вручную и создайте администратора${NC}"
         echo
@@ -299,7 +296,7 @@ manage_database() {
     case $choice in
         0) db_backup ;;
         1) db_restore ;;
-        2) continue ;;
+        2) : ;;
         3) return ;;
     esac
 }
