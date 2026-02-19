@@ -12,10 +12,16 @@ _BRANCH="dev"
 # В этом случае рядом нет lib/ — скачиваем архив и переключаемся на установленную копию
 _SELF="${BASH_SOURCE[0]}"
 if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
+    # Если скрипт уже установлен — запускаем существующую копию без перезаписи
+    if [ -f "${_INSTALL_DIR}/dfc-remna-install.sh" ] && [ -d "${_INSTALL_DIR}/lib" ]; then
+        export REMNA_INSTALLED_RUN=1
+        exec "${_INSTALL_DIR}/dfc-remna-install.sh"
+    fi
+
+    # Первичная установка — скачиваем архив
     echo "⏳ Загрузка скрипта..."
     mkdir -p "${_INSTALL_DIR}" || { echo "✖ Ошибка создания ${_INSTALL_DIR}"; exit 1; }
     
-    # Скачиваем архив
     _TMP_FILE=$(mktemp)
     if ! curl -fsSL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" -o "${_TMP_FILE}" 2>/dev/null; then
         echo "✖ Ошибка загрузки архива. Проверьте соединение с интернетом."
@@ -23,7 +29,6 @@ if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
         exit 1
     fi
     
-    # Распаковываем
     if ! tar -xz -C "${_INSTALL_DIR}" --strip-components=1 -f "${_TMP_FILE}" 2>/dev/null; then
         echo "✖ Ошибка распаковки архива."
         rm -f "${_TMP_FILE}"
