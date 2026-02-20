@@ -11,15 +11,68 @@ installation_node() {
         clear
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "${RED}        ⚠️  Нода уже установлена${NC}"
+        echo -e "${RED}      ⚠️  Нода уже установлена${NC}"
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
         echo -e "${DARKGRAY}⚠️  На этом сервере уже установлена нода.${NC}"
-        echo -e "    ${DARKGRAY}Вы можете переустановить ноду из главного меню.${NC}"
+        echo -e "    ${DARKGRAY}Что бы переустановить ноду нажмите ${BLUE}Enter${DARKGRAY}.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        show_continue_prompt || return 1
-        return 0
+
+        # Промпт: Enter = переустановить, Esc = назад
+        tput civis 2>/dev/null
+        local _choice=0
+        while true; do
+            printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Переустановить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
+            local _nk
+            IFS= read -rsn1 _nk 2>/dev/null
+            if [[ "$_nk" == "" ]] || [[ "$_nk" == $'\n' ]] || [[ "$_nk" == $'\r' ]]; then
+                _choice=1; break
+            elif [[ "$_nk" == $'\x1b' ]]; then
+                IFS= read -rsn1 -t 0.1 _ns 2>/dev/null || true
+                [[ -z "$_ns" ]] && { _choice=0; break; }
+            fi
+        done
+        tput cnorm 2>/dev/null; echo
+
+        # Esc — выход в главное меню
+        [[ $_choice -eq 0 ]] && return 1
+
+        # Enter — подтверждение переустановки
+        clear
+        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo -e "${RED}      ⚠️  Подтверждение переустановки${NC}"
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        echo
+        echo -e "   ${RED}⚠️  Все данные текущей ноды будут удалены!${NC}"
+        echo -e "   ${DARKGRAY}Контейнер и тома ноды будут полностью очищены.${NC}"
+        echo -e "   ${DARKGRAY}Конфигурация ноды будет пересоздана заново.${NC}"
+        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        if ! confirm_action; then
+            return 0
+        fi
+
+        # Останавливаем и удаляем контейнер ноды с томами
+        (
+            cd /opt/remnawave 2>/dev/null
+            docker compose stop remnanode 2>/dev/null || true
+            docker compose rm -f -v remnanode 2>/dev/null || true
+        ) &
+        show_spinner "Удаление контейнера ноды"
+
+        # Если нода стоит отдельно (не на сервере панели) — чистим .env и compose
+        if ! [ -f "/opt/remnawave/nginx.conf" ]; then
+            (
+                cd /opt/remnawave 2>/dev/null
+                docker compose down -v 2>/dev/null || true
+                rm -f /opt/remnawave/docker-compose.yml
+                rm -f /opt/remnawave/.env
+            ) &
+            show_spinner "Очистка конфигурации ноды"
+        fi
+        # Продолжаем — is_local_panel будет пересчитан ниже
     fi
 
     # ─── Определяем режим: локальная панель или удалённая ───
