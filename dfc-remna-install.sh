@@ -20,27 +20,56 @@ if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
         exec "${_INSTALL_DIR}/dfc-remna-install.sh"
     fi
 
+    # Inline-спиннер (lib ещё не загружен)
+    _GREEN='\033[0;32m'; _RED='\033[0;31m'
+    _spinner_pid=""
+    _start_spinner() {
+        local _msg="$1"
+        ( local _spin=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏') _i=0
+          tput civis 2>/dev/null || true
+          while true; do
+              printf "\r\033[0;32m%s\033[0m  %s" "${_spin[$_i]}" "$_msg"
+              _i=$(( (_i+1) % 10 ))
+              sleep 0.08
+          done ) &
+        _spinner_pid=$!
+    }
+    _stop_spinner() {
+        local _msg="$1" _ok="${2:-1}"
+        [ -n "$_spinner_pid" ] && kill "$_spinner_pid" 2>/dev/null; wait "$_spinner_pid" 2>/dev/null || true
+        _spinner_pid=""
+        if [ "$_ok" = "1" ]; then
+            printf "\r${_GREEN}✅\033[0m %s\n" "$_msg"
+        else
+            printf "\r${_RED}✖\033[0m  %s\n" "$_msg"
+        fi
+        tput cnorm 2>/dev/null || true
+    }
+
     # Первичная установка — скачиваем архив
     mkdir -p "${_INSTALL_DIR}" || { echo "✖ Ошибка создания ${_INSTALL_DIR}"; exit 1; }
-    
+
     _TMP_FILE=$(mktemp)
-    if ! curl -fsSL --connect-timeout 15 --max-time 120 "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" -o "${_TMP_FILE}" 2>/dev/null; then
-        echo "✖ Ошибка загрузки архива. Проверьте соединение с интернетом."
+    _start_spinner "Подготовка скрипта к запуску"
+
+    if ! curl -fsSL --connect-timeout 15 --max-time 120 \
+            "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" \
+            -o "${_TMP_FILE}" 2>/dev/null \
+        || ! tar -xz -C "${_INSTALL_DIR}" --strip-components=1 -f "${_TMP_FILE}" 2>/dev/null; then
+        _stop_spinner "Подготовка скрипта к запуску" 0
         rm -f "${_TMP_FILE}"
-        exit 1
-    fi
-    
-    if ! tar -xz -C "${_INSTALL_DIR}" --strip-components=1 -f "${_TMP_FILE}" 2>/dev/null; then
-        echo "✖ Ошибка распаковки архива."
-        rm -f "${_TMP_FILE}"
+        echo "✖ Ошибка загрузки или распаковки архива. Проверьте соединение с интернетом."
         exit 1
     fi
     rm -f "${_TMP_FILE}"
-    
+
     if [ ! -f "${_INSTALL_DIR}/dfc-remna-install.sh" ]; then
+        _stop_spinner "Подготовка скрипта к запуску" 0
         echo "✖ Файл скрипта не найден. Архив повреждён?"
         exit 1
     fi
+
+    _stop_spinner "Подготовка скрипта к запуску"
     chmod +x "${_INSTALL_DIR}/dfc-remna-install.sh"
     mkdir -p /usr/local/bin
     ln -sf "${_INSTALL_DIR}/dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
