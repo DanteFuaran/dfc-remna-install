@@ -25,10 +25,11 @@ if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
     fi
 
     # Первичная установка — скачиваем архив
+    echo -e "${_BLUE}   Загрузка скрипта...${_NC}"
     mkdir -p "${_INSTALL_DIR}" || { echo "✖ Ошибка создания ${_INSTALL_DIR}"; exit 1; }
     
     _TMP_FILE=$(mktemp)
-    if ! curl -fsSL "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" -o "${_TMP_FILE}" 2>/dev/null; then
+    if ! curl -fsSL --connect-timeout 15 --max-time 120 "https://github.com/${_REPO}/archive/refs/heads/${_BRANCH}.tar.gz" -o "${_TMP_FILE}" 2>/dev/null; then
         echo "✖ Ошибка загрузки архива. Проверьте соединение с интернетом."
         rm -f "${_TMP_FILE}"
         exit 1

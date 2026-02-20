@@ -16,7 +16,7 @@ install_script() {
     fi
 
     # Первичная установка — скачиваем полный архив
-    if ! curl -sL "https://github.com/DanteFuaran/dfc-remna-install/archive/refs/heads/main.tar.gz" \
+    if ! curl -sL --connect-timeout 15 --max-time 120 "https://github.com/DanteFuaran/dfc-remna-install/archive/refs/heads/main.tar.gz" \
         | tar -xz -C "${DIR_REMNAWAVE}" --strip-components=1; then
         echo -e "${RED}✖ Не удалось скачать скрипт${NC}"
         exit 1
@@ -68,7 +68,7 @@ update_script() {
 
     (
         mkdir -p "${DIR_REMNAWAVE}"
-        curl -sL "https://github.com/DanteFuaran/dfc-remna-install/archive/refs/heads/main.tar.gz" \
+        curl -sL --connect-timeout 15 --max-time 120 "https://github.com/DanteFuaran/dfc-remna-install/archive/refs/heads/main.tar.gz" \
             | tar -xz -C "${DIR_REMNAWAVE}" --strip-components=1 2>/dev/null
         chmod +x "${DIR_REMNAWAVE}dfc-remna-install.sh"
         ln -sf "${DIR_REMNAWAVE}dfc-remna-install.sh" /usr/local/bin/dfc-remna-install
