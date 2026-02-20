@@ -118,18 +118,23 @@ get_cert_acme() {
     _tmp_log=$(mktemp)
     _exit_file="${_tmp_log}.exit"
 
+    # Открываем порт 80 синхронно — ДО запуска certbot
+    ufw allow 80/tcp >/dev/null 2>&1
+    ufw reload >/dev/null 2>&1
+
     (
-        ufw allow 80/tcp >/dev/null 2>&1
         certbot certonly --standalone \
             -d "$domain" \
             --email "$email" --agree-tos --non-interactive \
             --http-01-port 80 \
             --key-type ecdsa > "$_tmp_log" 2>&1
         echo $? > "$_exit_file"
-        ufw delete allow 80/tcp >/dev/null 2>&1
-        ufw reload >/dev/null 2>&1
     ) &
     show_spinner "Получение сертификата для $domain"
+
+    # Закрываем порт 80 синхронно — ПОСЛЕ завершения certbot
+    ufw delete allow 80/tcp >/dev/null 2>&1
+    ufw reload >/dev/null 2>&1
 
     local _exit_code
     _exit_code=$(cat "$_exit_file" 2>/dev/null || echo 1)
