@@ -11,14 +11,26 @@ installation_node() {
         clear
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "   ${YELLOW}⚠️  НОДА УЖЕ УСТАНОВЛЕНА${NC}"
+        echo -e "${RED}        ⚠️  Нода уже установлена${NC}"
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
-        echo -e "   ${WHITE}На этом сервере уже установлена нода.${NC}"
-        echo -e "   ${WHITE}Вы можете переустановить ноду из главного меню.${NC}"
+        echo -e "   ${DARKGRAY}⚠️  На этом сервере уже установлена нода.${NC}"
+        echo -e "       ${DARKGRAY}Вы можете переустановить ноду из главного меню.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
+        tput civis 2>/dev/null
+        while true; do
+            printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
+            local _nk
+            IFS= read -rsn1 _nk 2>/dev/null
+            if [[ "$_nk" == "" ]] || [[ "$_nk" == $'\n' ]] || [[ "$_nk" == $'\r' ]]; then
+                break
+            elif [[ "$_nk" == $'\x1b' ]]; then
+                IFS= read -rsn1 -t 0.1 _ns 2>/dev/null || true
+                [[ -z "$_ns" ]] && break
+            fi
+        done
+        tput cnorm 2>/dev/null
         echo
         return
     fi

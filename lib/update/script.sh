@@ -31,7 +31,7 @@ update_script() {
     local force_update="${1:-}"
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   🔄 ОБНОВЛЕНИЕ СКРИПТА${NC}"
+    echo -e "${GREEN}        🔄  Обновление скрипта${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
@@ -59,9 +59,23 @@ update_script() {
     echo
     
     if [ "$force_update" != "force" ] && [ "$installed_version" = "$remote_version" ]; then
+        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
         print_success "У вас уже установлена последняя версия"
-    echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
+        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        tput civis 2>/dev/null
+        while true; do
+            printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
+            local _k
+            IFS= read -rsn1 _k 2>/dev/null
+            if [[ "$_k" == "" ]] || [[ "$_k" == $'\n' ]] || [[ "$_k" == $'\r' ]]; then
+                break
+            elif [[ "$_k" == $'\x1b' ]]; then
+                IFS= read -rsn1 -t 0.1 _s 2>/dev/null || true
+                [[ -z "$_s" ]] && break
+            fi
+        done
+        tput cnorm 2>/dev/null
         echo
         return 0
     fi
