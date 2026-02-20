@@ -22,12 +22,12 @@ manage_extra_settings() {
         [[ $choice -eq 255 ]] && return
 
         case $choice in
-            0) manage_swap ;;
-            1) manage_warp ;;
-            2) manage_fail2ban ;;
-            3) manage_bbr ;;
-            4) manage_ufw ;;
-            5) manage_logrotate ;;
+            0) manage_swap || break ;;
+            1) manage_warp || break ;;
+            2) manage_fail2ban || break ;;
+            3) manage_bbr || break ;;
+            4) manage_ufw || break ;;
+            5) manage_logrotate || break ;;
             6) continue ;;
             7) return ;;
         esac

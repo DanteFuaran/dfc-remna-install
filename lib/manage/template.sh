@@ -98,6 +98,6 @@ manage_random_template() {
 
     print_success "Шаблон успешно изменён"
     echo
-    show_continue_prompt
+    show_continue_prompt || break
     done
 }

@@ -256,7 +256,7 @@ reading_inline() {
 }
 
 # Промпт "Enter: Продолжить    Esc: Назад"
-# Оба ключа возвращают 0 — назад на одно меню
+# Возвращает: 0 = Enter (назад на одно меню), 1 = Esc (в главное меню)
 show_continue_prompt() {
     tput civis 2>/dev/null
     while true; do
@@ -270,7 +270,7 @@ show_continue_prompt() {
             IFS= read -rsn1 -t 0.1 _cps 2>/dev/null || true
             if [[ -z "$_cps" ]]; then
                 tput cnorm 2>/dev/null; echo
-                return 0   # Esc → назад на одно меню
+                return 1   # Esc → в главное меню
             fi
         fi
     done

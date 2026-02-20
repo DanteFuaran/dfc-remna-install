@@ -290,8 +290,8 @@ manage_database() {
         local choice=$?
         [[ $choice -eq 255 ]] && return
         case $choice in
-            0) db_backup ;;
-            1) db_restore ;;
+            0) db_backup || break ;;
+            1) db_restore || break ;;
             2) : ;;
             3) return ;;
         esac

@@ -87,7 +87,7 @@ update_script() {
         print_success "Скрипт успешно обновлён до версии v$new_installed_version"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        show_continue_prompt
+        show_continue_prompt || return 0
         exec /usr/local/bin/dfc-remna-install
     else
         print_error "Ошибка при обновлении скрипта"

@@ -31,8 +31,8 @@ manage_panel_access() {
         [[ $choice -eq 255 ]] && return
 
         case $choice in
-            0) open_panel_access ;;
-            1) close_panel_access ;;
+            0) open_panel_access || break ;;
+            1) close_panel_access || break ;;
             2)
                 clear
                 local COOKIE_NAME COOKIE_VALUE
@@ -55,11 +55,11 @@ manage_panel_access() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                show_continue_prompt
+                show_continue_prompt || break
                 ;;
             3) ;;
-            4) change_credentials ;;
-            5) regenerate_cookies ;;
+            4) change_credentials || break ;;
+            5) regenerate_cookies || break ;;
             6) manage_domains ;;
             7) ;;
             8) return ;;
