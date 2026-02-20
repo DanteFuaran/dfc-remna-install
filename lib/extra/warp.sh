@@ -119,7 +119,65 @@ install_warp_native() {
     echo
 
     (
-        { echo "2"; echo "${warp_key:-}"; } | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh) >/dev/null 2>&1
+        # 1. Установка WireGuard
+        apt-get update -qq >/dev/null 2>&1
+        apt-get install -y wireguard >/dev/null 2>&1
+
+        # 2. Определяем архитектуру и скачиваем wgcf
+        local arch
+        case $(uname -m) in
+            x86_64)          arch="amd64" ;;
+            aarch64|arm64)   arch="arm64" ;;
+            armv7l)          arch="armv7" ;;
+            *)               arch="amd64" ;;
+        esac
+        local wgcf_version
+        wgcf_version=$(curl -sL --max-time 10 "https://api.github.com/repos/ViRb3/wgcf/releases/latest" 2>/dev/null | grep '"tag_name"' | cut -d'"' -f4)
+        if [ -z "$wgcf_version" ]; then
+            exit 1
+        fi
+        local wgcf_bin="wgcf_${wgcf_version#v}_linux_${arch}"
+        wget -q "https://github.com/ViRb3/wgcf/releases/download/${wgcf_version}/${wgcf_bin}" -O /tmp/wgcf 2>/dev/null
+        chmod +x /tmp/wgcf
+        mv /tmp/wgcf /usr/local/bin/wgcf
+
+        # 3. Регистрация
+        cd /tmp
+        rm -f wgcf-account.toml wgcf-profile.conf 2>/dev/null
+        timeout 60 bash -c 'yes | wgcf register' >/dev/null 2>&1 || \
+            { echo | wgcf register >/dev/null 2>&1; sleep 2; }
+
+        # 4. Применяем WARP+ ключ если задан
+        if [ -n "${warp_key:-}" ]; then
+            wgcf update --license-key "${warp_key}" >/dev/null 2>&1 || true
+        fi
+
+        # 5. Генерация конфигурации
+        wgcf generate >/dev/null 2>&1
+
+        # 6. Редактирование конфигурации
+        local conf="/tmp/wgcf-profile.conf"
+        sed -i '/^DNS =/d' "$conf"
+        grep -q 'Table = off' "$conf"           || sed -i '/^MTU =/aTable = off' "$conf"
+        grep -q 'PersistentKeepalive' "$conf"  || sed -i '/^Endpoint =/aPersistentKeepalive = 25' "$conf"
+
+        # 7. IPv6
+        local ipv6_ok=false
+        sysctl net.ipv6.conf.all.disable_ipv6 2>/dev/null | grep -q ' = 0' && \
+        sysctl net.ipv6.conf.default.disable_ipv6 2>/dev/null | grep -q ' = 0' && \
+        ip -6 addr show scope global 2>/dev/null | grep -qv 'fe80::' && ipv6_ok=true
+        if [ "$ipv6_ok" = false ]; then
+            sed -i 's/,\s*[0-9a-fA-F:]*\/128//' "$conf"
+            sed -i '/Address = [0-9a-fA-F:]*\/128/d' "$conf"
+        fi
+
+        # 8. Перемещаем конфигурацию
+        mkdir -p /etc/wireguard
+        mv "$conf" /etc/wireguard/warp.conf
+
+        # 9. Запускаем и включаем автозапуск
+        systemctl start wg-quick@warp >/dev/null 2>&1
+        systemctl enable wg-quick@warp >/dev/null 2>&1
     ) &
     show_spinner "Установка WARP"
     echo
@@ -172,7 +230,16 @@ uninstall_warp_native() {
     echo
 
     (
-        echo "2" | bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/uninstall.sh) >/dev/null 2>&1
+        # Останавливаем интерфейс
+        wg-quick down warp >/dev/null 2>&1 || true
+        systemctl disable wg-quick@warp >/dev/null 2>&1 || true
+        # Удаляем файлы
+        rm -f /etc/wireguard/warp.conf 2>/dev/null || true
+        rm -f /usr/local/bin/wgcf 2>/dev/null || true
+        rm -f /tmp/wgcf-account.toml /tmp/wgcf-profile.conf 2>/dev/null || true
+        # Удаляем пакеты
+        DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y wireguard >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive apt-get autoremove -y >/dev/null 2>&1 || true
     ) &
     show_spinner "Удаление WARP"
     echo
