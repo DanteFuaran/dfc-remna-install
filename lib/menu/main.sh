@@ -72,43 +72,46 @@ main_menu() {
 
         case "$action" in
             install)
-                local -a inst_items=() inst_actions=()
-                if ! is_panel_installed && ! is_node_installed; then
-                    inst_items+=("📦  Панель + Нода (один сервер)"); inst_actions+=("full")
+                while true; do
+                    local -a inst_items=() inst_actions=()
+                    if ! is_panel_installed && ! is_node_installed; then
+                        inst_items+=("📦  Панель + Нода (один сервер)"); inst_actions+=("full")
+                        inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
+                    fi
+                    if ! is_panel_installed; then
+                        inst_items+=("🖥️   Только панель"); inst_actions+=("panel")
+                    fi
+                    inst_items+=("🌐  Только нода");    inst_actions+=("node")
+                    if is_panel_installed; then
+                        inst_items+=("➕  Подключить ноду в панель"); inst_actions+=("add_node")
+                    fi
                     inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
-                fi
-                if ! is_panel_installed; then
-                    inst_items+=("🖥️   Только панель"); inst_actions+=("panel")
-                fi
-                inst_items+=("🌐  Только нода");    inst_actions+=("node")
-                if is_panel_installed; then
-                    inst_items+=("➕  Подключить ноду в панель"); inst_actions+=("add_node")
-                fi
-                inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
-                inst_items+=("❌  Назад"); inst_actions+=("back")
+                    inst_items+=("❌  Назад"); inst_actions+=("back")
 
-                show_arrow_menu "📦  Выберите тип установки" "${inst_items[@]}"
-                local install_choice=$?
-                local inst_action="${inst_actions[$install_choice]:-back}"
-                case "$inst_action" in
-                    full)
-                        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-                            install_packages
-                        fi
-                        installation_full ;;
-                    panel)
-                        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-                            install_packages
-                        fi
-                        installation_panel ;;
-                    node)
-                        if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
-                            install_packages
-                        fi
-                        installation_node ;;
-                    add_node) add_node_to_panel ;;
-                    *) continue ;;
-                esac ;;
+                    show_arrow_menu "📦  Выберите тип установки" "${inst_items[@]}"
+                    local install_choice=$?
+                    [[ $install_choice -eq 255 ]] && break
+                    local inst_action="${inst_actions[$install_choice]:-back}"
+                    case "$inst_action" in
+                        full)
+                            if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+                                install_packages
+                            fi
+                            installation_full ;;
+                        panel)
+                            if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+                                install_packages
+                            fi
+                            installation_panel ;;
+                        node)
+                            if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
+                                install_packages
+                            fi
+                            installation_node ;;
+                        add_node) add_node_to_panel ;;
+                        *) break ;;
+                    esac
+                done ;;
             reinstall)        manage_reinstall ;;
             start)            manage_start ;;
             stop)             manage_stop ;;
