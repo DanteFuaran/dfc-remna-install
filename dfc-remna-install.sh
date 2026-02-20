@@ -6,7 +6,7 @@
 
 _INSTALL_DIR="/usr/local/dfc-remna-install"
 _REPO="DanteFuaran/dfc-remna-install"
-_BRANCH="dev"
+_BRANCH="main"
 
 # Bootstrap: при запуске через bash <(curl ...) скрипт читается из /dev/fd/N
 # В этом случае рядом нет lib/ — скачиваем архив и переключаемся на установленную копию
