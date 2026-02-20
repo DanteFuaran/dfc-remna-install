@@ -103,7 +103,8 @@ get_cert_cloudflare() {
     rm -f "$_tmp_log" "$_exit_file"
 
     # Добавляем cron для обновления
-    local cron_rule="0 3 * * * certbot renew --quiet --deploy-hook 'cd ${DIR_PANEL} && docker compose restart remnawave-nginx' 2>/dev/null"
+    local _deploy_hook='for d in /opt/remnawave /opt/remnanode; do [ -f "$d/docker-compose.yml" ] && cd "$d" && docker compose restart remnawave-nginx 2>/dev/null; done'
+    local cron_rule="0 3 * * * certbot renew --quiet --deploy-hook '${_deploy_hook}' 2>/dev/null"
     if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
         (crontab -l 2>/dev/null; echo "$cron_rule") | crontab -
     fi
@@ -143,7 +144,8 @@ get_cert_acme() {
 
     rm -f "$_tmp_log" "$_exit_file"
 
-    local cron_rule="0 3 * * * certbot renew --quiet --deploy-hook 'cd ${DIR_PANEL} && docker compose restart remnawave-nginx' 2>/dev/null"
+    local _deploy_hook='for d in /opt/remnawave /opt/remnanode; do [ -f "$d/docker-compose.yml" ] && cd "$d" && docker compose restart remnawave-nginx 2>/dev/null; done'
+    local cron_rule="0 3 * * * certbot renew --quiet --pre-hook 'ufw allow 80/tcp >/dev/null 2>&1' --post-hook 'ufw delete allow 80/tcp >/dev/null 2>&1; ufw reload >/dev/null 2>&1' --deploy-hook '${_deploy_hook}' 2>/dev/null"
     if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
         (crontab -l 2>/dev/null; echo "$cron_rule") | crontab -
     fi
