@@ -39,6 +39,9 @@ apply_template() {
     IFS='|' read -r id name <<< "$template_data"
     
     echo ""
+
+    # Создаём директорию если не существует
+    mkdir -p /var/www/html/
     
     # Очищаем директорию (кроме метаданных)
     find /var/www/html/ -mindepth 1 -not -name '.current_template' -not -name '.template_changed' -delete 2>/dev/null
