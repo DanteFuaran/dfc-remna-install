@@ -66,36 +66,11 @@ get_panel_token() {
             echo -e "${YELLOW}Зайдите в панель, перейдите в 'API токены' -> 'Создать новый токен'${NC}"
             echo -e "${YELLOW}Скопируйте созданный токен и введите его ниже.${NC}"
 
-            local first_api=true
             while true; do
-                if [ "$first_api" = true ]; then
-                    reading "Введите API-токен: " token
-                    first_api=false
-                else
-                    reading_inline "Введите API-токен: " token
-                fi
-
-                if [ -z "$token" ]; then
-                    print_error "Токен не введён"
-                    echo
-                    echo -e "${DARKGRAY}Нажмите Enter чтобы ввести токен заново, или Esc для отмены.${NC}"
-                    local key
-                    while true; do
-                        read -s -n 1 key
-                        if [[ "$key" == $'\x1b' ]]; then
-                            echo
-                            return 1
-                        elif [[ "$key" == "" ]]; then
-                            local lines_up=4
-                            for ((l=0; l<lines_up; l++)); do
-                                tput cuu1 2>/dev/null
-                                tput el 2>/dev/null
-                            done
-                            break
-                        fi
-                    done
-                    continue
-                fi
+                reading_inline "Введите API-токен: " token
+                local _rc_token=$?
+                if [[ $_rc_token -eq 2 ]]; then return 1; fi
+                if [ -z "$token" ]; then continue; fi
 
                 local test_response
                 test_response=$(make_api_request "GET" "$domain_url/api/config-profiles" "$token")
@@ -106,17 +81,8 @@ get_panel_token() {
                     local key
                     while true; do
                         read -s -n 1 key
-                        if [[ "$key" == $'\x1b' ]]; then
-                            echo
-                            return 1
-                        elif [[ "$key" == "" ]]; then
-                            local lines_up=4
-                            for ((l=0; l<lines_up; l++)); do
-                                tput cuu1 2>/dev/null
-                                tput el 2>/dev/null
-                            done
-                            break
-                        fi
+                        if [[ "$key" == $'\x1b' ]]; then echo; return 1; fi
+                        [[ "$key" == "" ]] && break
                     done
                     continue
                 fi
@@ -124,15 +90,25 @@ get_panel_token() {
                 break
             done
         else
-            local first_login=true
+            local _login_step=1
+            local username="" password=""
             while true; do
-                if [ "$first_login" = true ]; then
-                    reading "Введите логин панели: " username
-                    first_login=false
-                else
+                if [[ $_login_step -eq 1 ]]; then
                     reading_inline "Введите логин панели: " username
+                    local _rc_u=$?
+                    if [[ $_rc_u -eq 2 ]]; then return 1; fi
+                    if [[ -z "$username" ]]; then continue; fi
+                    _login_step=2
                 fi
+
                 reading_inline "Введите пароль панели: " password
+                local _rc_p=$?
+                if [[ $_rc_p -eq 2 ]]; then
+                    _login_step=1
+                    username=""
+                    continue
+                fi
+                if [[ -z "$password" ]]; then continue; fi
 
                 local login_response
                 login_response=$(make_api_request "POST" "$domain_url/api/auth/login" "" \
@@ -145,19 +121,14 @@ get_panel_token() {
 
                 print_error "Неверный логин или пароль"
                 echo
-                echo -e "${DARKGRAY}Нажмите Enter чтобы ввести данные заново, или Esc для отмены.${NC}"
+                echo -e "${DARKGRAY}Нажмите Enter чтобы ввести заново, или Esc для отмены.${NC}"
                 local key
                 while true; do
                     read -s -n 1 key
-                    if [[ "$key" == $'\x1b' ]]; then
-                        echo
-                        return 1
-                    elif [[ "$key" == "" ]]; then
-                        local lines_up=5
-                        for ((l=0; l<lines_up; l++)); do
-                            tput cuu1 2>/dev/null
-                            tput el 2>/dev/null
-                        done
+                    if [[ "$key" == $'\x1b' ]]; then echo; return 1; fi
+                    if [[ "$key" == "" ]]; then
+                        _login_step=1
+                        username=""
                         break
                     fi
                 done
