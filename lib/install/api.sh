@@ -69,7 +69,7 @@ get_panel_token() {
             while true; do
                 reading_inline "Введите API-токен: " token
                 local _rc_token=$?
-                if [[ $_rc_token -eq 2 ]]; then return 1; fi
+                if [[ $_rc_token -eq 2 ]]; then return 2; fi
                 if [ -z "$token" ]; then continue; fi
 
                 local test_response
@@ -83,7 +83,7 @@ get_panel_token() {
                         read -s -n 1 key
                         if [[ "$key" == $'\x1b' ]]; then
                             local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
-                            echo; return 1
+                            echo; return 2
                         fi
                         [[ "$key" == "" ]] && break
                     done
@@ -99,7 +99,7 @@ get_panel_token() {
                 if [[ $_login_step -eq 1 ]]; then
                     reading_inline "Введите логин панели: " username
                     local _rc_u=$?
-                    if [[ $_rc_u -eq 2 ]]; then return 1; fi
+                    if [[ $_rc_u -eq 2 ]]; then return 2; fi
                     if [[ -z "$username" ]]; then
                         print_error "Логин не может быть пустым"
                         echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
@@ -109,7 +109,7 @@ get_panel_token() {
                             read -s -n 1 _key
                             if [[ "$_key" == $'\x1b' ]]; then
                                 local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
-                                echo; return 1
+                                echo; return 2
                             fi
                             if [[ "$_key" == "" ]]; then
                                 for ((i=0; i<4; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
@@ -139,7 +139,7 @@ get_panel_token() {
                         read -s -n 1 _key
                         if [[ "$_key" == $'\x1b' ]]; then
                             local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
-                            echo; return 1
+                            echo; return 2
                         fi
                         if [[ "$_key" == "" ]]; then
                             for ((i=0; i<4; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
@@ -167,7 +167,7 @@ get_panel_token() {
                     read -s -n 1 key
                     if [[ "$key" == $'\x1b' ]]; then
                         local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
-                        echo; return 1
+                        echo; return 2
                     fi
                     if [[ "$key" == "" ]]; then
                         for ((i=0; i<6; i++)); do

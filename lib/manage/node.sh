@@ -135,7 +135,10 @@ add_node_to_panel() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${DARKGRAY}  Enter: Подтвердить     Esc: Отмена${NC}"
     echo
-    if ! get_panel_token; then
+    local _gpt_rc
+    get_panel_token; _gpt_rc=$?
+    if [[ $_gpt_rc -eq 2 ]]; then return; fi
+    if [[ $_gpt_rc -ne 0 ]]; then
         print_error "Не удалось получить токен"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"

@@ -155,7 +155,10 @@ installation_node_local() {
     done
 
     # ─── Авторизация в панели (до изменения конфигов) ───
-    if ! get_panel_token; then
+    local _gpt_rc
+    get_panel_token; _gpt_rc=$?
+    if [[ $_gpt_rc -eq 2 ]]; then return; fi
+    if [[ $_gpt_rc -ne 0 ]]; then
         echo -e "${YELLOW}Установка отменена${NC}"
         echo
         read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
