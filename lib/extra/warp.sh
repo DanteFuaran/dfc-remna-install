@@ -22,7 +22,7 @@ manage_warp() {
         echo
         echo -e "${YELLOW}На сервере нет приложений требующих WARP${NC}"
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -58,7 +58,7 @@ manage_warp() {
         items+=("❌  Назад");                               actions+=("back")
     fi
 
-    show_arrow_menu "WARP" "${items[@]}"
+    show_arrow_menu "🌐  WARP" "${items[@]}"
     local choice=$?
     local action="${actions[$choice]:-back}"
 
@@ -85,7 +85,7 @@ install_warp_native() {
         echo -e "${YELLOW}⚠️  Нода не найдена на этом сервере${NC}"
         echo -e "${DARKGRAY}WARP работает только с установленной нодой.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 1
     fi
@@ -100,7 +100,7 @@ install_warp_native() {
     if ip link show warp 2>/dev/null | grep -q "warp"; then
         print_success "WARP уже установлен"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 0
     fi
@@ -196,7 +196,7 @@ install_warp_native() {
 
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }
 
@@ -212,7 +212,7 @@ uninstall_warp_native() {
         print_error "WARP не установлен"
         echo
         echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 0
     fi
@@ -254,7 +254,7 @@ uninstall_warp_native() {
 
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }
 
@@ -294,7 +294,7 @@ add_warp_to_config() {
     if [ -z "$config_response" ] || ! echo "$config_response" | jq -e '.response.configProfiles' >/dev/null 2>&1; then
         print_error "Не удалось получить список конфигураций"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 1
     fi
@@ -305,7 +305,7 @@ add_warp_to_config() {
     if [ -z "$configs" ]; then
         print_error "Конфигурации не найдены"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 1
     fi
@@ -326,7 +326,7 @@ add_warp_to_config() {
     menu_items+=("──────────────────────────────────────")
     menu_items+=("❌  Назад")
 
-    show_arrow_menu "ВЫБЕРИТЕ КОНФИГУРАЦИЮ" "${menu_items[@]}"
+    show_arrow_menu "📄  Выберите конфигурацию" "${menu_items[@]}"
     local choice=$?
 
     # Проверка - выбран ли разделитель или "Назад"
@@ -358,7 +358,7 @@ add_warp_to_config() {
     if echo "$config_json" | jq -e '.outbounds[] | select(.tag == "warp-out")' >/dev/null 2>&1; then
         echo -e "${YELLOW}⚠️  WARP уже добавлен в эту конфигурацию${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 0
     fi
@@ -411,7 +411,7 @@ add_warp_to_config() {
     fi
 
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }
 
@@ -477,7 +477,7 @@ remove_warp_from_config() {
     menu_items+=("──────────────────────────────────────")
     menu_items+=("❌  Назад")
 
-    show_arrow_menu "ВЫБЕРИТЕ КОНФИГУРАЦИЮ" "${menu_items[@]}"
+    show_arrow_menu "📄  Выберите конфигурацию" "${menu_items[@]}"
     local choice=$?
 
     # Проверка - выбран ли разделитель или "Назад"
@@ -524,7 +524,7 @@ remove_warp_from_config() {
         echo
         echo -e "${YELLOW}WARP не был настроен в этой конфигурации${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 0
     fi
@@ -542,6 +542,6 @@ remove_warp_from_config() {
     fi
 
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }

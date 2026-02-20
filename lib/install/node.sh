@@ -18,7 +18,7 @@ installation_node() {
         echo -e "   ${WHITE}Вы можете переустановить ноду из главного меню.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
         echo
         return
     fi
@@ -88,7 +88,7 @@ installation_node_local() {
     if [ -z "$panel_domain" ] || [ -z "$sub_domain" ]; then
         print_error "Не удалось определить домены из nginx.conf"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -98,7 +98,7 @@ installation_node_local() {
     if ! get_cookie_from_nginx; then
         print_error "Не удалось извлечь cookie из nginx.conf"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -161,7 +161,7 @@ installation_node_local() {
     if [[ $_gpt_rc -ne 0 ]]; then
         echo -e "${YELLOW}Установка отменена${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -172,7 +172,7 @@ installation_node_local() {
     if ! check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"; then
         print_error "Домен $SELFSTEAL_DOMAIN уже используется в панели"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -182,7 +182,7 @@ installation_node_local() {
     if echo "$response" | jq -e ".response.configProfiles[] | select(.name == \"$entity_name\")" >/dev/null 2>&1; then
         print_error "Имя конфигурационного профиля '$entity_name' уже используется"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -199,7 +199,7 @@ installation_node_local() {
 
         if [ "$CERT_METHOD" = "1" ]; then
             if [ ! -f "/etc/letsencrypt/cloudflare.ini" ]; then
-                show_arrow_menu "🔐 МЕТОД ПОЛУЧЕНИЯ СЕРТИФИКАТА ДЛЯ НОДЫ" \
+                show_arrow_menu "🔐  Метод получения сертификата" \
                     "☁️   Cloudflare DNS-01 (wildcard)" \
                     "🌐  ACME HTTP-01 (Let's Encrypt)" \
                     "──────────────────────────────────────" \
@@ -224,7 +224,7 @@ installation_node_local() {
 
         if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
             echo
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
             echo
             return
         fi
@@ -291,7 +291,7 @@ installation_node_local() {
         print_error "API не отвечает. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -305,7 +305,7 @@ installation_node_local() {
         print_error "Не удалось установить публичный ключ. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -320,7 +320,7 @@ installation_node_local() {
         print_error "Не удалось сгенерировать ключи. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -332,7 +332,7 @@ installation_node_local() {
         print_error "Не удалось создать конфигурационный профиль. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -346,7 +346,7 @@ installation_node_local() {
         print_error "Не удалось создать ноду. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -386,7 +386,7 @@ installation_node_local() {
         print_error "Панель не отвечает после перезапуска. Восстановление..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -486,7 +486,7 @@ installation_node_local() {
     echo -e "${DARKGRAY}Панель доступна по порту 8443 (XRAY занимает 443)${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }
 
@@ -539,7 +539,7 @@ installation_node_remote() {
 
     if check_if_certificates_needed domains_to_check; then
         echo
-        show_arrow_menu "🔐 МЕТОД ПОЛУЧЕНИЯ СЕРТИФИКАТОВ" \
+        show_arrow_menu "🔐  Метод получения сертификатов" \
             "☁️   Cloudflare DNS-01 (wildcard)" \
             "🌐  ACME HTTP-01 (Let's Encrypt)" \
             "──────────────────────────────────────" \
@@ -563,7 +563,7 @@ installation_node_remote() {
         if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
             echo
             [ "$is_fresh_install" = true ] && rm -rf "${NODE_INSTALL_DIR}" "${DIR_REMNAWAVE}" 2>/dev/null
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
             echo
             return
         fi
@@ -669,6 +669,6 @@ EOL
     echo
     echo -e "${YELLOW}Проверьте подключение ноды в панели Remnawave${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }

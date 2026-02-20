@@ -78,7 +78,7 @@ get_panel_token() {
                     print_error "Токен недействителен"
                     echo
                     echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-                    echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
+                    echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Повторить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
                     local key
                     while true; do
                         read -s -n 1 key
@@ -106,7 +106,7 @@ get_panel_token() {
                         print_error "Логин не может быть пустым"
                         echo
                         echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-                        echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
+                        echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Повторить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
                         local _key
                         while true; do
                             read -s -n 1 _key
@@ -138,7 +138,7 @@ get_panel_token() {
                     print_error "Пароль не может быть пустым"
                     echo
                     echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-                    echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
+                    echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Повторить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
                     local _key
                     while true; do
                         read -s -n 1 _key
@@ -167,7 +167,7 @@ get_panel_token() {
                 print_error "Неверный логин или пароль"
                 echo
                 echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-                echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
+                echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Повторить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
                 local key
                 while true; do
                     read -s -n 1 key

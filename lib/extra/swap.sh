@@ -42,7 +42,7 @@ manage_swap() {
         swapon --show 2>/dev/null
         echo
 
-        show_arrow_menu "SWAP" \
+        show_arrow_menu "💾  Управление SWAP" \
             "💾  Пересоздать SWAP (${swap_size_gb} GB)" \
             "🗑️   Удалить SWAP" \
             "──────────────────────────────────────" \
@@ -81,7 +81,7 @@ manage_swap() {
                 print_success "SWAP удалён"
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
                 echo
                 return
                 ;;
@@ -92,7 +92,7 @@ manage_swap() {
         echo -e "${YELLOW}⚠️  SWAP не настроен на сервере${NC}"
         echo
 
-        show_arrow_menu "SWAP" \
+        show_arrow_menu "💾  Управление SWAP" \
             "💾  Создать SWAP (${swap_size_gb} GB)" \
             "──────────────────────────────────────" \
             "❌  Назад"
@@ -120,7 +120,7 @@ manage_swap() {
         print_error "Недостаточно места на диске для создания SWAP"
         echo -e "${DARKGRAY}Свободно: $((free_space_kb / 1024)) MB, требуется: $((needed_kb / 1024)) MB${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return 1
     fi
@@ -160,6 +160,6 @@ manage_swap() {
 
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     echo
 }

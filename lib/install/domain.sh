@@ -155,7 +155,7 @@ prompt_domain_with_retry() {
 
         echo
         echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-        echo -e "${DARKGRAY}   Enter: Повторить     Esc: Назад${NC}"
+        echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Повторить     ${BLUE}Esc${DARKGRAY}: Назад${NC}"
 
         local key
         while true; do

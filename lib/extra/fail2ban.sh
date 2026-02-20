@@ -32,7 +32,7 @@ manage_fail2ban() {
         done
         echo
 
-        show_arrow_menu "FAIL2BAN" \
+        show_arrow_menu "🛡️  Fail2ban" \
             "⚙️   Настройки" \
             "🔄  Перезапустить Fail2ban" \
             "🗑️   Удалить Fail2ban" \
@@ -110,7 +110,7 @@ JAIL_EOF
                 echo -e "  ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
                 echo
                 echo -e "${BLUE}════════════════════════════════${NC}"
-                read -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+                read -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
                 return
                 ;;
             1)
@@ -121,7 +121,7 @@ JAIL_EOF
                 show_spinner "Перезапуск Fail2ban"
                 print_success "Fail2ban перезапущен"
                 echo
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
                 echo
                 return
                 ;;
@@ -142,7 +142,7 @@ JAIL_EOF
                 show_spinner "Удаление Fail2ban"
                 print_success "Fail2ban удалён"
                 echo
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
                 echo
                 return
                 ;;
@@ -156,7 +156,7 @@ JAIL_EOF
         echo -e "${DARKGRAY}блокируя IP-адреса после нескольких неудачных попыток входа.${NC}"
         echo
 
-        show_arrow_menu "FAIL2BAN" \
+        show_arrow_menu "🛡️  Fail2ban" \
             "📥  Установить Fail2ban" \
             "──────────────────────────────────────" \
             "❌  Назад"
@@ -185,7 +185,7 @@ JAIL_EOF
         if ! command -v fail2ban-client >/dev/null 2>&1; then
             print_error "Не удалось установить Fail2ban"
             echo
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
             echo
             return 1
         fi
@@ -228,6 +228,6 @@ JAIL_EOF
 
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
     fi
 }

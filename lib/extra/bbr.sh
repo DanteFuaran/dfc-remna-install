@@ -25,7 +25,7 @@ manage_bbr() {
 
     if [ "$current_cc" = "bbr" ]; then
         # BBR включён — показываем только "Выключить"
-        show_arrow_menu "BBR" \
+        show_arrow_menu "🚀  BBR" \
             "❌  Выключить BBR" \
             "──────────────────────────────────────" \
             "↩️   Назад"
@@ -51,14 +51,14 @@ manage_bbr() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
                 echo
                 ;;
             *) return ;;
         esac
     else
         # BBR выключен — показываем только "Включить"
-        show_arrow_menu "BBR" \
+        show_arrow_menu "🚀  BBR" \
             "✅  Включить BBR" \
             "──────────────────────────────────────" \
             "↩️   Назад"
@@ -86,7 +86,7 @@ manage_bbr() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
                 echo
                 ;;
             *) return ;;

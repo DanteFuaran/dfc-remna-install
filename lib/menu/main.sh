@@ -63,8 +63,11 @@ main_menu() {
         items+=("──────────────────────────────────────"); actions+=("sep")
         items+=("❌  Выход");                         actions+=("exit")
 
+        MENU_ESC_LABEL="Выход"
         show_arrow_menu "$menu_title" "${items[@]}"
         local choice=$?
+        unset MENU_ESC_LABEL
+        [[ $choice -eq 255 ]] && { cleanup_terminal; exit 0; }
         local action="${actions[$choice]:-}"
 
         case "$action" in
@@ -84,7 +87,7 @@ main_menu() {
                 inst_items+=("──────────────────────────────────────"); inst_actions+=("sep")
                 inst_items+=("❌  Назад"); inst_actions+=("back")
 
-                show_arrow_menu "📦 ВЫБЕРИТЕ ТИП УСТАНОВКИ" "${inst_items[@]}"
+                show_arrow_menu "📦  Выберите тип установки" "${inst_items[@]}"
                 local install_choice=$?
                 local inst_action="${inst_actions[$install_choice]:-back}"
                 case "$inst_action" in
@@ -127,7 +130,7 @@ main_menu() {
                 del_items+=("──────────────────────────────────────");        del_actions+=("sep")
                 del_items+=("❌  Назад");                                      del_actions+=("back")
 
-                show_arrow_menu "🗑️ УДАЛЕНИЕ КОМПОНЕНТОВ" "${del_items[@]}"
+                show_arrow_menu "🗑️  Удаление компонентов" "${del_items[@]}"
                 local del_choice=$?
                 local del_action="${del_actions[$del_choice]:-back}"
                 case "$del_action" in

@@ -9,7 +9,7 @@ manage_extra_settings() {
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
 
-        show_arrow_menu "ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ" \
+        show_arrow_menu "⚙️  Дополнительные настройки" \
             "💾  SWAP" \
             "🌐  WARP" \
             "🛡️   Fail2ban" \

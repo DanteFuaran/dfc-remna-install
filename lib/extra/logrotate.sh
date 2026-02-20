@@ -33,7 +33,7 @@ manage_logrotate() {
     echo -e "  ${WHITE}max-file${NC}: ${YELLOW}${docker_max_file}${NC}"
     echo
 
-    show_arrow_menu "LOGROTATE" \
+    show_arrow_menu "📝  Logrotate" \
         "📝  Настроить ротацию системных логов" \
         "🐳  Настроить ротацию Docker логов" \
         "──────────────────────────────────────" \
@@ -53,7 +53,7 @@ manage_logrotate() {
             echo -e "${DARKGRAY}Как часто делать ротацию логов:${NC}"
             echo
 
-            show_arrow_menu "ЧАСТОТА РОТАЦИИ" \
+            show_arrow_menu "⏱️  Частота ротации" \
                 "  1 час" \
                 "  2 часа" \
                 "  3 часа" \
@@ -101,7 +101,7 @@ CRON_EOF
             print_success "Ротация: каждые ${rotate_hours}ч, хранить ${keep_count} ротаций"
             echo
             echo -e "${BLUE}══════════════════════════════════════${NC}"
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
             echo
             ;;
         1)
@@ -115,7 +115,7 @@ CRON_EOF
             echo -e "${DARKGRAY}Максимальный размер одного лог-файла:${NC}"
             echo
 
-            show_arrow_menu "РАЗМЕР ЛОГА" \
+            show_arrow_menu "📦  Размер лога" \
                 " 10m" \
                 " 20m" \
                 " 50m" \
@@ -162,7 +162,7 @@ DOCKER_EOF
             echo -e "${YELLOW}⚠️  Docker перезапущен. Контейнеры будут перезапущены автоматически.${NC}"
             echo
             echo -e "${BLUE}══════════════════════════════════════${NC}"
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
             echo
             ;;
         2) return ;;

@@ -116,7 +116,17 @@ show_arrow_menu() {
     while true; do
         clear
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "${GREEN}   $title${NC}"
+        if [[ "$title" == *\\* ]]; then
+            echo -e "${GREEN}$title${NC}"
+        else
+            local _clean
+            _clean=$(echo -e "$title" | sed 's/\x1b\[[0-9;]*m//g')
+            local _vlen=${#_clean}
+            local _pad=$(( (38 - _vlen) / 2 ))
+            [ $_pad -lt 0 ] && _pad=0
+            printf "%${_pad}s" ""
+            echo -e "${GREEN}$title${NC}"
+        fi
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
 
@@ -134,7 +144,8 @@ show_arrow_menu() {
 
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "${DARKGRAY}   ↑↓: Навигация    Enter: Выбор    Esc: Назад${NC}"
+        local _esc_label="${MENU_ESC_LABEL:-Назад}"
+        echo -e "${DARKGRAY}${BLUE}↑↓${DARKGRAY}: Навигация  ${BLUE}Enter${DARKGRAY}: Выбор  ${BLUE}Esc${DARKGRAY}: ${_esc_label}${NC}"
         echo
 
         local key
@@ -245,7 +256,7 @@ reading_inline() {
 }
 
 confirm_action() {
-    echo -e "${DARKGRAY}   Enter: Подтвердить     Esc: Отмена${NC}"
+    echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Подтвердить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
     tput civis  # Скрыть курсор
 
     local key

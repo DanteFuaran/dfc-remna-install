@@ -17,7 +17,7 @@ installation_panel() {
         echo -e "${WHITE}На этом сервере уже установлена панель.${NC}"
         echo -e "${WHITE}Используйте опцию ${GREEN}"🔄 Переустановить"${WHITE} в главном меню.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -54,7 +54,7 @@ installation_panel() {
 
     if check_if_certificates_needed domains_to_check; then
         echo
-        show_arrow_menu "🔐 МЕТОД ПОЛУЧЕНИЯ СЕРТИФИКАТОВ" \
+        show_arrow_menu "🔐  Метод получения сертификатов" \
             "☁️   Cloudflare DNS-01 (wildcard)" \
             "🌐  ACME HTTP-01 (Let's Encrypt)" \
             "──────────────────────────────────────" \
@@ -79,7 +79,7 @@ installation_panel() {
         if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
             echo
             [ "$is_fresh_install" = true ] && rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
             echo
             return
         fi
@@ -166,7 +166,7 @@ installation_panel() {
         echo
         echo -e "${RED}⚠️  ОБЯЗАТЕЛЬНО СКОПИРУЙТЕ И СОХРАНИТЕ ЭТИ ДАННЫЕ!${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
         return
     fi
@@ -221,6 +221,6 @@ installation_panel() {
     echo
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
 }
