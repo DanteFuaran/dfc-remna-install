@@ -9,7 +9,6 @@ installation_node() {
     # Проверяем, не установлена ли уже нода
     if [ -f "/opt/remnawave/docker-compose.yml" ] && grep -q "remnanode" /opt/remnawave/docker-compose.yml; then
         clear
-        echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo -e "${RED}      ⚠️  Нода уже установлена${NC}"
         echo -e "${BLUE}══════════════════════════════════════${NC}"
@@ -23,7 +22,7 @@ installation_node() {
         tput civis 2>/dev/null
         local _choice=0
         while true; do
-            printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Переустановить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
+            printf "${DARKGRAY} ${BLUE}Enter${DARKGRAY}: Переустановить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
             local _nk
             IFS= read -rsn1 _nk 2>/dev/null
             if [[ "$_nk" == "" ]] || [[ "$_nk" == $'\n' ]] || [[ "$_nk" == $'\r' ]]; then
