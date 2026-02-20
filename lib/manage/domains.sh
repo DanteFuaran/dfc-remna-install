@@ -443,6 +443,7 @@ manage_domains() {
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
+    [[ $choice -eq 255 ]] && return
 
     case $choice in
         0) change_panel_domain ;;

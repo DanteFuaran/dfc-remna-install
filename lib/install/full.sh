@@ -80,6 +80,7 @@ installation_full() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local cert_choice=$?
+        [[ $cert_choice -eq 255 ]] && return
 
         case $cert_choice in
             0) CERT_METHOD=1 ;;

@@ -17,6 +17,7 @@ manage_ufw() {
                 "──────────────────────────────────────" \
                 "❌  Назад"
             local choice=$?
+            [[ $choice -eq 255 ]] && return
 
             # Индекс 0 — установить ufw
             if [ "$choice" -eq 0 ]; then
@@ -64,6 +65,7 @@ manage_ufw() {
                 "──────────────────────────────────────" \
                 "❌  Назад"
             local choice=$?
+            [[ $choice -eq 255 ]] && return
         fi
 
         case $choice in

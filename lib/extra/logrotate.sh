@@ -39,6 +39,7 @@ manage_logrotate() {
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
+    [[ $choice -eq 255 ]] && return
 
     case $choice in
         0)

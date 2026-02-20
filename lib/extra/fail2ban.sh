@@ -39,6 +39,7 @@ manage_fail2ban() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
+        [[ $choice -eq 255 ]] && return
 
         case $choice in
             0)
@@ -160,6 +161,7 @@ JAIL_EOF
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
+        [[ $choice -eq 255 ]] && return
 
         case $choice in
             0) ;; # продолжаем установку

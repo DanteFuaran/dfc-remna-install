@@ -31,7 +31,8 @@ manage_random_template() {
         "📋  Выбрать из списка" \
         "❌  Назад"
     local choice=$?
-    
+    [[ $choice -eq 255 ]] && return
+
     case $choice in
         0)
             clear
@@ -65,7 +66,8 @@ manage_random_template() {
                 "💼  Vertex Advisory - Консалтинг центр" \
                 "❌  Назад"
             local template_choice=$?
-            
+            [[ $template_choice -eq 255 ]] && return
+
             if [ $template_choice -eq 20 ]; then
                 return
             fi

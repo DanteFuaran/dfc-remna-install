@@ -134,7 +134,7 @@ show_arrow_menu() {
 
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        echo -e "${DARKGRAY}Используйте ↑↓ для навигации, Enter для выбора${NC}"
+        echo -e "${DARKGRAY}   ↑↓: Навигация    Enter: Выбор    Esc: Назад${NC}"
         echo
 
         local key
@@ -174,6 +174,10 @@ show_arrow_menu() {
                         done
                         ;;
                 esac
+            else
+                # Чистый Esc без последовательности — назад
+                _restore_term
+                return 255
             fi
         else
             local key_code

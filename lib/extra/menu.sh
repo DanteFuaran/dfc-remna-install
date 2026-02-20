@@ -19,6 +19,7 @@ manage_extra_settings() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
+        [[ $choice -eq 255 ]] && return
 
         case $choice in
             0) manage_swap ;;

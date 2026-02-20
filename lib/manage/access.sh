@@ -38,6 +38,7 @@ manage_panel_access() {
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
+    [[ $choice -eq 255 ]] && return
 
     case $choice in
         0) open_panel_access ;;

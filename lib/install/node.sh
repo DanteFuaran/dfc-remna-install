@@ -14,11 +14,11 @@ installation_node() {
         echo -e "   ${YELLOW}⚠️  НОДА УЖЕ УСТАНОВЛЕНА${NC}"
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
-        echo -e "${RED}На этом сервере уже установлена нода.${NC}"
-        echo -e "${RED}Используйте опцию 🔄 Переустановить в главном меню.${NC}"
+        echo -e "   ${WHITE}На этом сервере уже установлена нода.${NC}"
+        echo -e "   ${WHITE}Вы можете переустановить ноду из главного меню.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return
     fi
@@ -545,6 +545,7 @@ installation_node_remote() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local cert_choice=$?
+        [[ $cert_choice -eq 255 ]] && return
 
         case $cert_choice in
             0) CERT_METHOD=1 ;;

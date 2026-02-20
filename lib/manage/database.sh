@@ -292,6 +292,7 @@ manage_database() {
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
+    [[ $choice -eq 255 ]] && return
 
     case $choice in
         0) db_backup ;;

@@ -48,6 +48,7 @@ manage_swap() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
+        [[ $choice -eq 255 ]] && return
 
         case $choice in
             0)
@@ -96,6 +97,7 @@ manage_swap() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
+        [[ $choice -eq 255 ]] && return
 
         case $choice in
             0) ;; # продолжаем создание
