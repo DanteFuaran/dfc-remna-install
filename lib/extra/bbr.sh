@@ -53,7 +53,7 @@ manage_bbr() {
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 show_continue_prompt || return 1
                 ;;
-            *) return ;;
+            *) return 0 ;;
         esac
     else
         # BBR выключен — показываем только "Включить"
@@ -87,7 +87,7 @@ manage_bbr() {
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 show_continue_prompt || return 1
                 ;;
-            *) return ;;
+            *) return 0 ;;
         esac
     fi
 }

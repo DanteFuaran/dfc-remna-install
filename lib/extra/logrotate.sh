@@ -39,7 +39,7 @@ manage_logrotate() {
         "──────────────────────────────────────" \
         "❌  Назад"
     local choice=$?
-    [[ $choice -eq 255 ]] && return
+    [[ $choice -eq 255 ]] && return 0
 
     case $choice in
         0)
@@ -70,7 +70,7 @@ manage_logrotate() {
                 3) rotate_hours=6 ;;
                 4) rotate_hours=12 ;;
                 5) rotate_hours=24 ;;
-                *) return ;;
+                *) return 0 ;;
             esac
 
             echo
@@ -131,7 +131,7 @@ CRON_EOF
                 3) log_size="100m" ;;
                 4) log_size="200m" ;;
                 5) log_size="500m" ;;
-                *) return ;;
+                *) return 0 ;;
             esac
 
             echo
@@ -163,7 +163,7 @@ DOCKER_EOF
             echo -e "${BLUE}══════════════════════════════════════${NC}"
             show_continue_prompt || return 1
             ;;
-        2) return ;;
-        3) return ;;
+        2) return 0 ;;
+        3) return 0 ;;
     esac
 }

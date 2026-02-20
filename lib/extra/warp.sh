@@ -23,7 +23,7 @@ manage_warp() {
         echo -e "${YELLOW}На сервере нет приложений требующих WARP${NC}"
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         show_continue_prompt || return 1
-        return
+        return 0
     fi
 
     # Только панель (без ноды) — только пункты конфигурации
@@ -66,7 +66,7 @@ manage_warp() {
         uninstall) uninstall_warp_native ;;
         add_config) add_warp_to_config ;;
         del_config) remove_warp_from_config ;;
-        *) return ;;
+        *) return 0 ;;
     esac
 }
 

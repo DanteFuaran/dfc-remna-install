@@ -39,7 +39,7 @@ manage_fail2ban() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
-        [[ $choice -eq 255 ]] && return
+        [[ $choice -eq 255 ]] && return 0
 
         case $choice in
             0)
@@ -111,7 +111,7 @@ JAIL_EOF
                 echo
                 echo -e "${BLUE}════════════════════════════════${NC}"
                 show_continue_prompt || return 1
-                return
+                return 0
                 ;;
             1)
                 echo
@@ -122,7 +122,7 @@ JAIL_EOF
                 print_success "Fail2ban перезапущен"
                 echo
                 show_continue_prompt || return 1
-                return
+                return 0
                 ;;
             2)
                 echo
@@ -142,10 +142,10 @@ JAIL_EOF
                 print_success "Fail2ban удалён"
                 echo
                 show_continue_prompt || return 1
-                return
+                return 0
                 ;;
-            3) return ;;
-            4) return ;;
+            3) return 0 ;;
+            4) return 0 ;;
         esac
     else
         echo -e "${YELLOW}⚠️  Fail2ban не установлен${NC}"
@@ -159,12 +159,12 @@ JAIL_EOF
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
-        [[ $choice -eq 255 ]] && return
+        [[ $choice -eq 255 ]] && return 0
 
         case $choice in
             0) ;; # продолжаем установку
-            1) return ;;
-            2) return ;;
+            1) return 0 ;;
+            2) return 0 ;;
         esac
 
         clear
@@ -184,7 +184,7 @@ JAIL_EOF
             print_error "Не удалось установить Fail2ban"
             echo
             show_continue_prompt || return 1
-            return 1
+            return 0
         fi
 
         # Создаём jail.local для SSH

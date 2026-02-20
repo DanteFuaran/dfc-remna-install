@@ -17,7 +17,7 @@ manage_ufw() {
                 "──────────────────────────────────────" \
                 "❌  Назад"
             local choice=$?
-            [[ $choice -eq 255 ]] && return
+            [[ $choice -eq 255 ]] && return 0
 
             # Индекс 0 — установить ufw
             if [ "$choice" -eq 0 ]; then
@@ -35,7 +35,7 @@ manage_ufw() {
             # Разделитель (index 1) — пропускаем
             [ "$choice" -eq 1 ] && continue
             # Назад (index 6 в не-установленном меню) — возвращаемся
-            [ "$choice" -eq 6 ] && return
+            [ "$choice" -eq 6 ] && return 0
             # Остальные сдвинуты на 2 (убираем "Установить" и разделитель)
             choice=$((choice - 2))
         else
@@ -64,7 +64,7 @@ manage_ufw() {
                 "──────────────────────────────────────" \
                 "❌  Назад"
             local choice=$?
-            [[ $choice -eq 255 ]] && return
+            [[ $choice -eq 255 ]] && return 0
         fi
 
         case $choice in
@@ -216,7 +216,7 @@ manage_ufw() {
                 show_continue_prompt || return 1
                 ;;
             5) continue ;;
-            6) return ;;
+            6) return 0 ;;
         esac
     done
 }

@@ -48,7 +48,7 @@ manage_swap() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
-        [[ $choice -eq 255 ]] && return
+        [[ $choice -eq 255 ]] && return 0
 
         case $choice in
             0)
@@ -82,10 +82,10 @@ manage_swap() {
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
                 show_continue_prompt || return 1
-                return
+                return 0
                 ;;
-            2) return ;;
-            3) return ;;
+            2) return 0 ;;
+            3) return 0 ;;
         esac
     else
         echo -e "${YELLOW}⚠️  SWAP не настроен на сервере${NC}"
@@ -96,12 +96,12 @@ manage_swap() {
             "──────────────────────────────────────" \
             "❌  Назад"
         local choice=$?
-        [[ $choice -eq 255 ]] && return
+        [[ $choice -eq 255 ]] && return 0
 
         case $choice in
             0) ;; # продолжаем создание
-            1) return ;;
-            2) return ;;
+            1) return 0 ;;
+            2) return 0 ;;
         esac
     fi
 
@@ -120,7 +120,7 @@ manage_swap() {
         echo -e "${DARKGRAY}Свободно: $((free_space_kb / 1024)) MB, требуется: $((needed_kb / 1024)) MB${NC}"
         echo
         show_continue_prompt || return 1
-        return 1
+        return 0
     fi
 
     # Создаём swapfile
