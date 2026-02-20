@@ -122,6 +122,9 @@ get_cert_acme() {
     # Открываем порт 80 синхронно — ДО запуска certbot
     ufw allow 80/tcp >/dev/null 2>&1 || true
     ufw reload >/dev/null 2>&1 || true
+    # iptables fallback если ufw не управляет правилами
+    iptables -I INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+    sleep 1
 
     (
         set +e
@@ -137,6 +140,7 @@ get_cert_acme() {
     # Закрываем порт 80 синхронно — ПОСЛЕ завершения certbot
     ufw delete allow 80/tcp >/dev/null 2>&1 || true
     ufw reload >/dev/null 2>&1 || true
+    iptables -D INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
 
     local _exit_code
     _exit_code=$(cat "$_exit_file" 2>/dev/null || echo 1)

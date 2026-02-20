@@ -14,10 +14,6 @@ cd /opt >/dev/null 2>&1 || true
 # В этом случае рядом нет lib/ — скачиваем архив и переключаемся на установленную копию
 _SELF="${BASH_SOURCE[0]}"
 if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
-    _BLUE='\033[1;34m'; _NC='\033[0m'
-    echo -e "${_BLUE}⏳ Происходит подготовка к запуску... Пожалуйста, подождите${_NC}"
-    echo ""
-
     # Если скрипт уже установлен — запускаем существующую копию без перезаписи
     if [ -f "${_INSTALL_DIR}/dfc-remna-install.sh" ] && [ -d "${_INSTALL_DIR}/lib" ]; then
         export REMNA_INSTALLED_RUN=1
@@ -25,7 +21,6 @@ if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
     fi
 
     # Первичная установка — скачиваем архив
-    echo -e "${_BLUE}   Загрузка скрипта...${_NC}"
     mkdir -p "${_INSTALL_DIR}" || { echo "✖ Ошибка создания ${_INSTALL_DIR}"; exit 1; }
     
     _TMP_FILE=$(mktemp)
@@ -108,10 +103,7 @@ source "${SCRIPT_DIR}/lib/menu/main.sh"
 # ═══════════════════════════════════════════════
 # ТОЧКА ВХОДА
 # ═══════════════════════════════════════════════
-if [ "${REMNA_INSTALLED_RUN:-}" != "1" ]; then
-    echo -e "${BLUE}⏳ Происходит подготовка установки... Пожалуйста, подождите${NC}"
-    echo ""
-fi
+
 
 check_root
 check_os
