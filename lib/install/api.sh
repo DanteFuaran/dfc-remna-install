@@ -101,9 +101,11 @@ get_panel_token() {
                     local _rc_u=$?
                     if [[ $_rc_u -eq 2 ]]; then return 2; fi
                     if [[ -z "$username" ]]; then
+                        echo
                         print_error "Логин не может быть пустым"
+                        echo
                         echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-                        echo -e "${DARKGRAY}Enter: Повторить     Esc: Отмена${NC}"
+                        echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
                         local _key
                         while true; do
                             read -s -n 1 _key
@@ -112,7 +114,7 @@ get_panel_token() {
                                 echo; return 2
                             fi
                             if [[ "$_key" == "" ]]; then
-                                for ((i=0; i<4; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
+                                for ((i=0; i<6; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
                                 break
                             fi
                         done
@@ -131,9 +133,11 @@ get_panel_token() {
                     continue
                 fi
                 if [[ -z "$password" ]]; then
+                    echo
                     print_error "Пароль не может быть пустым"
+                    echo
                     echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-                    echo -e "${DARKGRAY}Enter: Повторить     Esc: Отмена${NC}"
+                    echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
                     local _key
                     while true; do
                         read -s -n 1 _key
@@ -142,7 +146,7 @@ get_panel_token() {
                             echo; return 2
                         fi
                         if [[ "$_key" == "" ]]; then
-                            for ((i=0; i<4; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
+                            for ((i=0; i<6; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
                             break
                         fi
                     done
