@@ -88,11 +88,7 @@ update_script() {
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         show_continue_prompt
-        local _upd_ret=$?
-        if [[ $_upd_ret -eq 1 ]]; then
-            exec /usr/local/bin/dfc-remna-install
-        fi
-        return 0
+        exec /usr/local/bin/dfc-remna-install
     else
         print_error "Ошибка при обновлении скрипта"
         echo

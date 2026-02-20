@@ -3,6 +3,7 @@
 # ═══════════════════════════════════════════════
 
 manage_random_template() {
+    while true; do
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo -e "${GREEN}   🎨 СМЕНА ШАБЛОНА САЙТА-ЗАГЛУШКИ${NC}"
@@ -97,5 +98,6 @@ manage_random_template() {
 
     print_success "Шаблон успешно изменён"
     echo
-    show_continue_prompt || return 1
+    show_continue_prompt
+    done
 }

@@ -97,18 +97,18 @@ main_menu() {
                             if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                                 install_packages
                             fi
-                            installation_full; [[ $? -eq 1 ]] && break ;;
+                            installation_full ;;
                         panel)
                             if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                                 install_packages
                             fi
-                            installation_panel; [[ $? -eq 1 ]] && break ;;
+                            installation_panel ;;
                         node)
                             if [ ! -f "${DIR_REMNAWAVE}install_packages" ] || ! command -v docker >/dev/null 2>&1; then
                                 install_packages
                             fi
-                            installation_node; [[ $? -eq 1 ]] && break ;;
-                        add_node) add_node_to_panel; [[ $? -eq 1 ]] && break ;;
+                            installation_node ;;
+                        add_node) add_node_to_panel ;;
                         *) break ;;
                     esac
                 done ;;

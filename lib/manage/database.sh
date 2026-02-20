@@ -281,24 +281,19 @@ db_restore() {
 }
 
 manage_database() {
-    clear
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   💾  БАЗА ДАННЫХ${NC}"
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo
-
-    show_arrow_menu "💾  Работа с базой данных" \
-        "💾  Сохранить базу данных" \
-        "📥  Загрузить базу данных" \
-        "──────────────────────────────────────" \
-        "❌  Назад"
-    local choice=$?
-    [[ $choice -eq 255 ]] && return
-
-    case $choice in
-        0) db_backup ;;
-        1) db_restore ;;
-        2) : ;;
-        3) return ;;
-    esac
+    while true; do
+        show_arrow_menu "💾  Работа с базой данных" \
+            "💾  Сохранить базу данных" \
+            "📥  Загрузить базу данных" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+        [[ $choice -eq 255 ]] && return
+        case $choice in
+            0) db_backup ;;
+            1) db_restore ;;
+            2) : ;;
+            3) return ;;
+        esac
+    done
 }

@@ -3,76 +3,68 @@
 # ═══════════════════════════════════════════════════
 
 manage_panel_access() {
-    clear
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   🔓 ДОСТУП К ПАНЕЛИ${NC}"
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo
+    while true; do
+        # Показываем текущий статус доступа по 8443
+        local _8443_status
+        if grep -q "# ─── 8443 Fallback" /opt/remnawave/nginx.conf 2>/dev/null; then
+            _8443_status="${GREEN}открыт${NC}"
+        else
+            _8443_status="${RED}закрыт${NC}"
+        fi
 
-    # Показываем текущий статус доступа по 8443
-    if grep -q "# ─── 8443 Fallback" /opt/remnawave/nginx.conf 2>/dev/null; then
-        echo -e "${WHITE}Доступ по 8443:${NC} ${GREEN}открыт${NC}"
-    else
-        echo -e "${WHITE}Доступ по 8443:${NC} ${RED}закрыт${NC}"
-    fi
+        # Показываем cookie-ссылку
+        local COOKIE_NAME COOKIE_VALUE _panel_domain
+        get_cookie_from_nginx 2>/dev/null
+        _panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf 2>/dev/null | head -1)
 
-    # Показываем cookie-ссылку
-    local COOKIE_NAME COOKIE_VALUE
-    if get_cookie_from_nginx; then
-        local panel_domain
-        panel_domain=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
-        echo
-        echo -e "${WHITE}🔗 Cookie-ссылка на панель:${NC}"
-        echo -e "${DARKGRAY}https://${panel_domain}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
-    fi
-    echo
+        show_arrow_menu "🔓  Доступ к панели" \
+            "🔓  Открыть доступ по 8443" \
+            "🔒  Закрыть доступ по 8443" \
+            "🔗  Показать cookie-ссылку" \
+            "──────────────────────────────────────" \
+            "🔐  Сбросить суперадмина" \
+            "🍪  Сменить cookie доступа" \
+            "🌐  Редактировать домены" \
+            "──────────────────────────────────────" \
+            "❌  Назад"
+        local choice=$?
+        [[ $choice -eq 255 ]] && return
 
-    show_arrow_menu "🔓  Доступ к панели" \
-        "🔓  Открыть доступ по 8443" \
-        "🔒  Закрыть доступ по 8443" \
-        "🔗  Показать cookie-ссылку" \
-        "──────────────────────────────────────" \
-        "🔐  Сбросить суперадмина" \
-        "🍪  Сменить cookie доступа" \
-        "🌐  Редактировать домены" \
-        "──────────────────────────────────────" \
-        "❌  Назад"
-    local choice=$?
-    [[ $choice -eq 255 ]] && return
-
-    case $choice in
-        0) open_panel_access ;;
-        1) close_panel_access ;;
-        2)
-            clear
-            local COOKIE_NAME COOKIE_VALUE
-            if get_cookie_from_nginx; then
-                local pd
-                pd=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
-                echo
-                echo -e "${GREEN}🔗 Cookie-ссылка на панель (основной порт):${NC}"
-                echo -e "${WHITE}https://${pd}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
-                echo
-                if grep -q "# ─── 8443 Fallback" /opt/remnawave/nginx.conf 2>/dev/null; then
-                    echo -e "${GREEN}🔗 Cookie-ссылка на панель (доступ по 8443):${NC}"
-                    echo -e "${WHITE}https://${pd}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+        case $choice in
+            0) open_panel_access ;;
+            1) close_panel_access ;;
+            2)
+                clear
+                local COOKIE_NAME COOKIE_VALUE
+                if get_cookie_from_nginx; then
+                    local pd
+                    pd=$(grep -oP 'server_name\s+\K[^;]+' /opt/remnawave/nginx.conf | head -1)
+                    echo
+                    echo -e "${GREEN}🔗 Cookie-ссылка на панель (основной порт):${NC}"
+                    echo -e "${WHITE}https://${pd}/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+                    echo
+                    if grep -q "# ─── 8443 Fallback" /opt/remnawave/nginx.conf 2>/dev/null; then
+                        echo -e "${GREEN}🔗 Cookie-ссылка на панель (доступ по 8443):${NC}"
+                        echo -e "${WHITE}https://${pd}:8443/?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
+                        echo
+                    fi
+                else
+                    echo
+                    print_error "Не удалось извлечь cookie из nginx.conf"
                     echo
                 fi
-            else
                 echo
-                print_error "Не удалось извлечь cookie из nginx.conf"
-                echo
-            fi
-            echo
-            show_continue_prompt || return 1
-            ;;
-        3) ;;
-        4) change_credentials ;;
-        5) regenerate_cookies ;;
-        6) manage_domains ;;
-        7) ;;
-        8) return ;;
-    esac
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                show_continue_prompt
+                ;;
+            3) ;;
+            4) change_credentials ;;
+            5) regenerate_cookies ;;
+            6) manage_domains ;;
+            7) ;;
+            8) return ;;
+        esac
+    done
 }
 
 open_panel_access() {

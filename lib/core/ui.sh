@@ -256,7 +256,7 @@ reading_inline() {
 }
 
 # Промпт "Enter: Продолжить    Esc: Назад"
-# Возвращает: 1 = Enter (в главное меню), 0 = Esc (на одно меню назад)
+# Оба ключа возвращают 0 — назад на одно меню
 show_continue_prompt() {
     tput civis 2>/dev/null
     while true; do
@@ -265,12 +265,12 @@ show_continue_prompt() {
         IFS= read -rsn1 _cpk 2>/dev/null
         if [[ "$_cpk" == "" ]] || [[ "$_cpk" == $'\n' ]] || [[ "$_cpk" == $'\r' ]]; then
             tput cnorm 2>/dev/null; echo
-            return 1   # Enter → идём в главное меню
+            return 0   # Enter → назад на одно меню
         elif [[ "$_cpk" == $'\x1b' ]]; then
             IFS= read -rsn1 -t 0.1 _cps 2>/dev/null || true
             if [[ -z "$_cps" ]]; then
                 tput cnorm 2>/dev/null; echo
-                return 0   # Esc → возврат на одно меню назад
+                return 0   # Esc → назад на одно меню
             fi
         fi
     done
