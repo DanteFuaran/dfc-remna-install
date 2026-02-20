@@ -101,8 +101,7 @@ CRON_EOF
             print_success "Ротация: каждые ${rotate_hours}ч, хранить ${keep_count} ротаций"
             echo
             echo -e "${BLUE}══════════════════════════════════════${NC}"
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-            echo
+            show_continue_prompt || return 1
             ;;
         1)
             # Ротация Docker логов
@@ -162,8 +161,7 @@ DOCKER_EOF
             echo -e "${YELLOW}⚠️  Docker перезапущен. Контейнеры будут перезапущены автоматически.${NC}"
             echo
             echo -e "${BLUE}══════════════════════════════════════${NC}"
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-            echo
+            show_continue_prompt || return 1
             ;;
         2) return ;;
         3) return ;;

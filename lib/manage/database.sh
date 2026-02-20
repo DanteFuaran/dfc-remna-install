@@ -5,15 +5,15 @@
 db_backup() {
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   💾 СОХРАНЕНИЕ БАЗЫ ДАННЫХ${NC}"
+    echo -e "${GREEN}       💾  Сохранение базы данных${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
-        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        show_continue_prompt || return 1
         return 1
     fi
 
@@ -21,8 +21,8 @@ db_backup() {
     if ! docker ps --filter "name=remnawave-db" --format "{{.Names}}" 2>/dev/null | grep -q "remnawave-db"; then
         print_error "Контейнер remnawave-db не запущен"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
-        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        show_continue_prompt || return 1
         return 1
     fi
 
@@ -41,6 +41,8 @@ db_backup() {
 
     echo -e "${WHITE}Директория бэкапа:${NC} ${DARKGRAY}${backup_dir}${NC}"
     echo
+    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+    echo
 
     (
         docker exec remnawave-db pg_dump -U postgres -d postgres 2>/dev/null | gzip > "$dump_file"
@@ -48,21 +50,20 @@ db_backup() {
     show_spinner "Создание дампа базы данных"
 
     if [ -f "$dump_file" ] && [ -s "$dump_file" ]; then
-        local file_size
-        file_size=$(du -h "$dump_file" | cut -f1)
+        local dump_name
+        dump_name=$(basename "$dump_file")
         echo
-        print_success "Дамп успешно сохранён"
+        print_success "Бекап успешно создан!"
         echo
-        echo -e "${WHITE}Файл:${NC}    ${DARKGRAY}${dump_file}${NC}"
-        echo -e "${WHITE}Размер:${NC}  ${DARKGRAY}${file_size}${NC}"
+        echo -e "📄 ${WHITE}Файл бекапа:${NC} ${DARKGRAY}${dump_name}${NC}"
     else
         print_error "Не удалось создать дамп базы данных"
         rm -f "$dump_file" 2>/dev/null
     fi
 
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
-    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    show_continue_prompt || return 1
 }
 
 db_restore() {

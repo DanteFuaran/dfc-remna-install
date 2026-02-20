@@ -51,8 +51,7 @@ manage_bbr() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 ;;
             *) return ;;
         esac
@@ -86,8 +85,7 @@ manage_bbr() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 ;;
             *) return ;;
         esac

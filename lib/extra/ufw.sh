@@ -29,8 +29,7 @@ manage_ufw() {
                     print_error "Не удалось установить UFW"
                 fi
                 echo
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 continue
             fi
             # Разделитель (index 1) — пропускаем
@@ -79,8 +78,7 @@ manage_ufw() {
                 ufw status numbered 2>/dev/null | tail -n +4
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 ;;
             1)
                 # Открыть порт
@@ -96,8 +94,7 @@ manage_ufw() {
                 if [ -z "$ufw_port" ] || ! [[ "$ufw_port" =~ ^[0-9]+$ ]]; then
                     print_error "Порт не указан или некорректен"
                     echo
-                    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                    echo
+                    show_continue_prompt || return 1
                     continue
                 fi
 
@@ -131,8 +128,7 @@ manage_ufw() {
                 [ -n "$ufw_comment" ] && echo -e "  ${DARKGRAY}Комментарий: ${WHITE}${ufw_comment}${NC}"
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 ;;
             2)
                 # Удалить правило — остаёмся в этом меню после удаления или отмены
@@ -153,8 +149,7 @@ manage_ufw() {
                         echo
                         print_warning "Нет правил для удаления"
                         echo
-                        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                        echo
+                        show_continue_prompt || return 1
                         break
                     fi
 
@@ -218,8 +213,7 @@ manage_ufw() {
                     print_error "Не удалось удалить UFW"
                 fi
                 echo
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 ;;
             5) continue ;;
             6) return ;;

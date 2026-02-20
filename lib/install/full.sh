@@ -17,8 +17,7 @@ installation_full() {
         echo -e "${WHITE}На этом сервере уже установлен Remnawave.${NC}"
         echo -e "${WHITE}Используйте опцию ${GREEN}"🔄 Переустановить"${WHITE} в главном меню.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -208,8 +207,7 @@ installation_full() {
         echo
         echo -e "${RED}⚠️  ОБЯЗАТЕЛЬНО СКОПИРУЙТЕ И СОХРАНИТЕ ЭТИ ДАННЫЕ!${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -361,6 +359,5 @@ installation_full() {
     echo
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+    show_continue_prompt || return 1
 }

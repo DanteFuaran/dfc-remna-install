@@ -110,7 +110,7 @@ JAIL_EOF
                 echo -e "  ${WHITE}Окно поиска:${NC}  ${YELLOW}${new_findtime_min}${NC} мин"
                 echo
                 echo -e "${BLUE}════════════════════════════════${NC}"
-                read -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
+                show_continue_prompt || return 1
                 return
                 ;;
             1)
@@ -121,8 +121,7 @@ JAIL_EOF
                 show_spinner "Перезапуск Fail2ban"
                 print_success "Fail2ban перезапущен"
                 echo
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 return
                 ;;
             2)
@@ -142,8 +141,7 @@ JAIL_EOF
                 show_spinner "Удаление Fail2ban"
                 print_success "Fail2ban удалён"
                 echo
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-                echo
+                show_continue_prompt || return 1
                 return
                 ;;
             3) return ;;
@@ -185,8 +183,7 @@ JAIL_EOF
         if ! command -v fail2ban-client >/dev/null 2>&1; then
             print_error "Не удалось установить Fail2ban"
             echo
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-            echo
+            show_continue_prompt || return 1
             return 1
         fi
 
@@ -228,6 +225,6 @@ JAIL_EOF
 
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
+        show_continue_prompt || return 1
     fi
 }

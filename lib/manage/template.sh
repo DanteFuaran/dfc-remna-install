@@ -97,6 +97,5 @@ manage_random_template() {
 
     print_success "Шаблон успешно изменён"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+    show_continue_prompt || return 1
 }

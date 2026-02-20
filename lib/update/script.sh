@@ -57,26 +57,14 @@ update_script() {
     fi
     
     echo
-    
+    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+    echo
+
     if [ "$force_update" != "force" ] && [ "$installed_version" = "$remote_version" ]; then
-        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
         print_success "У вас уже установлена последняя версия"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        tput civis 2>/dev/null
-        while true; do
-            printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
-            local _k
-            IFS= read -rsn1 _k 2>/dev/null
-            if [[ "$_k" == "" ]] || [[ "$_k" == $'\n' ]] || [[ "$_k" == $'\r' ]]; then
-                break
-            elif [[ "$_k" == $'\x1b' ]]; then
-                IFS= read -rsn1 -t 0.1 _s 2>/dev/null || true
-                [[ -z "$_s" ]] && break
-            fi
-        done
-        tput cnorm 2>/dev/null
-        echo
+        show_continue_prompt
         return 0
     fi
 
@@ -97,16 +85,19 @@ update_script() {
         rm -f "${UPDATE_AVAILABLE_FILE}" "${UPDATE_CHECK_TIME_FILE}" 2>/dev/null
         
         print_success "Скрипт успешно обновлён до версии v$new_installed_version"
-    echo
-        echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
         echo
-        exec /usr/local/bin/dfc-remna-install
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        show_continue_prompt
+        local _upd_ret=$?
+        if [[ $_upd_ret -eq 1 ]]; then
+            exec /usr/local/bin/dfc-remna-install
+        fi
+        return 0
     else
         print_error "Ошибка при обновлении скрипта"
-    echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Назад${NC}")"
         echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        show_continue_prompt
         return 1
     fi
 }

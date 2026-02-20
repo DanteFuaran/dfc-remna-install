@@ -18,21 +18,8 @@ installation_node() {
         echo -e "    ${DARKGRAY}Вы можете переустановить ноду из главного меню.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        tput civis 2>/dev/null
-        while true; do
-            printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
-            local _nk
-            IFS= read -rsn1 _nk 2>/dev/null
-            if [[ "$_nk" == "" ]] || [[ "$_nk" == $'\n' ]] || [[ "$_nk" == $'\r' ]]; then
-                break
-            elif [[ "$_nk" == $'\x1b' ]]; then
-                IFS= read -rsn1 -t 0.1 _ns 2>/dev/null || true
-                [[ -z "$_ns" ]] && break
-            fi
-        done
-        tput cnorm 2>/dev/null
-        echo
-        return
+        show_continue_prompt || return 1
+        return 0
     fi
 
     # ─── Определяем режим: локальная панель или удалённая ───
@@ -100,8 +87,7 @@ installation_node_local() {
     if [ -z "$panel_domain" ] || [ -z "$sub_domain" ]; then
         print_error "Не удалось определить домены из nginx.conf"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -110,8 +96,7 @@ installation_node_local() {
     if ! get_cookie_from_nginx; then
         print_error "Не удалось извлечь cookie из nginx.conf"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -173,8 +158,7 @@ installation_node_local() {
     if [[ $_gpt_rc -ne 0 ]]; then
         echo -e "${YELLOW}Установка отменена${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
     local token
@@ -184,8 +168,7 @@ installation_node_local() {
     if ! check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"; then
         print_error "Домен $SELFSTEAL_DOMAIN уже используется в панели"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -194,8 +177,7 @@ installation_node_local() {
     if echo "$response" | jq -e ".response.configProfiles[] | select(.name == \"$entity_name\")" >/dev/null 2>&1; then
         print_error "Имя конфигурационного профиля '$entity_name' уже используется"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -303,8 +285,7 @@ installation_node_local() {
         print_error "API не отвечает. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -317,8 +298,7 @@ installation_node_local() {
         print_error "Не удалось установить публичный ключ. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
     print_success "Установка публичного ключа"
@@ -332,8 +312,7 @@ installation_node_local() {
         print_error "Не удалось сгенерировать ключи. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
     print_success "Ключи сгенерированы"
@@ -344,8 +323,7 @@ installation_node_local() {
         print_error "Не удалось создать конфигурационный профиль. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
     read config_profile_uuid inbound_uuid <<< "$config_result"
@@ -358,8 +336,7 @@ installation_node_local() {
         print_error "Не удалось создать ноду. Восстановление конфигурации..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -398,8 +375,7 @@ installation_node_local() {
         print_error "Панель не отвечает после перезапуска. Восстановление..."
         _restore_panel_config
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -498,8 +474,7 @@ installation_node_local() {
     echo -e "${DARKGRAY}Панель доступна по порту 8443 (XRAY занимает 443)${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-    echo
+    show_continue_prompt || return 1
 }
 
 # ─── Установка ноды на отдельный сервер (удалённая панель) ───
@@ -681,6 +656,5 @@ EOL
     echo
     echo -e "${YELLOW}Проверьте подключение ноды в панели Remnawave${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-    echo
+    show_continue_prompt || return 1
 }

@@ -64,7 +64,7 @@ manage_panel_access() {
                 echo
             fi
             echo
-            read -e -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")" _
+            show_continue_prompt || return 1
             ;;
         3) ;;
         4) change_credentials ;;
@@ -116,7 +116,7 @@ open_panel_access() {
         echo
         echo -e "${RED}⚠️  Не забудьте закрыть доступ после использования!${NC}"
         echo
-        read -e -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")" _
+        show_continue_prompt || return 1
         return
     fi
 
@@ -233,7 +233,7 @@ EOF
     if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnawave-nginx$'; then
         print_error "Nginx не запустился. Проверьте: docker logs remnawave-nginx"
         echo
-        read -e -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")" _
+        show_continue_prompt || return 1
         return
     fi
 
@@ -247,7 +247,7 @@ EOF
     echo
     echo -e "${RED}⚠️  Не забудьте закрыть доступ после использования!${NC}"
     echo
-    read -e -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")" _
+    show_continue_prompt || return 1
 }
 
 close_panel_access() {
@@ -284,7 +284,7 @@ close_panel_access() {
     if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnawave-nginx$'; then
         print_error "Nginx не запустился. Проверьте: docker logs remnawave-nginx"
         echo
-        read -e -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")" _
+        show_continue_prompt || return 1
         return
     fi
 
@@ -296,7 +296,7 @@ close_panel_access() {
     echo
     print_success "Доступ по 8443 закрыт"
     echo
-    read -e -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")" _
+    show_continue_prompt || return 1
 }
 
 auto_enable_panel_access_8443() {

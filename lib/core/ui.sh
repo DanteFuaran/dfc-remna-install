@@ -255,6 +255,27 @@ reading_inline() {
     printf -v "$var_name" '%s' "$input"
 }
 
+# Промпт "Enter: Продолжить    Esc: Назад"
+# Возвращает: 1 = Enter (в главное меню), 0 = Esc (на одно меню назад)
+show_continue_prompt() {
+    tput civis 2>/dev/null
+    while true; do
+        printf "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить    ${BLUE}Esc${DARKGRAY}: Назад${NC}"
+        local _cpk
+        IFS= read -rsn1 _cpk 2>/dev/null
+        if [[ "$_cpk" == "" ]] || [[ "$_cpk" == $'\n' ]] || [[ "$_cpk" == $'\r' ]]; then
+            tput cnorm 2>/dev/null; echo
+            return 1   # Enter → идём в главное меню
+        elif [[ "$_cpk" == $'\x1b' ]]; then
+            IFS= read -rsn1 -t 0.1 _cps 2>/dev/null || true
+            if [[ -z "$_cps" ]]; then
+                tput cnorm 2>/dev/null; echo
+                return 0   # Esc → возврат на одно меню назад
+            fi
+        fi
+    done
+}
+
 confirm_action() {
     echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Подтвердить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
     tput civis  # Скрыть курсор

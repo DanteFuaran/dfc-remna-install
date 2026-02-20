@@ -16,8 +16,7 @@ remove_node_from_panel() {
         print_error "Нода не найдена на этом сервере"
         echo -e "${YELLOW}На сервере установлена только панель.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return 1
     fi
 
@@ -104,8 +103,7 @@ remove_node_from_panel() {
     echo
     echo -e "${DARKGRAY}Порт 443 активен, порт 8443 закрыт${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-    echo
+    show_continue_prompt || return 1
 }
 
 add_node_to_panel() {
@@ -114,8 +112,7 @@ add_node_to_panel() {
         echo -e "${YELLOW}Эта функция регистрирует ноду на удалённом сервере в панели.${NC}"
         echo -e "${YELLOW}Панель должна быть установлена на этом сервере.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
 
@@ -141,8 +138,7 @@ add_node_to_panel() {
     if [[ $_gpt_rc -ne 0 ]]; then
         print_error "Не удалось получить токен"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-        echo
+        show_continue_prompt || return 1
         return
     fi
     local token
@@ -245,6 +241,5 @@ add_node_to_panel() {
     echo -e "${WHITE}2. Выберите \"Установить компоненты\" → \"Только нода\"${NC}"
     echo -e "${RED}─────────────────────────────────────────────────${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-    echo
+    show_continue_prompt || return 1
 }

@@ -213,8 +213,7 @@ change_panel_domain() {
         echo -e "${WHITE}https://${new_domain}/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     fi
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Продолжить${NC}")"
-    echo
+    show_continue_prompt || return 1
 }
 
 change_sub_domain() {
