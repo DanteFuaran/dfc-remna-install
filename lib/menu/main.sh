@@ -17,11 +17,11 @@ main_menu() {
         local update_notice=""
         local install_status=""
         if [ "$has_panel" = true ] && [ "$has_node" = true ]; then
-            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель и Нода${NC}"
+            install_status="\n${DARKGRAY}         Установлено: ${GREEN}Панель и Нода${NC}"
         elif [ "$has_panel" = true ]; then
-            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Панель${NC}"
+            install_status="\n${DARKGRAY}         Установлено: ${GREEN}Панель${NC}"
         elif [ "$has_node" = true ]; then
-            install_status="\n${DARKGRAY}  Установлено: ${GREEN}Нода${NC}"
+            install_status="\n${DARKGRAY}         Установлено: ${GREEN}Нода${NC}"
         fi
         local menu_title="    🚀 DFC REMNA-INSTALL v$SCRIPT_VERSION${install_status}\n${DARKGRAY}Проект развивается благодаря вашей поддержке\n        https://github.com/DanteFuaran${NC}"
         if [ -f "${UPDATE_AVAILABLE_FILE}" ]; then
