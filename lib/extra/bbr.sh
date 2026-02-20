@@ -23,64 +23,73 @@ manage_bbr() {
     fi
     echo
 
-    show_arrow_menu "BBR" \
-        "✅  Включить BBR" \
-        "❌  Выключить BBR" \
-        "──────────────────────────────────────" \
-        "↩️   Назад"
-    local choice=$?
+    if [ "$current_cc" = "bbr" ]; then
+        # BBR включён — показываем только "Выключить"
+        show_arrow_menu "BBR" \
+            "❌  Выключить BBR" \
+            "──────────────────────────────────────" \
+            "↩️   Назад"
+        local choice=$?
+        case $choice in
+            0)
+                echo
+                (
+                    sysctl -w net.core.default_qdisc=pfifo_fast >/dev/null 2>&1
+                    sysctl -w net.ipv4.tcp_congestion_control=cubic >/dev/null 2>&1
+                    sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf 2>/dev/null
+                    sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
+                    sysctl -p >/dev/null 2>&1
+                ) &
+                show_spinner "Выключение BBR"
 
-    case $choice in
-        0)
-            echo
-            (
-                sysctl -w net.core.default_qdisc=fq >/dev/null 2>&1
-                sysctl -w net.ipv4.tcp_congestion_control=bbr >/dev/null 2>&1
-                # Сохраняем в sysctl.conf
-                sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf 2>/dev/null
-                sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
-                echo 'net.core.default_qdisc=fq' >> /etc/sysctl.conf
-                echo 'net.ipv4.tcp_congestion_control=bbr' >> /etc/sysctl.conf
-                sysctl -p >/dev/null 2>&1
-            ) &
-            show_spinner "Включение BBR"
+                local new_cc
+                new_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+                if [ "$new_cc" = "cubic" ]; then
+                    print_success "BBR выключен (переключено на cubic)"
+                else
+                    print_error "Не удалось выключить BBR"
+                fi
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                ;;
+            *) return ;;
+        esac
+    else
+        # BBR выключен — показываем только "Включить"
+        show_arrow_menu "BBR" \
+            "✅  Включить BBR" \
+            "──────────────────────────────────────" \
+            "↩️   Назад"
+        local choice=$?
+        case $choice in
+            0)
+                echo
+                (
+                    sysctl -w net.core.default_qdisc=fq >/dev/null 2>&1
+                    sysctl -w net.ipv4.tcp_congestion_control=bbr >/dev/null 2>&1
+                    sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf 2>/dev/null
+                    sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
+                    echo 'net.core.default_qdisc=fq' >> /etc/sysctl.conf
+                    echo 'net.ipv4.tcp_congestion_control=bbr' >> /etc/sysctl.conf
+                    sysctl -p >/dev/null 2>&1
+                ) &
+                show_spinner "Включение BBR"
 
-            local new_cc
-            new_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
-            if [ "$new_cc" = "bbr" ]; then
-                print_success "BBR успешно включён"
-            else
-                print_error "Не удалось включить BBR"
-            fi
-            echo
-            echo -e "${BLUE}══════════════════════════════════════${NC}"
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-            echo
-            ;;
-        1)
-            echo
-            (
-                sysctl -w net.core.default_qdisc=pfifo_fast >/dev/null 2>&1
-                sysctl -w net.ipv4.tcp_congestion_control=cubic >/dev/null 2>&1
-                sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf 2>/dev/null
-                sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf 2>/dev/null
-                sysctl -p >/dev/null 2>&1
-            ) &
-            show_spinner "Выключение BBR"
-
-            local new_cc
-            new_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
-            if [ "$new_cc" = "cubic" ]; then
-                print_success "BBR выключен (переключено на cubic)"
-            else
-                print_error "Не удалось выключить BBR"
-            fi
-            echo
-            echo -e "${BLUE}══════════════════════════════════════${NC}"
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-            echo
-            ;;
-        2) return ;;
-        3) return ;;
-    esac
+                local new_cc
+                new_cc=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null)
+                if [ "$new_cc" = "bbr" ]; then
+                    print_success "BBR успешно включён"
+                else
+                    print_error "Не удалось включить BBR"
+                fi
+                echo
+                echo -e "${BLUE}══════════════════════════════════════${NC}"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                echo
+                ;;
+            *) return ;;
+        esac
+    fi
 }
