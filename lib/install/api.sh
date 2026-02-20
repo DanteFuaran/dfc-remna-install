@@ -104,6 +104,8 @@ get_panel_token() {
                 reading_inline "Введите пароль панели: " password
                 local _rc_p=$?
                 if [[ $_rc_p -eq 2 ]]; then
+                    tput cuu1 2>/dev/null; tput el 2>/dev/null
+                    tput cuu1 2>/dev/null; tput el 2>/dev/null
                     _login_step=1
                     username=""
                     continue

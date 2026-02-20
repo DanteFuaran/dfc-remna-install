@@ -132,8 +132,8 @@ add_node_to_panel() {
     echo -e "${DARKGRAY}   После завершения подключения, запустите установку${NC}"
     echo -e "${DARKGRAY}   ноды (Только нода) на сервере ноды.${NC}"
     echo
-    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
-    echo -e "${DARKGRAY}   Esc — назад / Enter — подтвердить${NC}"
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    echo -e "${DARKGRAY}   Enter: Подтвердить        Esc: Отмена${NC}"
     echo
     if ! get_panel_token; then
         print_error "Не удалось получить токен"
