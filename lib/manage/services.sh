@@ -12,7 +12,7 @@ manage_start() {
     show_spinner "Запуск сервисов"
     print_success "Сервисы запущены"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
     echo
 }
 
@@ -26,7 +26,7 @@ manage_stop() {
     show_spinner "Остановка сервисов"
     print_success "Сервисы остановлены"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
     echo
 }
 
@@ -41,7 +41,7 @@ manage_update() {
         echo -e "${RED}✖  Не найдено установленных компонентов.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
         return
     fi
@@ -68,7 +68,7 @@ manage_update() {
 
     print_success "Обновление завершено"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
 }
 

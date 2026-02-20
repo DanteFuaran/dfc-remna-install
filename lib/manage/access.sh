@@ -63,7 +63,7 @@ manage_panel_access() {
                 echo
             fi
             echo
-            read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+            read -e -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")" _
             ;;
         3) ;;
         4) change_credentials ;;
@@ -115,7 +115,7 @@ open_panel_access() {
         echo
         echo -e "${RED}⚠️  Не забудьте закрыть доступ после использования!${NC}"
         echo
-        read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+        read -e -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")" _
         return
     fi
 
@@ -232,7 +232,7 @@ EOF
     if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnawave-nginx$'; then
         print_error "Nginx не запустился. Проверьте: docker logs remnawave-nginx"
         echo
-        read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+        read -e -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")" _
         return
     fi
 
@@ -246,7 +246,7 @@ EOF
     echo
     echo -e "${RED}⚠️  Не забудьте закрыть доступ после использования!${NC}"
     echo
-    read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+    read -e -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")" _
 }
 
 close_panel_access() {
@@ -283,7 +283,7 @@ close_panel_access() {
     if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^remnawave-nginx$'; then
         print_error "Nginx не запустился. Проверьте: docker logs remnawave-nginx"
         echo
-        read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+        read -e -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")" _
         return
     fi
 
@@ -295,7 +295,7 @@ close_panel_access() {
     echo
     print_success "Доступ по 8443 закрыт"
     echo
-    read -e -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения...${NC}")" _
+    read -e -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")" _
 }
 
 auto_enable_panel_access_8443() {
@@ -478,7 +478,7 @@ EOSQL
     echo -e "${WHITE}При следующем входе в панель вы сможете создать${NC}"
     echo -e "${WHITE}нового суперадмина с любым логином и паролем.${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
 }
 
@@ -548,7 +548,7 @@ regenerate_cookies() {
     echo -e "${WHITE}https://${panel_domain}/auth/login?${NEW_NAME}=${NEW_VALUE}${NC}"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
     tput cnorm 2>/dev/null
 }

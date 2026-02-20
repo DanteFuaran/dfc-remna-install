@@ -51,7 +51,7 @@ update_script() {
     else
         print_error "Не удалось получить информацию о версии с GitHub"
     echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -61,7 +61,7 @@ update_script() {
     if [ "$force_update" != "force" ] && [ "$installed_version" = "$remote_version" ]; then
         print_success "У вас уже установлена последняя версия"
     echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 0
     fi
@@ -85,13 +85,13 @@ update_script() {
         print_success "Скрипт успешно обновлён до версии v$new_installed_version"
     echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
         exec /usr/local/bin/dfc-remna-install
     else
         print_error "Ошибка при обновлении скрипта"
     echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi

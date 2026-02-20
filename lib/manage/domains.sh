@@ -110,7 +110,7 @@ change_panel_domain() {
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -143,7 +143,7 @@ change_panel_domain() {
     local new_cert_domain=""
     if ! obtain_cert_for_domain "$new_domain" "$panel_dir" "$current_domain" new_cert_domain; then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -213,7 +213,7 @@ change_panel_domain() {
         echo -e "${WHITE}https://${new_domain}/auth/login?${COOKIE_NAME}=${COOKIE_VALUE}${NC}"
     fi
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
     echo
 }
 
@@ -227,7 +227,7 @@ change_sub_domain() {
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -262,7 +262,7 @@ change_sub_domain() {
     local new_cert_domain=""
     if ! obtain_cert_for_domain "$new_domain" "$panel_dir" "$current_sub_domain" new_cert_domain; then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -303,7 +303,7 @@ change_sub_domain() {
     echo
     print_success "Домен страницы подписки изменён на ${new_domain}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
     echo
 }
 
@@ -317,7 +317,7 @@ change_node_domain() {
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -330,7 +330,7 @@ change_node_domain() {
         echo -e "${WHITE}Смена домена ноды доступна только при установке${NC}"
         echo -e "${WHITE}типа \"Панель + Нода\" на одном сервере.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -360,7 +360,7 @@ change_node_domain() {
     local new_cert_domain=""
     if ! obtain_cert_for_domain "$new_domain" "$panel_dir" "$current_node_domain" new_cert_domain; then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -400,7 +400,7 @@ change_node_domain() {
     echo
     echo -e "${YELLOW}⚠️  Не забудьте обновить домен ноды в панели Remnawave${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
     echo
 }
 
@@ -414,7 +414,7 @@ manage_domains() {
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi

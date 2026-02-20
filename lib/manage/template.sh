@@ -95,6 +95,6 @@ manage_random_template() {
 
     print_success "Шаблон успешно изменён"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для продолжения${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
 }

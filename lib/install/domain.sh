@@ -154,7 +154,8 @@ prompt_domain_with_retry() {
         fi
 
         echo
-        echo -e "${DARKGRAY}Нажмите Enter что бы ввести другой домен, или нажмите Esc для возвращения в главное меню.${NC}"
+        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+        echo -e "${DARKGRAY}   Enter: Повторить     Esc: Назад${NC}"
 
         local key
         while true; do

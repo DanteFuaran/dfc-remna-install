@@ -17,7 +17,7 @@ installation_panel() {
         echo -e "${WHITE}На этом сервере уже установлена панель.${NC}"
         echo -e "${WHITE}Используйте опцию ${GREEN}"🔄 Переустановить"${WHITE} в главном меню.${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
         return
     fi
@@ -78,7 +78,7 @@ installation_panel() {
         if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
             echo
             [ "$is_fresh_install" = true ] && rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата в главное меню...${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
             echo
             return
         fi
@@ -165,7 +165,7 @@ installation_panel() {
         echo
         echo -e "${RED}⚠️  ОБЯЗАТЕЛЬНО СКОПИРУЙТЕ И СОХРАНИТЕ ЭТИ ДАННЫЕ!${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
         return
     fi
@@ -220,6 +220,6 @@ installation_panel() {
     echo
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
         echo
 }

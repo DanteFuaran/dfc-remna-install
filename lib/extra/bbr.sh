@@ -51,7 +51,7 @@ manage_bbr() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
                 echo
                 ;;
             *) return ;;
@@ -86,7 +86,7 @@ manage_bbr() {
                 fi
                 echo
                 echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Продолжить${NC}")"
                 echo
                 ;;
             *) return ;;

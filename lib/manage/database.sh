@@ -12,7 +12,7 @@ db_backup() {
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -21,7 +21,7 @@ db_backup() {
     if ! docker ps --filter "name=remnawave-db" --format "{{.Names}}" 2>/dev/null | grep -q "remnawave-db"; then
         print_error "Контейнер remnawave-db не запущен"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -61,7 +61,7 @@ db_backup() {
     fi
 
     echo
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
     echo
 }
 
@@ -75,7 +75,7 @@ db_restore() {
     local panel_dir
     if ! panel_dir=$(detect_remnawave_path); then
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -84,7 +84,7 @@ db_restore() {
     if ! docker ps --filter "name=remnawave-db" --format "{{.Names}}" 2>/dev/null | grep -q "remnawave-db"; then
         print_error "Контейнер remnawave-db не запущен"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -108,7 +108,7 @@ db_restore() {
         if [ ! -f "$custom_dump_path" ]; then
             print_error "Файл не найден: ${custom_dump_path}"
             echo
-            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
             echo
             return 1
         fi
@@ -133,7 +133,7 @@ db_restore() {
     if [ ${#dump_files[@]} -eq 0 ]; then
         print_error "Файлы бэкапов не найдены"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return 1
     fi
@@ -214,7 +214,7 @@ db_restore() {
         print_error "API не отвечает после восстановления"
         echo -e "${YELLOW}Запустите панель вручную и создайте администратора${NC}"
         echo
-        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+        read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
         echo
         return
     fi
@@ -275,7 +275,7 @@ db_restore() {
     print_success "База данных успешно загружена!"
     echo
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата${NC}")"
+    read -s -n 1 -p "$(echo -e "${DARKGRAY}   Enter: Назад${NC}")"
     echo
 }
 

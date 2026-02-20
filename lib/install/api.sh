@@ -77,7 +77,8 @@ get_panel_token() {
                 if [ -z "$test_response" ] || ! echo "$test_response" | jq -e '.response.configProfiles' >/dev/null 2>&1; then
                     print_error "Токен недействителен"
                     echo
-                    echo -e "${DARKGRAY}Нажмите Enter чтобы ввести токен заново, или Esc для отмены.${NC}"
+                    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+                    echo -e "${DARKGRAY}   Enter: Повторить     Esc: Отмена${NC}"
                     local key
                     while true; do
                         read -s -n 1 key
