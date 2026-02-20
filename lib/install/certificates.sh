@@ -79,6 +79,7 @@ get_cert_cloudflare() {
     _exit_file="${_tmp_log}.exit"
 
     (
+        set +e
         certbot certonly --dns-cloudflare \
             --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini \
             --dns-cloudflare-propagation-seconds 30 \
@@ -119,10 +120,11 @@ get_cert_acme() {
     _exit_file="${_tmp_log}.exit"
 
     # Открываем порт 80 синхронно — ДО запуска certbot
-    ufw allow 80/tcp >/dev/null 2>&1
-    ufw reload >/dev/null 2>&1
+    ufw allow 80/tcp >/dev/null 2>&1 || true
+    ufw reload >/dev/null 2>&1 || true
 
     (
+        set +e
         certbot certonly --standalone \
             -d "$domain" \
             --email "$email" --agree-tos --non-interactive \
@@ -133,8 +135,8 @@ get_cert_acme() {
     show_spinner "Получение сертификата для $domain"
 
     # Закрываем порт 80 синхронно — ПОСЛЕ завершения certbot
-    ufw delete allow 80/tcp >/dev/null 2>&1
-    ufw reload >/dev/null 2>&1
+    ufw delete allow 80/tcp >/dev/null 2>&1 || true
+    ufw reload >/dev/null 2>&1 || true
 
     local _exit_code
     _exit_code=$(cat "$_exit_file" 2>/dev/null || echo 1)
