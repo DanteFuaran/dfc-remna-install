@@ -67,7 +67,7 @@ main_menu() {
         show_arrow_menu "$menu_title" "${items[@]}"
         local choice=$?
         unset MENU_ESC_LABEL
-        [[ $choice -eq 255 ]] && { cleanup_terminal; exit 0; }
+        [[ $choice -eq 255 ]] && { cleanup_terminal; clear; exit 0; }
         local action="${actions[$choice]:-}"
 
         case "$action" in
@@ -139,7 +139,7 @@ main_menu() {
                     *) continue ;;
                 esac ;;
             sep)    continue ;;
-            exit)   cleanup_terminal; exit 0 ;;
+            exit)   cleanup_terminal; clear; exit 0 ;;
             *)      continue ;;
         esac
     done
