@@ -42,6 +42,7 @@ cleanup_uninstalled() {
 
 handle_interrupt() {
     cleanup_terminal
+    clear
     echo
     echo -e "${RED}⚠️  Скрипт был остановлен пользователем${NC}"
     echo
