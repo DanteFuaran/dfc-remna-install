@@ -8,10 +8,16 @@ _INSTALL_DIR="/usr/local/dfc-remna-install"
 _REPO="DanteFuaran/dfc-remna-install"
 _BRANCH="main"
 
+cd /opt >/dev/null 2>&1 || true
+
 # Bootstrap: при запуске через bash <(curl ...) скрипт читается из /dev/fd/N
 # В этом случае рядом нет lib/ — скачиваем архив и переключаемся на установленную копию
 _SELF="${BASH_SOURCE[0]}"
 if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
+    _BLUE='\033[1;34m'; _NC='\033[0m'
+    echo -e "${_BLUE}⏳ Происходит подготовка к запуску... Пожалуйста, подождите${_NC}"
+    echo ""
+
     # Если скрипт уже установлен — запускаем существующую копию без перезаписи
     if [ -f "${_INSTALL_DIR}/dfc-remna-install.sh" ] && [ -d "${_INSTALL_DIR}/lib" ]; then
         export REMNA_INSTALLED_RUN=1
@@ -19,7 +25,6 @@ if [[ "$_SELF" == /dev/fd/* ]] || [[ "$_SELF" == /proc/* ]]; then
     fi
 
     # Первичная установка — скачиваем архив
-    echo "⏳ Загрузка скрипта..."
     mkdir -p "${_INSTALL_DIR}" || { echo "✖ Ошибка создания ${_INSTALL_DIR}"; exit 1; }
     
     _TMP_FILE=$(mktemp)
