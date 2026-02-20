@@ -105,21 +105,21 @@ manage_ufw() {
 
                 echo
 
-                # Формируем правило
-                local ufw_cmd="ufw allow"
+                # Формируем правило через массив аргументов (без eval, без проблем с пробелами)
+                local cmd_args=("ufw" "allow")
                 if [ -n "$ufw_ip" ]; then
-                    ufw_cmd+=" from $ufw_ip to any"
+                    cmd_args+=("from" "$ufw_ip")
                 fi
-                ufw_cmd+=" port $ufw_port"
+                cmd_args+=("to" "any" "port" "$ufw_port")
                 if [ -n "$ufw_proto" ]; then
-                    ufw_cmd+=" proto $ufw_proto"
+                    cmd_args+=("proto" "$ufw_proto")
                 fi
                 if [ -n "$ufw_comment" ]; then
-                    ufw_cmd+=" comment '$ufw_comment'"
+                    cmd_args+=("comment" "$ufw_comment")
                 fi
 
                 (
-                    eval "$ufw_cmd" >/dev/null 2>&1
+                    "${cmd_args[@]}" >/dev/null 2>&1
                 ) &
                 show_spinner "Открытие порта $ufw_port"
 
@@ -133,66 +133,66 @@ manage_ufw() {
                 echo
                 ;;
             2)
-                # Удалить правило
-                clear
-                echo -e "${BLUE}══════════════════════════════════════${NC}"
-                echo -e "${GREEN}       ➖ УДАЛИТЬ ПРАВИЛО${NC}"
-                echo -e "${BLUE}══════════════════════════════════════${NC}"
-                echo
+                # Удалить правило — остаёмся в этом меню после удаления или отмены
+                while true; do
+                    # Актуализируем список правил на каждой итерации
+                    local rules=()
+                    while IFS= read -r line; do
+                        local rule_text
+                        rule_text=$(echo "$line" | sed 's/^\[\s*[0-9]*\]\s*//')
+                        [ -n "$rule_text" ] && rules+=("$rule_text")
+                    done < <(ufw status numbered 2>/dev/null | grep '^\[')
 
-                # Собираем правила в массив
-                local rules=()
-                while IFS= read -r line; do
-                    # Убираем номер в скобках, оставляем описание правила
-                    local rule_text
-                    rule_text=$(echo "$line" | sed 's/^\[\s*[0-9]*\]\s*//')
-                    [ -n "$rule_text" ] && rules+=("$rule_text")
-                done < <(ufw status numbered 2>/dev/null | grep '^\[')
+                    if [ ${#rules[@]} -eq 0 ]; then
+                        clear
+                        echo -e "${BLUE}══════════════════════════════════════${NC}"
+                        echo -e "${GREEN}       ➖ УДАЛИТЬ ПРАВИЛО${NC}"
+                        echo -e "${BLUE}══════════════════════════════════════${NC}"
+                        echo
+                        print_warning "Нет правил для удаления"
+                        echo
+                        read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                        echo
+                        break
+                    fi
 
-                if [ ${#rules[@]} -eq 0 ]; then
-                    print_warning "Нет правил для удаления"
+                    # Формируем меню с кнопкой "Назад"
+                    local menu_items=()
+                    for r in "${rules[@]}"; do
+                        menu_items+=("$r")
+                    done
+                    menu_items+=("──────────────────────────────────────")
+                    menu_items+=("❌  Назад")
+
+                    show_arrow_menu "УДАЛИТЬ ПРАВИЛО" "${menu_items[@]}"
+                    local del_choice=$?
+
+                    local total_rules=${#rules[@]}
+                    # Пользователь выбрал разделитель или "Назад" — выходим из подменю
+                    if [ "$del_choice" -ge "$total_rules" ]; then
+                        break
+                    fi
+
+                    # Запрашиваем подтверждение — не покидаем подменю ни при каком ответе
                     echo
-                    read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
+                    echo -e "${YELLOW}Удалить правило: ${WHITE}${rules[$del_choice]}${NC}"
                     echo
-                    continue
-                fi
+                    if ! confirm_action; then
+                        # Esc — отмена, возвращаемся к списку правил без удаления
+                        continue
+                    fi
 
-                # Добавляем кнопку "Назад"
-                local menu_items=()
-                for r in "${rules[@]}"; do
-                    menu_items+=("$r")
+                    # Подтверждено — удаляем правило
+                    local rule_num=$((del_choice + 1))
+                    echo
+                    (
+                        echo "y" | ufw delete "$rule_num" >/dev/null 2>&1
+                    ) &
+                    show_spinner "Удаление правила"
+                    print_success "Правило удалено: ${rules[$del_choice]}"
+                    sleep 1
+                    # Продолжаем цикл — список правил обновится автоматически
                 done
-                menu_items+=("──────────────────────────────────────")
-                menu_items+=("❌  Назад")
-
-                show_arrow_menu "УДАЛИТЬ ПРАВИЛО" "${menu_items[@]}"
-                local del_choice=$?
-
-                # Проверяем что не разделитель и не "Назад"
-                local total_rules=${#rules[@]}
-                if [ "$del_choice" -ge "$total_rules" ]; then
-                    continue
-                fi
-
-                local rule_num=$((del_choice + 1))
-                echo
-                echo -e "${YELLOW}Удалить: ${WHITE}${rules[$del_choice]}${NC}"
-                if ! confirm_action; then
-                    print_error "Операция отменена"
-                    sleep 2
-                    continue
-                fi
-
-                echo
-                (
-                    echo "y" | ufw delete "$rule_num" >/dev/null 2>&1
-                ) &
-                show_spinner "Удаление правила"
-                print_success "Правило удалено: ${rules[$del_choice]}"
-                echo
-                echo -e "${BLUE}══════════════════════════════════════${NC}"
-                read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите любую клавишу для продолжения...${NC}")"
-                echo
                 ;;
             3) continue ;;
             4)
