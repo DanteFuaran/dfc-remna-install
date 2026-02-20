@@ -100,7 +100,24 @@ get_panel_token() {
                     reading_inline "Введите логин панели: " username
                     local _rc_u=$?
                     if [[ $_rc_u -eq 2 ]]; then return 1; fi
-                    if [[ -z "$username" ]]; then continue; fi
+                    if [[ -z "$username" ]]; then
+                        print_error "Логин не может быть пустым"
+                        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+                        echo -e "${DARKGRAY}Enter: Повторить     Esc: Отмена${NC}"
+                        local _key
+                        while true; do
+                            read -s -n 1 _key
+                            if [[ "$_key" == $'\x1b' ]]; then
+                                local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
+                                echo; return 1
+                            fi
+                            if [[ "$_key" == "" ]]; then
+                                for ((i=0; i<4; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
+                                break
+                            fi
+                        done
+                        continue
+                    fi
                     _login_step=2
                 fi
 
@@ -113,7 +130,24 @@ get_panel_token() {
                     username=""
                     continue
                 fi
-                if [[ -z "$password" ]]; then continue; fi
+                if [[ -z "$password" ]]; then
+                    print_error "Пароль не может быть пустым"
+                    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+                    echo -e "${DARKGRAY}Enter: Повторить     Esc: Отмена${NC}"
+                    local _key
+                    while true; do
+                        read -s -n 1 _key
+                        if [[ "$_key" == $'\x1b' ]]; then
+                            local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
+                            echo; return 1
+                        fi
+                        if [[ "$_key" == "" ]]; then
+                            for ((i=0; i<4; i++)); do tput cuu1 2>/dev/null; tput el 2>/dev/null; done
+                            break
+                        fi
+                    done
+                    continue
+                fi
 
                 local login_response
                 login_response=$(make_api_request "POST" "$domain_url/api/auth/login" "" \
