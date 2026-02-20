@@ -75,7 +75,13 @@ installation_panel() {
             setup_cloudflare_credentials || return
         fi
 
-        handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"
+        if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
+            echo
+            [ "$is_fresh_install" = true ] && rm -rf "${DIR_PANEL}" "${DIR_REMNAWAVE}" 2>/dev/null
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата в главное меню...${NC}")"
+            echo
+            return
+        fi
     else
         CERT_METHOD=$(detect_cert_method "$PANEL_DOMAIN")
         echo

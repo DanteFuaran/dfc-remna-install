@@ -20,11 +20,11 @@ handle_certificates() {
         case "$cert_method" in
             1)
                 # Cloudflare DNS-01 (wildcard)
-                get_cert_cloudflare "$base_domain" "$email"
+                get_cert_cloudflare "$base_domain" "$email" || return 1
                 ;;
             2)
                 # ACME HTTP-01
-                get_cert_acme "$domain" "$email"
+                get_cert_acme "$domain" "$email" || return 1
                 ;;
             *)
                 print_error "Неизвестный метод сертификации"
@@ -74,15 +74,33 @@ get_cert_cloudflare() {
         return 1
     fi
 
+    local _tmp_log _exit_file
+    _tmp_log=$(mktemp)
+    _exit_file="${_tmp_log}.exit"
+
     (
         certbot certonly --dns-cloudflare \
             --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini \
             --dns-cloudflare-propagation-seconds 30 \
             -d "$domain" -d "*.$domain" \
             --email "$email" --agree-tos --non-interactive \
-            --key-type ecdsa >/dev/null 2>&1
+            --key-type ecdsa > "$_tmp_log" 2>&1
+        echo $? > "$_exit_file"
     ) &
     show_spinner "Получение wildcard сертификата для *.$domain"
+
+    local _exit_code
+    _exit_code=$(cat "$_exit_file" 2>/dev/null || echo 1)
+    if [ "$_exit_code" -ne 0 ] || [ ! -d "/etc/letsencrypt/live/$domain" ]; then
+        local _cert_error
+        _cert_error=$(grep -iE "error|Detail|Problem|Failed|unauthorized|invalid|Could not" "$_tmp_log" 2>/dev/null | grep -v "^$" | tail -5)
+        rm -f "$_tmp_log" "$_exit_file"
+        print_error "Не удалось получить сертификат для $domain"
+        [ -n "$_cert_error" ] && echo -e "${DARKGRAY}${_cert_error}${NC}"
+        return 1
+    fi
+
+    rm -f "$_tmp_log" "$_exit_file"
 
     # Добавляем cron для обновления
     local cron_rule="0 3 * * * certbot renew --quiet --deploy-hook 'cd ${DIR_PANEL} && docker compose restart remnawave-nginx' 2>/dev/null"
@@ -95,17 +113,35 @@ get_cert_acme() {
     local domain="$1"
     local email="$2"
 
+    local _tmp_log _exit_file
+    _tmp_log=$(mktemp)
+    _exit_file="${_tmp_log}.exit"
+
     (
         ufw allow 80/tcp >/dev/null 2>&1
         certbot certonly --standalone \
             -d "$domain" \
             --email "$email" --agree-tos --non-interactive \
             --http-01-port 80 \
-            --key-type ecdsa >/dev/null 2>&1
+            --key-type ecdsa > "$_tmp_log" 2>&1
+        echo $? > "$_exit_file"
         ufw delete allow 80/tcp >/dev/null 2>&1
         ufw reload >/dev/null 2>&1
     ) &
     show_spinner "Получение сертификата для $domain"
+
+    local _exit_code
+    _exit_code=$(cat "$_exit_file" 2>/dev/null || echo 1)
+    if [ "$_exit_code" -ne 0 ] || [ ! -d "/etc/letsencrypt/live/$domain" ]; then
+        local _cert_error
+        _cert_error=$(grep -iE "error|Detail|Problem|Failed|unauthorized|invalid|Could not" "$_tmp_log" 2>/dev/null | grep -v "^$" | tail -5)
+        rm -f "$_tmp_log" "$_exit_file"
+        print_error "Не удалось получить сертификат для $domain"
+        [ -n "$_cert_error" ] && echo -e "${DARKGRAY}${_cert_error}${NC}"
+        return 1
+    fi
+
+    rm -f "$_tmp_log" "$_exit_file"
 
     local cron_rule="0 3 * * * certbot renew --quiet --deploy-hook 'cd ${DIR_PANEL} && docker compose restart remnawave-nginx' 2>/dev/null"
     if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then

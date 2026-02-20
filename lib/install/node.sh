@@ -212,7 +212,12 @@ installation_node_local() {
         fi
         echo
 
-        handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"
+        if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
+            echo
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата в главное меню...${NC}")"
+            echo
+            return
+        fi
     else
         echo -e "${BLUE}──────────────────────────────────────${NC}"
         print_success "Сертификат для $SELFSTEAL_DOMAIN уже существует"
@@ -544,7 +549,13 @@ installation_node_remote() {
             setup_cloudflare_credentials || return
         fi
 
-        handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"
+        if ! handle_certificates domains_to_check "$CERT_METHOD" "$LETSENCRYPT_EMAIL"; then
+            echo
+            [ "$is_fresh_install" = true ] && rm -rf "${NODE_INSTALL_DIR}" "${DIR_REMNAWAVE}" 2>/dev/null
+            read -s -n 1 -p "$(echo -e "${DARKGRAY}Нажмите Enter для возврата в главное меню...${NC}")"
+            echo
+            return
+        fi
     else
         CERT_METHOD=$(detect_cert_method "$SELFSTEAL_DOMAIN")
         echo
