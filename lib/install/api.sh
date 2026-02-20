@@ -123,12 +123,17 @@ get_panel_token() {
 
                 print_error "Неверный логин или пароль"
                 echo
+                echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
                 echo -e "${DARKGRAY}Нажмите Enter чтобы ввести заново, или Esc для отмены.${NC}"
                 local key
                 while true; do
                     read -s -n 1 key
                     if [[ "$key" == $'\x1b' ]]; then echo; return 1; fi
                     if [[ "$key" == "" ]]; then
+                        for ((i=0; i<7; i++)); do
+                            tput cuu1 2>/dev/null
+                            tput el 2>/dev/null
+                        done
                         _login_step=1
                         username=""
                         break
