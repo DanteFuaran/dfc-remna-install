@@ -15,7 +15,7 @@ installation_node() {
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
         echo -e "${DARKGRAY}⚠️  На этом сервере уже установлена нода.${NC}"
-        echo -e "  ${DARKGRAY}Что бы переустановить ноду нажмите ${BLUE}Enter${DARKGRAY}.${NC}"
+        echo -e "   ${DARKGRAY}Что бы переустановить ноду нажмите ${BLUE}Enter${DARKGRAY}.${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
 
@@ -46,7 +46,6 @@ installation_node() {
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         echo
         echo -e "${RED}⚠️  Все данные текущей ноды будут удалены!${NC}"
-        echo -e "  ${DARKGRAY}Нажмите Enter для подтверждения, или Esc для отмены${NC}"
         echo
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         if ! confirm_action; then
