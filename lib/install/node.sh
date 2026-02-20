@@ -137,6 +137,12 @@ installation_node_local() {
     local entity_name
     while true; do
         reading_inline "Введите имя для ноды (например, Germany):" entity_name
+        local _rc_en=$?
+        if [[ $_rc_en -eq 2 ]]; then
+            echo -e "${YELLOW}Установка отменена${NC}"
+            return
+        fi
+        if [[ -z "$entity_name" ]]; then continue; fi
         if [[ "$entity_name" =~ ^[a-zA-Z0-9-]+$ ]]; then
             if [ ${#entity_name} -ge 3 ] && [ ${#entity_name} -le 20 ]; then
                 break

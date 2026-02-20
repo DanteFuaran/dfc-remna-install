@@ -226,6 +226,11 @@ reading_inline() {
                 _seq+="$_sc"
                 [[ "$_sc" =~ [A-Za-z~] ]] && break
             done
+            if [[ -z "$_seq" ]]; then
+                echo
+                printf -v "$var_name" ''
+                return 2
+            fi
         else
             input+="$char"
             echo -en "$char"

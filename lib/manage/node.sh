@@ -123,16 +123,17 @@ add_node_to_panel() {
 
     clear
     echo -e "${BLUE}══════════════════════════════════════${NC}"
-    echo -e "${GREEN}   ➕ ПОДКЛЮЧИТЬ НОДУ В ПАНЕЛЬ${NC}"
+    echo -e "${GREEN}     ➕  Подключение ноды в панель${NC}"
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
-    echo -e "${YELLOW}⚠️  Добавление ноды в панель предназначена для запуска${NC}"
-    echo -e "${YELLOW}       на сервере с установленной панелью Remnawave.${NC}"
+    echo -e "${DARKGRAY}⚠️  Добавление ноды в панель предназначена для запуска${NC}"
+    echo -e "${DARKGRAY}   на сервере с установленной панелью Remnawave.${NC}"
     echo
-    echo -e "${DARKGRAY}       После завершения подключения, запустите установку${NC}"
-    echo -e "${DARKGRAY}       ноды (Только нода) на сервере ноды.${NC}"
+    echo -e "${DARKGRAY}   После завершения подключения, запустите установку${NC}"
+    echo -e "${DARKGRAY}   ноды (Только нода) на сервере ноды.${NC}"
     echo
-    echo -e "${BLUE}──────────────────────────────────────${NC}"
+    echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+    echo -e "${DARKGRAY}   Esc — назад / Enter — подтвердить${NC}"
     echo
     if ! get_panel_token; then
         print_error "Не удалось получить токен"
@@ -144,33 +145,47 @@ add_node_to_panel() {
     local token
     token=$(cat "${DIR_REMNAWAVE}/token")
 
-    local SELFSTEAL_DOMAIN
-    while true; do
-        reading_inline "Введите selfsteal домен для ноды (например, node.example.com):" SELFSTEAL_DOMAIN
-        if check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"; then
-            break
-        fi
-        echo -e "${YELLOW}Пожалуйста, используйте другой домен${NC}"
-    done
+    local SELFSTEAL_DOMAIN=""
+    local entity_name=""
+    local _step=1
 
-    local entity_name
     while true; do
-        reading_inline "Введите имя для вашей ноды (например, Germany):" entity_name
-        if [[ "$entity_name" =~ ^[a-zA-Z0-9-]+$ ]]; then
-            if [ ${#entity_name} -ge 3 ] && [ ${#entity_name} -le 20 ]; then
-                local response
-                response=$(make_api_request "GET" "$domain_url/api/config-profiles" "$token")
-
-                if echo "$response" | jq -e ".response.configProfiles[] | select(.name == \"$entity_name\")" >/dev/null 2>&1; then
-                    print_error "Имя конфигурационного профиля '$entity_name' уже используется. Выберите другое."
-                else
-                    break
-                fi
+        if [[ $_step -eq 1 ]]; then
+            reading_inline "Введите selfsteal домен для ноды (например, node.example.com):" SELFSTEAL_DOMAIN
+            local _rc_sd=$?
+            if [[ $_rc_sd -eq 2 ]]; then
+                return
+            fi
+            if [[ -z "$SELFSTEAL_DOMAIN" ]]; then continue; fi
+            if check_node_domain "$domain_url" "$token" "$SELFSTEAL_DOMAIN"; then
+                _step=2
             else
-                print_error "Имя должно содержать от 3 до 20 символов"
+                echo -e "${YELLOW}Пожалуйста, используйте другой домен${NC}"
             fi
         else
-            print_error "Имя должно содержать только английские буквы, цифры и дефис"
+            reading_inline "Введите имя для вашей ноды (например, Germany):" entity_name
+            local _rc_en=$?
+            if [[ $_rc_en -eq 2 ]]; then
+                _step=1
+                SELFSTEAL_DOMAIN=""
+                continue
+            fi
+            if [[ -z "$entity_name" ]]; then continue; fi
+            if [[ "$entity_name" =~ ^[a-zA-Z0-9-]+$ ]]; then
+                if [ ${#entity_name} -ge 3 ] && [ ${#entity_name} -le 20 ]; then
+                    local response
+                    response=$(make_api_request "GET" "$domain_url/api/config-profiles" "$token")
+                    if echo "$response" | jq -e ".response.configProfiles[] | select(.name == \"$entity_name\")" >/dev/null 2>&1; then
+                        print_error "Имя конфигурационного профиля '$entity_name' уже используется. Выберите другое."
+                    else
+                        break
+                    fi
+                else
+                    print_error "Имя должно содержать от 3 до 20 символов"
+                fi
+            else
+                print_error "Имя должно содержать только английские буквы, цифры и дефис"
+            fi
         fi
     done
 
