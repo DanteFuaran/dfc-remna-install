@@ -277,7 +277,7 @@ show_continue_prompt() {
 }
 
 confirm_action() {
-    echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Подтвердить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
+    echo -e "${DARKGRAY} ${BLUE}Enter${DARKGRAY}: Подтвердить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
     tput civis  # Скрыть курсор
 
     local key
