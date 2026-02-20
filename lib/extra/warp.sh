@@ -215,7 +215,7 @@ uninstall_warp_native() {
     if ! confirm_action; then
         print_error "Операция отменена"
         sleep 2
-        return 1
+        return 0
     fi
 
     clear
