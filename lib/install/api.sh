@@ -81,7 +81,10 @@ get_panel_token() {
                     local key
                     while true; do
                         read -s -n 1 key
-                        if [[ "$key" == $'\x1b' ]]; then echo; return 1; fi
+                        if [[ "$key" == $'\x1b' ]]; then
+                            local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
+                            echo; return 1
+                        fi
                         [[ "$key" == "" ]] && break
                     done
                     continue
@@ -128,9 +131,12 @@ get_panel_token() {
                 local key
                 while true; do
                     read -s -n 1 key
-                    if [[ "$key" == $'\x1b' ]]; then echo; return 1; fi
+                    if [[ "$key" == $'\x1b' ]]; then
+                        local _drain; while IFS= read -r -s -n1 -t 0.05 _drain; do :; done
+                        echo; return 1
+                    fi
                     if [[ "$key" == "" ]]; then
-                        for ((i=0; i<7; i++)); do
+                        for ((i=0; i<6; i++)); do
                             tput cuu1 2>/dev/null
                             tput el 2>/dev/null
                         done
