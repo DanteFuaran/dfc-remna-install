@@ -207,9 +207,47 @@ install_warp_native() {
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         show_continue_prompt || return 1
     else
-        journalctl -u wg-quick@warp --no-pager -n 20 >> "$_warp_log" 2>/dev/null
-        show_install_error "Не удалось установить WARP" "$_warp_log"
-        rm -f "$_warp_log"
+        journalctl -u wg-quick@warp --no-pager -n 10 >> "$_warp_log" 2>/dev/null
+
+        # Диагностика: определяем причину по ключевым словам в логе
+        local _diag="Не удалось установить WARP"
+        if grep -q "TLS handshake timeout" "$_warp_log" 2>/dev/null; then
+            _diag="Нет доступа к серверам Cloudflare — TLS timeout"
+        elif grep -q "connection refused\|connect: connection refused" "$_warp_log" 2>/dev/null; then
+            _diag="Соединение отклонено при регистрации WARP"
+        elif grep -q "no account detected" "$_warp_log" 2>/dev/null; then
+            _diag="Регистрация аккаунта WARP не удалась"
+        elif grep -q "ERROR: wgcf-profile.conf" "$_warp_log" 2>/dev/null; then
+            _diag="Генерация конфигурации WARP не удалась"
+        fi
+
+        # Фильтруем лог: убираем Go стектрейсы, оставляем суть
+        local _filtered
+        _filtered=$(mktemp /tmp/warp_filtered.XXXXXX)
+        grep -v '^\s*|' "$_warp_log" \
+            | grep -v 'github\.com/' \
+            | grep -v '^\s*Wraps:' \
+            | grep -v 'runtime/' \
+            | grep -v '^Error types:' \
+            | grep -v '^\s*-- stack trace:' \
+            | grep -v '\[\.\.\.' \
+            | sed '/^$/d' \
+            > "$_filtered"
+
+        # Добавляем подсказку в начало лога при известных ошибках
+        if grep -q "TLS handshake timeout" "$_warp_log" 2>/dev/null; then
+            local _hint_file
+            _hint_file=$(mktemp /tmp/warp_hint.XXXXXX)
+            echo "💡 Сервер не может подключиться к api.cloudflareclient.com" > "$_hint_file"
+            echo "   Проверьте, не заблокирован ли исходящий HTTPS-трафик" >> "$_hint_file"
+            echo "   или попробуйте повторить установку позже." >> "$_hint_file"
+            echo "" >> "$_hint_file"
+            cat "$_filtered" >> "$_hint_file"
+            mv "$_hint_file" "$_filtered"
+        fi
+
+        show_install_error "$_diag" "$_filtered"
+        rm -f "$_warp_log" "$_filtered"
         return $?
     fi
 }
