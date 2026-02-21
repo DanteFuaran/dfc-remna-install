@@ -186,14 +186,18 @@ install_warp_native() {
         print_success "WARP успешно установлен"
         echo
         echo -e "${YELLOW}⚠️  Добавьте WARP в конфигурацию ноды через соответствующий пункт меню.${NC}"
+        echo
+        echo -e "${BLUE}══════════════════════════════════════${NC}"
+        show_continue_prompt || return 1
     else
-        print_error "Не удалось установить WARP"
-        echo -e "${YELLOW}Проверьте подключение к интернету и попробуйте снова.${NC}"
+        local _warp_log
+        _warp_log=$(mktemp /tmp/warp_install.XXXXXX)
+        journalctl -u wg-quick@warp --no-pager -n 30 > "$_warp_log" 2>/dev/null
+        ip link list >> "$_warp_log" 2>/dev/null
+        show_install_error "Не удалось установить WARP" "$_warp_log"
+        rm -f "$_warp_log"
+        return $?
     fi
-
-    echo
-    echo -e "${BLUE}══════════════════════════════════════${NC}"
-    show_continue_prompt || return 1
 }
 
 uninstall_warp_native() {

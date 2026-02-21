@@ -276,6 +276,43 @@ show_continue_prompt() {
     done
 }
 
+# Ошибка установки с возможностью просмотра логов
+# Возвращает: 0 = Enter→продолжить, 1 = Esc→главное меню
+show_install_error() {
+    local message="$1"
+    local log_file="${2:-}"
+
+    print_error "$message"
+    echo
+    echo -e "${BLUE}══════════════════════════════════════${NC}"
+    printf "${DARKGRAY}  ${BLUE}Enter${DARKGRAY}: Показать логи     ${BLUE}Esc${DARKGRAY}: Главное меню${NC}"
+
+    tput civis 2>/dev/null
+    local _key _seq
+    while true; do
+        IFS= read -rsn1 _key 2>/dev/null
+        if [[ "$_key" == "" ]] || [[ "$_key" == $'\n' ]] || [[ "$_key" == $'\r' ]]; then
+            tput cnorm 2>/dev/null; echo
+            echo
+            if [ -n "$log_file" ] && [ -s "$log_file" ]; then
+                echo -e "${DARKGRAY}$(cat "$log_file" 2>/dev/null)${NC}"
+            else
+                echo -e "${DARKGRAY}Логи недоступны${NC}"
+            fi
+            echo
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            show_continue_prompt
+            return $?
+        elif [[ "$_key" == $'\x1b' ]]; then
+            IFS= read -rsn1 -t 0.1 _seq 2>/dev/null || true
+            if [[ -z "$_seq" ]]; then
+                tput cnorm 2>/dev/null; echo
+                return 1
+            fi
+        fi
+    done
+}
+
 confirm_action() {
     echo -e "${DARKGRAY} ${BLUE}Enter${DARKGRAY}: Подтвердить     ${BLUE}Esc${DARKGRAY}: Отмена${NC}"
     tput civis  # Скрыть курсор

@@ -174,18 +174,20 @@ JAIL_EOF
         echo
 
         # Установка
+        local _f2b_log
+        _f2b_log=$(mktemp /tmp/f2b_install.XXXXXX)
         (
-            apt-get update -qq >/dev/null 2>&1
-            apt-get install -y -qq fail2ban >/dev/null 2>&1
-        ) &
+            apt-get update -qq 2>&1
+            apt-get install -y -qq fail2ban 2>&1
+        ) > "$_f2b_log" &
         show_spinner "Установка Fail2ban"
 
         if ! command -v fail2ban-client >/dev/null 2>&1; then
-            print_error "Не удалось установить Fail2ban"
-            echo
-            show_continue_prompt || return 1
-            return 0
+            show_install_error "Не удалось установить Fail2ban" "$_f2b_log"
+            rm -f "$_f2b_log"
+            return $?
         fi
+        rm -f "$_f2b_log"
 
         # Создаём jail.local для SSH
         cat > /etc/fail2ban/jail.local <<'JAIL_EOF'
@@ -219,12 +221,16 @@ JAIL_EOF
             echo -e "  ${WHITE}Количество:${NC}   5 попыток"
             echo -e "  ${WHITE}Длит. бана:${NC}   60 мин"
             echo -e "  ${WHITE}Окно поиска:${NC}  10 мин"
+            echo
+            echo -e "${BLUE}══════════════════════════════════════${NC}"
+            show_continue_prompt || return 1
         else
-            print_error "Fail2ban установлен, но не удалось запустить"
+            local _svc_log
+            _svc_log=$(mktemp /tmp/f2b_service.XXXXXX)
+            journalctl -u fail2ban --no-pager -n 30 > "$_svc_log" 2>/dev/null
+            show_install_error "Fail2ban установлен, но не удалось запустить" "$_svc_log"
+            rm -f "$_svc_log"
+            return $?
         fi
-
-        echo
-        echo -e "${BLUE}══════════════════════════════════════${NC}"
-        show_continue_prompt || return 1
     fi
 }
