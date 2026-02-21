@@ -4,6 +4,8 @@
 #   https://github.com/DanteFuaran/dfc-remna-install
 # ═══════════════════════════════════════════════════════════
 
+echo "⏳ Подготовка..."
+
 _INSTALL_DIR="/usr/local/dfc-remna-install"
 _REPO="DanteFuaran/dfc-remna-install"
 _BRANCH="main"
