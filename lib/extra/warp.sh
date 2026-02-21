@@ -115,10 +115,15 @@ install_warp_native() {
     echo -e "${BLUE}══════════════════════════════════════${NC}"
     echo
 
+    local _warp_log
+    _warp_log=$(mktemp /tmp/warp_install.XXXXXX)
+
     (
         # 1. Установка WireGuard
-        apt-get update -qq >/dev/null 2>&1
-        apt-get install -y wireguard >/dev/null 2>&1
+        echo "=== apt-get update ==="
+        apt-get update -qq 2>&1
+        echo "=== apt-get install wireguard ==="
+        apt-get install -y wireguard 2>&1
 
         # 2. Определяем архитектуру и скачиваем wgcf
         local arch
@@ -131,32 +136,42 @@ install_warp_native() {
         local wgcf_version
         wgcf_version=$(curl -sL --max-time 10 "https://api.github.com/repos/ViRb3/wgcf/releases/latest" 2>/dev/null | grep '"tag_name"' | cut -d'"' -f4)
         if [ -z "$wgcf_version" ]; then
+            echo "ERROR: не удалось получить версию wgcf с GitHub API"
             exit 1
         fi
+        echo "=== wgcf version: $wgcf_version ==="
         local wgcf_bin="wgcf_${wgcf_version#v}_linux_${arch}"
-        wget -q "https://github.com/ViRb3/wgcf/releases/download/${wgcf_version}/${wgcf_bin}" -O /tmp/wgcf 2>/dev/null
+        wget -q "https://github.com/ViRb3/wgcf/releases/download/${wgcf_version}/${wgcf_bin}" -O /tmp/wgcf 2>&1
         chmod +x /tmp/wgcf
         mv /tmp/wgcf /usr/local/bin/wgcf
 
         # 3. Регистрация
         cd /tmp
         rm -f wgcf-account.toml wgcf-profile.conf 2>/dev/null
-        timeout 60 bash -c 'yes | wgcf register' >/dev/null 2>&1 || \
-            { echo | wgcf register >/dev/null 2>&1; sleep 2; }
+        echo "=== wgcf register ==="
+        timeout 60 bash -c 'yes | wgcf register' 2>&1 || \
+            { echo | wgcf register 2>&1; sleep 2; }
 
         # 4. Применяем WARP+ ключ если задан
         if [ -n "${warp_key:-}" ]; then
-            wgcf update --license-key "${warp_key}" >/dev/null 2>&1 || true
+            echo "=== wgcf update key ==="
+            wgcf update --license-key "${warp_key}" 2>&1 || true
         fi
 
         # 5. Генерация конфигурации
-        wgcf generate >/dev/null 2>&1
+        echo "=== wgcf generate ==="
+        wgcf generate 2>&1
 
         # 6. Редактирование конфигурации
         local conf="/tmp/wgcf-profile.conf"
-        sed -i '/^DNS =/d' "$conf"
-        grep -q 'Table = off' "$conf"           || sed -i '/^MTU =/aTable = off' "$conf"
-        grep -q 'PersistentKeepalive' "$conf"  || sed -i '/^Endpoint =/aPersistentKeepalive = 25' "$conf"
+        if [ ! -f "$conf" ]; then
+            echo "ERROR: wgcf-profile.conf не создан — регистрация или генерация не удалась"
+            exit 1
+        fi
+
+        sed -i '/^DNS =/d' "$conf" 2>&1
+        grep -q 'Table = off' "$conf"          || sed -i '/^MTU =/aTable = off' "$conf" 2>&1
+        grep -q 'PersistentKeepalive' "$conf" || sed -i '/^Endpoint =/aPersistentKeepalive = 25' "$conf" 2>&1
 
         # 7. IPv6
         local ipv6_ok=false
@@ -164,23 +179,25 @@ install_warp_native() {
         sysctl net.ipv6.conf.default.disable_ipv6 2>/dev/null | grep -q ' = 0' && \
         ip -6 addr show scope global 2>/dev/null | grep -qv 'fe80::' && ipv6_ok=true
         if [ "$ipv6_ok" = false ]; then
-            sed -i 's/,\s*[0-9a-fA-F:]*\/128//' "$conf"
-            sed -i '/Address = [0-9a-fA-F:]*\/128/d' "$conf"
+            sed -i 's/,\s*[0-9a-fA-F:]*\/128//' "$conf" 2>&1
+            sed -i '/Address = [0-9a-fA-F:]*\/128/d' "$conf" 2>&1
         fi
 
         # 8. Перемещаем конфигурацию
         mkdir -p /etc/wireguard
-        mv "$conf" /etc/wireguard/warp.conf
+        mv "$conf" /etc/wireguard/warp.conf 2>&1
 
         # 9. Запускаем и включаем автозапуск
-        systemctl start wg-quick@warp >/dev/null 2>&1
-        systemctl enable wg-quick@warp >/dev/null 2>&1
-    ) &
+        echo "=== systemctl start wg-quick@warp ==="
+        systemctl start wg-quick@warp 2>&1
+        systemctl enable wg-quick@warp 2>&1
+    ) > "$_warp_log" 2>&1 &
     show_spinner "Установка WARP"
     echo
 
     # Проверяем результат
     if ip link show warp 2>/dev/null | grep -q "warp"; then
+        rm -f "$_warp_log"
         print_success "Настройка WARP"
         print_success "Создание WARP интерфейса"
         print_success "WARP успешно установлен"
@@ -190,10 +207,7 @@ install_warp_native() {
         echo -e "${BLUE}══════════════════════════════════════${NC}"
         show_continue_prompt || return 1
     else
-        local _warp_log
-        _warp_log=$(mktemp /tmp/warp_install.XXXXXX)
-        journalctl -u wg-quick@warp --no-pager -n 30 > "$_warp_log" 2>/dev/null
-        ip link list >> "$_warp_log" 2>/dev/null
+        journalctl -u wg-quick@warp --no-pager -n 20 >> "$_warp_log" 2>/dev/null
         show_install_error "Не удалось установить WARP" "$_warp_log"
         rm -f "$_warp_log"
         return $?
