@@ -128,6 +128,40 @@ check_domain() {
     return 0
 }
 
+prompt_ip_with_retry() {
+    local prompt_text="$1"
+    local var_name="$2"
+
+    while true; do
+        reading_inline "$prompt_text" "$var_name"
+
+        if echo "${!var_name}" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
+            return 0
+        fi
+
+        print_error "Некорректный IP адрес"
+        echo
+        echo -e "${DARKGRAY}──────────────────────────────────────${NC}"
+        echo -e "${DARKGRAY}   ${BLUE}Enter${DARKGRAY}: Повторить     ${BLUE}Esc${DARKGRAY}: Назад${NC}"
+
+        local key
+        while true; do
+            read -s -n 1 key
+            if [[ "$key" == $'\x1b' ]]; then
+                echo
+                return 1
+            elif [[ "$key" == "" ]]; then
+                local lines_up=5
+                for ((l=0; l<lines_up; l++)); do
+                    tput cuu1 2>/dev/null
+                    tput el 2>/dev/null
+                done
+                break
+            fi
+        done
+    done
+}
+
 prompt_domain_with_retry() {
     local prompt_text="$1"
     local var_name="$2"
