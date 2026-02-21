@@ -165,7 +165,7 @@ prompt_domain_with_retry() {
                 return 1
             elif [[ "$key" == "" ]]; then
                 # Очищаем всё после ввода домена и показываем промпт заново
-                local lines_up=9
+                local lines_up=7
                 for ((l=0; l<lines_up; l++)); do
                     tput cuu1 2>/dev/null
                     tput el 2>/dev/null
